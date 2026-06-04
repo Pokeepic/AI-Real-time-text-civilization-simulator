@@ -199,6 +199,12 @@ class Agent:
         if self.age >= 18 and self.greed > 70:
             choices += ["gamble", "trade"]
 
+        if self.age >= 18 and self.debts:
+            choices += ["repay debt"]
+
+        if self.age >= 18 and self.greed > 60:
+            choices += ["demand debt"]
+
         if self.social < 50 and self.kindness > 50:
             choices += ["bond"]
 

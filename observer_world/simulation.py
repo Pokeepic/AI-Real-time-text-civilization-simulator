@@ -152,6 +152,12 @@ class Simulation:
             elif action == "gamble":
                 logs.extend(self.handle_gamble(agent))
 
+            elif action == "repay debt":
+                logs.extend(self.handle_repay_debt(agent))
+
+            elif action == "demand debt":
+                logs.extend(self.handle_demand_debt(agent))
+
             else:
                 logs.append(f"{agent.name} stayed at {agent.location} and chose to {action}.")
 
@@ -450,6 +456,8 @@ class Simulation:
             logs.append(f"{winner.name} won, but {loser.name} could not fully pay.")
             logs.append(f"{loser.name} now owes {winner.name} {debt} wealth.")
 
+            self.add_history(f"{loser.name} fell into debt to {winner.name}.")
+
             winner.change_relationship(loser.name, "trust", -5)
             loser.change_relationship(winner.name, "fear", 3)
 
@@ -468,6 +476,110 @@ class Simulation:
 
         if self.village_tension > 60:
             self.add_history(f"Gambling caused rising tension in {self.settlement['name'] or 'the camp'}.")
+
+        return logs
+
+    def handle_repay_debt(self, agent):
+        logs = []
+
+        if not agent.debts:
+            logs.append(f"{agent.name} had no debts to repay.")
+            return logs
+
+        creditor_name = random.choice(list(agent.debts.keys()))
+        creditor = next((a for a in self.agents if a.name == creditor_name and a.alive), None)
+
+        if not creditor:
+            logs.append(f"{agent.name}'s creditor was gone, so the debt faded from memory.")
+            del agent.debts[creditor_name]
+            return logs
+
+        amount_owed = agent.debts[creditor_name]
+
+        if agent.wealth <= 0:
+            logs.append(f"{agent.name} wanted to repay {creditor_name}, but had no wealth.")
+            return logs
+
+        payment = min(agent.wealth, amount_owed)
+
+        agent.wealth -= payment
+        creditor.wealth += payment
+        agent.debts[creditor_name] -= payment
+
+        logs.append(f"{agent.name} repaid {payment} wealth to {creditor_name}.")
+
+        agent.change_relationship(creditor_name, "trust", 3)
+        creditor.change_relationship(agent.name, "trust", 5)
+
+        agent.remember(f"Repaid debt to {creditor_name}.")
+        creditor.remember(f"{agent.name} repaid part of their debt.")
+
+        if agent.debts[creditor_name] <= 0:
+            del agent.debts[creditor_name]
+            logs.append(f"{agent.name} fully repaid their debt to {creditor_name}.")
+            creditor.change_relationship(agent.name, "respect", 4)
+
+        return logs
+
+    def handle_demand_debt(self, agent):
+        logs = []
+
+        debtors = [
+            other for other in self.nearby_agents(agent)
+            if other.alive and other.debts.get(agent.name, 0) > 0
+        ]
+
+        if not debtors:
+            logs.append(f"{agent.name} wanted to demand repayment, but no debtor was nearby.")
+            return logs
+
+        debtor = random.choice(debtors)
+        owed = debtor.debts[agent.name]
+
+        logs.append(f"{agent.name} demanded repayment from {debtor.name}.")
+        logs.append(f"{debtor.name} owes {agent.name} {owed} wealth.")
+
+        pressure = agent.aggression + agent.greed + owed * 5
+        resistance = debtor.pride + debtor.aggression + debtor.greed
+
+        if debtor.wealth > 0:
+            payment = min(debtor.wealth, owed)
+
+            debtor.wealth -= payment
+            agent.wealth += payment
+            debtor.debts[agent.name] -= payment
+
+            logs.append(f"{debtor.name} paid {payment} wealth under pressure.")
+
+            debtor.change_relationship(agent.name, "trust", -4)
+            debtor.change_relationship(agent.name, "fear", 4)
+            agent.change_relationship(debtor.name, "respect", -2)
+
+            if debtor.debts[agent.name] <= 0:
+                del debtor.debts[agent.name]
+                logs.append(f"{debtor.name}'s debt to {agent.name} is fully cleared.")
+
+        elif resistance > pressure:
+            logs.append(f"{debtor.name} refused to repay {agent.name}.")
+            debtor.change_relationship(agent.name, "trust", -8)
+            agent.change_relationship(debtor.name, "trust", -12)
+
+            self.village_tension += 8
+            logs.append(f"Village tension increased to {self.village_tension}.")
+
+            if random.random() < 0.35:
+                logs.append(f"The debt argument turned violent.")
+                logs.extend(self.handle_fight(agent))
+
+            self.add_history(f"{debtor.name} refused to repay debt to {agent.name}.")
+
+        else:
+            logs.append(f"{debtor.name} could not pay and became afraid.")
+            debtor.change_relationship(agent.name, "fear", 8)
+            agent.change_relationship(debtor.name, "trust", -6)
+
+            self.village_tension += 5
+            logs.append(f"Village tension increased to {self.village_tension}.")
 
         return logs
 
