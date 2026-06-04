@@ -49,6 +49,7 @@ class Simulation:
             "healing_faith": 0,
             "strength_worship": 0
         }
+        self.factions = {}
 
     def unlock_milestone(self, key, text, logs):
         if key in self.milestones:
@@ -250,6 +251,78 @@ class Simulation:
 
         return names.get(dominant, "None")
 
+    def update_factions(self, logs):
+        if self.hour != 19:
+            return
+
+        if self.settlement["name"] is None:
+            return
+
+        alive = [
+            a for a in self.agents
+            if a.alive and a.location != "Exiled Lands" and a.age >= 13
+        ]
+
+        if len(alive) < 6:
+            return
+
+        possible_factions = []
+
+        if self.leader:
+            possible_factions.append(("Leader Loyalists", "loyalty"))
+
+        if self.get_belief_identity() != "None":
+            possible_factions.append(("Faith Circle", "belief"))
+
+        if self.village_tension > 60:
+            possible_factions.append(("Reform Seekers", "tension"))
+
+        if any(a.wealth >= 5 for a in alive):
+            possible_factions.append(("Trade Guild", "wealth"))
+
+        if any(a.role == "Guard" for a in alive):
+            possible_factions.append(("Watch Order", "guard"))
+
+        for faction_name, reason in possible_factions:
+            if faction_name not in self.factions:
+                self.factions[faction_name] = {
+                    "reason": reason,
+                    "members": []
+                }
+
+                logs.append(f"New faction formed: {faction_name}.")
+                self.add_history(f"Faction formed: {faction_name}.")
+
+        for agent in alive:
+            chosen_faction = None
+
+            if self.leader:
+                rel = agent.get_relationship(self.leader)
+
+                if rel["trust"] > 20 or rel["respect"] > 20:
+                    chosen_faction = "Leader Loyalists"
+
+            if agent.role == "Guard" and "Watch Order" in self.factions:
+                chosen_faction = "Watch Order"
+
+            if agent.wealth >= 5 and "Trade Guild" in self.factions:
+                chosen_faction = "Trade Guild"
+
+            if self.get_belief_identity() != "None" and agent.kindness > 50:
+                chosen_faction = "Faith Circle"
+
+            if self.village_tension > 60 and agent.aggression > 50:
+                chosen_faction = "Reform Seekers"
+
+            agent.faction = chosen_faction
+
+        for faction in self.factions.values():
+            faction["members"] = []
+
+        for agent in alive:
+            if agent.faction and agent.faction in self.factions:
+                self.factions[agent.faction]["members"].append(agent.name)
+
     def check_milestones(self, logs):
         alive = [a for a in self.agents if a.alive]
         dead = [a for a in self.agents if not a.alive]
@@ -439,6 +512,7 @@ class Simulation:
         self.create_tradition(logs)
         self.run_traditions(logs)
         self.update_beliefs(logs)
+        self.update_factions(logs)
         self.check_milestones(logs)
 
         self.hour += 1

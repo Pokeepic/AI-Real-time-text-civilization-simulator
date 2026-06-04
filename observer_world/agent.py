@@ -51,6 +51,7 @@ class Agent:
         self.debts = {}
         self.risk_taking = random.randint(1, 100)
         self.greed = random.randint(1, 100)
+        self.faction = None
 
     def update_needs(self):
         self.hunger = clamp(self.hunger + 5, 0, 100)

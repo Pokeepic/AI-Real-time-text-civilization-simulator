@@ -13,6 +13,7 @@ from display import (
     show_memorials,
     show_statistics,
     show_milestones,
+    show_factions,
 )
 from save_system import save_world, load_world
 from archive import archive_logs
@@ -107,6 +108,9 @@ while running:
 
     console.print()
     show_milestones(console, sim)
+
+    console.print()
+    show_factions(console, sim)
 
     console.print()
     show_world_history(console, sim)

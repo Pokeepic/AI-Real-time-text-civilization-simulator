@@ -66,6 +66,7 @@ def show_agent_details(console, agent):
     text = f"""
 Partner: {agent.partner or 'None'}
 Family: {', '.join(agent.family) if agent.family else 'None'}
+Faction: {agent.faction or 'None'}
 Inventory: {agent.inventory}
 Wealth: {agent.wealth}
 Debts: {agent.debts if agent.debts else 'None'}
@@ -163,3 +164,16 @@ def show_milestones(console, sim):
 
     text = "\n".join(sorted(sim.milestones))
     console.print(Panel(text, title="Milestones"))
+
+
+def show_factions(console, sim):
+    if not sim.factions:
+        return
+
+    lines = []
+
+    for name, data in sim.factions.items():
+        members = ", ".join(data["members"]) if data["members"] else "No active members"
+        lines.append(f"{name} ({data['reason']}): {members}")
+
+    console.print(Panel("\n".join(lines), title="Factions"))
