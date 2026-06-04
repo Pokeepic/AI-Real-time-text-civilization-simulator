@@ -29,6 +29,7 @@ class Simulation:
         self.season = "Spring"
         self.death_records = []
         self.memorials = []
+        self.current_project = None
 
     def add_history(self, event):
         record = f"Day {self.day}, {self.hour}:00 — {event}"
@@ -169,6 +170,7 @@ class Simulation:
 
         self.handle_family_growth(logs)
         self.handle_aging(logs)
+        self.choose_village_project(logs)
         self.check_leadership(logs)
 
         self.hour += 1
@@ -806,8 +808,114 @@ class Simulation:
             if other.name != agent.name and other.location == agent.location
         ]
 
+    def choose_village_project(self, logs):
+        if self.settlement["name"] is None:
+            return
+
+        if self.current_project is not None:
+            return
+
+        if not self.leader:
+            return
+
+        possible_projects = []
+
+        if "Storage Hut" not in self.settlement["buildings"]:
+            possible_projects.append("Storage Hut")
+
+        if "Farm" not in self.settlement["buildings"]:
+            possible_projects.append("Farm")
+
+        if "Clinic" not in self.settlement["buildings"]:
+            possible_projects.append("Clinic")
+
+        if "Guard Post" not in self.settlement["buildings"]:
+            possible_projects.append("Guard Post")
+
+        if not possible_projects:
+            return
+
+        leader = next((a for a in self.agents if a.name == self.leader), None)
+
+        if not leader:
+            return
+
+        if leader.role == "Leader":
+            if self.resources["food"] < 30:
+                project = "Farm"
+            elif self.village_tension > 50:
+                project = "Guard Post"
+            else:
+                project = random.choice(possible_projects)
+        else:
+            project = random.choice(possible_projects)
+
+        self.current_project = {
+            "name": project,
+            "progress": 0,
+            "required": 100
+        }
+
+        logs.append(f"Leader {self.leader} proposed a new village project: {project}.")
+        self.add_history(f"{self.leader} proposed building a {project}.")
+
+    def work_on_project(self, agent):
+        logs = []
+
+        if self.current_project is None:
+            return logs
+
+        project_name = self.current_project["name"]
+
+        wood_cost = 5
+        stone_cost = 3
+
+        if self.resources["wood"] < wood_cost or self.resources["stone"] < stone_cost:
+            logs.append(f"{agent.name} wanted to work on {project_name}, but materials were too low.")
+            return logs
+
+        self.resources["wood"] -= wood_cost
+        self.resources["stone"] -= stone_cost
+
+        progress = random.randint(8, 18) + agent.skills["building"]
+        self.current_project["progress"] += progress
+
+        agent.improve_skill("building", 1)
+
+        logs.append(f"{agent.name} worked on {project_name}.")
+        logs.append(
+            f"{project_name} progress +{progress}. "
+            f"Total: {self.current_project['progress']}/{self.current_project['required']}."
+        )
+
+        if self.current_project["progress"] >= self.current_project["required"]:
+            self.settlement["buildings"].append(project_name)
+            logs.append(f"{project_name} has been completed.")
+            self.add_history(f"{project_name} was completed in {self.settlement['name']}.")
+
+            if project_name == "Farm":
+                self.resources["food"] += 30
+                logs.append("The Farm produced its first food. Food +30.")
+
+            elif project_name == "Storage Hut":
+                logs.append("The village can now store more supplies safely.")
+
+            elif project_name == "Clinic":
+                logs.append("The village now has a place for healing.")
+
+            elif project_name == "Guard Post":
+                self.village_tension = max(self.village_tension - 15, 0)
+                logs.append("The Guard Post made the village feel safer. Village tension -15.")
+
+            self.current_project = None
+
+        return logs
+
     def handle_build(self, agent):
         logs = []
+
+        if self.current_project is not None and "Shelter" in self.settlement["buildings"]:
+            return self.work_on_project(agent)
 
         if "Shelter" in self.settlement["buildings"]:
             logs.append(f"{agent.name} maintained the shelter.")

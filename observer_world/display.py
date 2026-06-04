@@ -98,6 +98,7 @@ Settlement: {sim.settlement['name'] or 'None'}
 Leader: {sim.leader or 'None'}
 Buildings: {', '.join(sim.settlement['buildings']) if sim.settlement['buildings'] else 'None'}
 Shelter Progress: {sim.settlement['shelter_progress']}/100
+Current Project: {sim.current_project['name'] + ' ' + str(sim.current_project['progress']) + '/' + str(sim.current_project['required']) if sim.current_project else 'None'}
 
 Village Tension: {sim.village_tension}
 Laws: {', '.join(sim.laws) if sim.laws else 'None'}
