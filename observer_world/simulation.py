@@ -552,7 +552,16 @@ class Simulation:
                 "wood": 10,
                 "stone": 5
             },
-            "buildings": []
+            "buildings": [],
+            "laws": [],
+            "culture": {
+                "cooperation": 0,
+                "fear": 0,
+                "discipline": 0,
+                "violence": 0,
+                "knowledge": 0,
+                "trade": 0
+            }
         }
 
         self.extra_settlements.append(new_settlement)
@@ -790,6 +799,80 @@ class Simulation:
                 logs.append(f"{best_candidate.name} became the leader of {settlement['name']}.")
                 self.add_history(f"{best_candidate.name} became leader of {settlement['name']}.")
 
+    def update_extra_settlement_culture(self, logs):
+        if self.hour != 20:
+            return
+
+        for settlement in self.extra_settlements:
+            residents = [
+                a for a in self.agents
+                if a.alive and a.location == settlement["name"]
+            ]
+
+            if not residents:
+                continue
+
+            avg_kindness = sum(a.kindness for a in residents) / len(residents)
+            avg_aggression = sum(a.aggression for a in residents) / len(residents)
+            avg_discipline = sum(a.discipline for a in residents) / len(residents)
+
+            if avg_kindness > 55:
+                settlement["culture"]["cooperation"] += 1
+
+            if avg_aggression > 60 or settlement["tension"] > 60:
+                settlement["culture"]["violence"] += 1
+
+            if avg_discipline > 55:
+                settlement["culture"]["discipline"] += 1
+
+            if any(a.role == "Teacher" for a in residents):
+                settlement["culture"]["knowledge"] += 1
+
+            if any(a.role == "Merchant" for a in residents):
+                settlement["culture"]["trade"] += 1
+
+            if any(a.role == "Guard" for a in residents):
+                settlement["culture"]["fear"] += 1
+
+    def get_extra_settlement_culture_identity(self, settlement):
+        culture = settlement.get("culture", {})
+
+        if not culture:
+            return "Undefined"
+
+        dominant = max(culture, key=culture.get)
+
+        if culture[dominant] < 10:
+            return "Undefined"
+
+        identities = {
+            "cooperation": "Cooperative Society",
+            "fear": "Fear-Driven Society",
+            "discipline": "Disciplined Society",
+            "violence": "Violent Society",
+            "knowledge": "Knowledge-Seeking Society",
+            "trade": "Trade-Oriented Society"
+        }
+
+        return identities.get(dominant, "Undefined")
+
+    def update_extra_settlement_laws(self, logs):
+        if self.hour != 21:
+            return
+
+        for settlement in self.extra_settlements:
+            laws = settlement.get("laws", [])
+
+            if settlement["tension"] > 60 and "No attacks inside the camp" not in laws:
+                laws.append("No attacks inside the camp")
+                logs.append(f'{settlement["name"]} created a law: "No attacks inside the camp".')
+                self.add_history(f'{settlement["name"]} created law: No attacks inside the camp.')
+
+            if settlement["resources"]["food"] < 10 and "Food must be rationed" not in laws:
+                laws.append("Food must be rationed")
+                logs.append(f'{settlement["name"]} created a law: "Food must be rationed".')
+                self.add_history(f'{settlement["name"]} created law: Food must be rationed.')
+
     def check_milestones(self, logs):
         alive = [a for a in self.agents if a.alive]
         dead = [a for a in self.agents if not a.alive]
@@ -1014,6 +1097,8 @@ class Simulation:
         self.handle_migration(logs)
         self.handle_extra_settlement_growth(logs)
         self.update_extra_settlement_leaders(logs)
+        self.update_extra_settlement_culture(logs)
+        self.update_extra_settlement_laws(logs)
         self.check_milestones(logs)
 
         self.hour += 1

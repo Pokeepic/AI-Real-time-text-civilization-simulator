@@ -191,11 +191,14 @@ def show_extra_settlements(console, sim):
     for settlement in sim.extra_settlements:
         resources = settlement.get("resources", {})
         buildings = settlement.get("buildings", [])
+        culture_identity = sim.get_extra_settlement_culture_identity(settlement)
+        laws = settlement.get("laws", [])
 
         lines.append(
             f"{settlement['name']} | Founder: {settlement['founder']} | Leader: {settlement.get('leader', 'None')} | "
             f"Population: {settlement['population']} | Stage: {settlement['stage']} | "
             f"Relation to Main: {settlement['relationship_to_main']}\n"
+            f"Culture: {culture_identity} | Laws: {', '.join(laws) if laws else 'None'}\n"
             f"Resources: food {resources.get('food', 0)}, wood {resources.get('wood', 0)}, stone {resources.get('stone', 0)} | "
             f"Buildings: {', '.join(buildings) if buildings else 'None'}"
         )
