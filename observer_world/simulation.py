@@ -24,6 +24,7 @@ class Simulation:
         self.village_tension = 0
         self.laws = []
         self.crime_records = {}
+        self.leader = None
 
     def add_history(self, event):
         record = f"Day {self.day}, {self.hour}:00 — {event}"
@@ -97,6 +98,8 @@ class Simulation:
             else:
                 logs.append(f"{agent.name} stayed at {agent.location} and chose to {action}.")
 
+        self.check_leadership(logs)
+
         self.hour += 1
 
         if self.hour >= 24:
@@ -105,6 +108,52 @@ class Simulation:
             logs.append(f"--- A new day begins. Day {self.day}. ---")
 
         return logs
+
+    def check_leadership(self, logs):
+        if self.settlement["name"] is None:
+            return
+
+        best_candidate = None
+        best_score = -999
+
+        for agent in self.agents:
+            if agent.location == "Exiled Lands":
+                continue
+
+            total_respect = 0
+            total_trust = 0
+
+            for other in self.agents:
+                if other.name == agent.name:
+                    continue
+
+                rel = other.get_relationship(agent.name)
+                total_respect += rel["respect"]
+                total_trust += rel["trust"]
+
+            score = (
+                total_respect
+                + total_trust
+                + agent.skills["social"] * 3
+                + agent.discipline
+                + agent.kindness // 2
+                - agent.aggression // 2
+            )
+
+            if score > best_score:
+                best_score = score
+                best_candidate = agent
+
+        if best_candidate and self.leader != best_candidate.name and best_score > 80:
+            old_leader = self.leader
+            self.leader = best_candidate.name
+
+            if old_leader is None:
+                logs.append(f"{best_candidate.name} has naturally become the leader of {self.settlement['name']}.")
+                self.add_history(f"{best_candidate.name} became the first leader of {self.settlement['name']}.")
+            else:
+                logs.append(f"Leadership changed from {old_leader} to {best_candidate.name}.")
+                self.add_history(f"Leadership changed from {old_leader} to {best_candidate.name}.")
 
     def nearby_agents(self, agent):
         return [
@@ -276,6 +325,17 @@ class Simulation:
         avg_fear = total_fear / max(voters, 1)
 
         severity = self.village_tension - avg_trust + avg_fear
+
+        if self.leader:
+            leader_agent = next((a for a in self.agents if a.name == self.leader), None)
+
+            if leader_agent:
+                leader_rel = leader_agent.get_relationship(accused.name)
+
+                severity -= leader_rel["trust"] * 0.2
+                severity += leader_rel["fear"] * 0.3
+
+                logs.append(f"Leader {self.leader}'s opinion influenced the trial.")
 
         if crime == "stealing food":
             severity += 10
