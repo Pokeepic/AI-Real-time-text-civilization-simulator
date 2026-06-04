@@ -32,6 +32,11 @@ class Agent:
         self.health = 100
         self.alive = True
         self.status = "Healthy"
+        self.age = random.randint(18, 40)
+        self.partner = None
+        self.family = []
+        self.pregnant = False
+        self.pregnancy_timer = 0
 
     def update_needs(self):
         self.hunger = min(self.hunger + 5, 100)
@@ -161,5 +166,8 @@ class Agent:
 
         if self.role == "Medic":
             choices += ["heal", "help", "observe"]
+
+        if self.social < 50 and self.kindness > 50:
+            choices += ["bond"]
 
         return random.choice(choices)

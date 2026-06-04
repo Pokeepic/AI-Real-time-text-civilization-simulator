@@ -60,6 +60,9 @@ def show_agent_details(console, agent):
     ])
 
     text = f"""
+Partner: {agent.partner or 'None'}
+Family: {', '.join(agent.family) if agent.family else 'None'}
+
 Skills:
 {skills_text}
 

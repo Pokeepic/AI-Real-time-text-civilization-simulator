@@ -136,9 +136,13 @@ class Simulation:
             elif action == "heal":
                 logs.extend(self.handle_heal(agent))
 
+            elif action == "bond":
+                logs.extend(self.handle_bond(agent))
+
             else:
                 logs.append(f"{agent.name} stayed at {agent.location} and chose to {action}.")
 
+        self.handle_family_growth(logs)
         self.check_leadership(logs)
 
         self.hour += 1
@@ -271,6 +275,104 @@ class Simulation:
         self.add_history(f"{medic.name} healed {patient.name}.")
 
         return logs
+
+    def handle_bond(self, agent):
+        logs = []
+
+        nearby = [
+            other for other in self.nearby_agents(agent)
+            if other.alive
+            and other.partner is None
+            and agent.partner is None
+            and other.age >= 18
+            and agent.age >= 18
+        ]
+
+        if not nearby:
+            logs.append(f"{agent.name} wanted to bond with someone, but no suitable person was nearby.")
+            return logs
+
+        other = random.choice(nearby)
+
+        rel = agent.get_relationship(other.name)
+        other_rel = other.get_relationship(agent.name)
+
+        compatibility = (
+            rel["trust"]
+            + rel["friendship"]
+            + other_rel["trust"]
+            + other_rel["friendship"]
+            + agent.kindness
+            + other.kindness
+            - abs(agent.aggression - other.aggression)
+        )
+
+        logs.append(f"{agent.name} spent quiet time with {other.name} at {agent.location}.")
+
+        if compatibility > 120:
+            agent.partner = other.name
+            other.partner = agent.name
+
+            agent.family.append(other.name)
+            other.family.append(agent.name)
+
+            agent.remember(f"Formed a partnership with {other.name}.")
+            other.remember(f"Formed a partnership with {agent.name}.")
+
+            logs.append(f"{agent.name} and {other.name} became partners.")
+            self.add_history(f"{agent.name} and {other.name} became partners.")
+        else:
+            friendship_gain = random.randint(2, 5)
+            agent.change_relationship(other.name, "friendship", friendship_gain)
+            other.change_relationship(agent.name, "friendship", friendship_gain)
+
+            logs.append(f"Their bond grew slowly. Friendship +{friendship_gain}.")
+
+        return logs
+
+    def handle_family_growth(self, logs):
+        for agent in self.agents:
+            if not agent.alive:
+                continue
+
+            if agent.partner and not agent.pregnant:
+                if random.random() < 0.01:
+                    agent.pregnant = True
+                    agent.pregnancy_timer = 5
+
+                    logs.append(f"{agent.name} and {agent.partner}'s family may grow soon.")
+                    self.add_history(f"{agent.name} and {agent.partner} are expecting a child.")
+
+            elif agent.pregnant:
+                agent.pregnancy_timer -= 1
+
+                if agent.pregnancy_timer <= 0:
+                    child_name = self.generate_child_name()
+
+                    from agent import Agent
+                    child = Agent(child_name)
+
+                    child.age = 0
+                    child.location = agent.location
+                    child.family.append(agent.name)
+                    child.family.append(agent.partner)
+
+                    self.agents.append(child)
+
+                    agent.family.append(child_name)
+
+                    partner = next((a for a in self.agents if a.name == agent.partner), None)
+                    if partner:
+                        partner.family.append(child_name)
+
+                    agent.pregnant = False
+
+                    logs.append(f"A child was born: {child_name}.")
+                    self.add_history(f"{child_name} was born into the settlement.")
+
+    def generate_child_name(self):
+        syllables = ["ra", "mi", "ka", "lo", "zen", "ari", "no", "el", "sha", "rin"]
+        return random.choice(syllables).capitalize() + random.choice(syllables)
 
     def check_leadership(self, logs):
         if self.settlement["name"] is None:
