@@ -112,6 +112,8 @@ Stone: {sim.resources['stone']}
 Settlement: {sim.settlement['name'] or 'None'}
 Stage: {sim.settlement_stage}
 Era: {sim.current_era}
+World State: {sim.world_state}
+Collapse Reasons: {', '.join(sim.collapse_reasons) if sim.collapse_reasons else 'None'}
 Culture: {sim.get_culture_identity()}
 Traditions: {', '.join(sim.traditions) if sim.traditions else 'None'}
 Belief: {sim.get_belief_identity()}

@@ -67,6 +67,8 @@ class Simulation:
                 "start_day": 1
             }
         ]
+        self.world_state = "Ongoing"
+        self.collapse_reasons = []
 
     def unlock_milestone(self, key, text, logs):
         if key in self.milestones:
@@ -1494,6 +1496,34 @@ class Simulation:
             logs.append(f"NEW ERA BEGINS: {new_era}.")
             self.add_history(f"New era began: {new_era}.")
 
+    def check_world_state(self, logs):
+        alive = [a for a in self.agents if a.alive]
+        main_alive = [
+            a for a in self.agents
+            if a.alive and a.location != "Exiled Lands" and a.location != "Ash Hollow"
+        ]
+
+        if len(alive) == 0:
+            self.world_state = "Extinct"
+            reason = "All agents have died."
+        elif len(main_alive) == 0 and not self.extra_settlements:
+            self.world_state = "Collapsed"
+            reason = "The main settlement collapsed with no surviving offshoots."
+        elif self.village_tension >= 100 and self.wars:
+            self.world_state = "Dark Age"
+            reason = "War and tension pushed society into a dark age."
+        elif len(alive) >= 100 and self.settlement_stage == "City":
+            self.world_state = "Civilization"
+            reason = "The society successfully became a city civilization."
+        else:
+            return
+
+        if reason not in self.collapse_reasons:
+            self.collapse_reasons.append(reason)
+            logs.append(f"WORLD STATE CHANGED: {self.world_state}.")
+            logs.append(f"Reason: {reason}")
+            self.add_history(f"World state changed to {self.world_state}: {reason}")
+
     def check_milestones(self, logs):
         alive = [a for a in self.agents if a.alive]
         dead = [a for a in self.agents if not a.alive]
@@ -1529,6 +1559,15 @@ class Simulation:
         if self.settlement_stage == "Village":
             self.unlock_milestone("became_village", "The settlement became a village.", logs)
 
+        if self.world_state == "Dark Age":
+            self.unlock_milestone("dark_age", "The world entered a dark age.", logs)
+
+        if self.world_state == "Civilization":
+            self.unlock_milestone("civilization_success", "The society became a civilization.", logs)
+
+        if self.world_state == "Extinct":
+            self.unlock_milestone("extinction", "All agents died.", logs)
+
         if self.settlement_stage == "Town":
             self.unlock_milestone("became_town", "The settlement became a town.", logs)
 
@@ -1563,6 +1602,10 @@ class Simulation:
     def tick(self):
         logs = []
         starting_day = self.day
+
+        if self.world_state in ["Extinct", "Civilization"]:
+            logs.append(f"The simulation has reached an ending state: {self.world_state}.")
+            return logs
 
         if self.hour == 6:
             self.update_season()
@@ -1758,6 +1801,8 @@ class Simulation:
 
         if self.day != starting_day:
             self.create_daily_chronicle(logs)
+
+        self.check_world_state(logs)
 
         return logs
 
