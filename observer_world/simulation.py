@@ -27,6 +27,8 @@ class Simulation:
         self.leader = None
         self.weather = "Clear"
         self.season = "Spring"
+        self.death_records = []
+        self.memorials = []
 
     def add_history(self, event):
         record = f"Day {self.day}, {self.hour}:00 — {event}"
@@ -49,7 +51,17 @@ class Simulation:
 
             self.assign_role(agent)
             agent.update_needs()
+
+            if not agent.alive:
+                self.record_death(agent, "hunger or exhaustion")
+                continue
+
             self.apply_weather_effects(agent, logs)
+
+            if not agent.alive:
+                self.record_death(agent, "weather exposure")
+                continue
+
             action = agent.choose_action(self.hour)
 
             if action == "explore":
@@ -168,7 +180,27 @@ class Simulation:
                     agent.alive = False
                     agent.status = "Dead"
                     logs.append(f"{agent.name} died from exposure.")
-                    self.add_history(f"{agent.name} died from exposure.")
+                    self.record_death(agent, "exposure")
+
+    def record_death(self, agent, cause):
+        for record in self.death_records:
+            if record["name"] == agent.name:
+                return
+
+        death_record = {
+            "name": agent.name,
+            "day": self.day,
+            "hour": self.hour,
+            "cause": cause,
+            "role": agent.role
+        }
+
+        self.death_records.append(death_record)
+
+        memorial = f"{agent.name}, the {agent.role}, died on Day {self.day} at {self.hour}:00. Cause: {cause}."
+        self.memorials.append(memorial)
+
+        self.add_history(f"{agent.name} died. Cause: {cause}.")
 
     def assign_role(self, agent):
         if agent.location == "Exiled Lands":
@@ -404,7 +436,7 @@ class Simulation:
             other.alive = False
             other.status = "Dead"
             logs.append(f"{other.name} died after the fight.")
-            self.add_history(f"{other.name} died after a fight with {agent.name}.")
+            self.record_death(other, f"fight with {agent.name}")
         else:
             logs.append(f"{other.name} was injured. Health -{damage}.")
 

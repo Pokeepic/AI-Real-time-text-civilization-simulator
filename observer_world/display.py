@@ -91,3 +91,11 @@ Village Tension: {sim.village_tension}
 Laws: {', '.join(sim.laws) if sim.laws else 'None'}
 """
     console.print(Panel(text, title="World Resources"))
+
+
+def show_memorials(console, sim):
+    if not sim.memorials:
+        return
+
+    recent_memorials = "\n".join(sim.memorials[-5:])
+    console.print(Panel(recent_memorials, title="Memorials"))
