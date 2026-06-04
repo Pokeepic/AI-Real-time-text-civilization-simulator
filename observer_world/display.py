@@ -1,0 +1,67 @@
+from rich.table import Table
+from rich.panel import Panel
+
+
+def show_agent_status(console, agents):
+    table = Table(title="AI Status")
+
+    table.add_column("Name")
+    table.add_column("Location")
+    table.add_column("Hunger")
+    table.add_column("Energy")
+    table.add_column("Social")
+    table.add_column("Best Skill")
+
+    for agent in agents:
+        best_skill = max(agent.skills, key=agent.skills.get)
+
+        table.add_row(
+            agent.name,
+            agent.location,
+            str(agent.hunger),
+            str(agent.energy),
+            str(agent.social),
+            f"{best_skill} ({agent.skills[best_skill]})"
+        )
+
+    console.print(table)
+
+
+def show_world_history(console, sim):
+    if not sim.world_history:
+        return
+
+    recent_history = "\n".join(sim.world_history[-5:])
+    console.print(Panel(recent_history, title="Recent World History"))
+
+
+def show_agent_details(console, agent):
+    memories = "\n".join(agent.memories[-5:]) if agent.memories else "No memories yet."
+
+    relationships = []
+
+    for name, rel in agent.relationships.items():
+        relationships.append(
+            f"{name}: trust {rel['trust']}, friendship {rel['friendship']}, "
+            f"respect {rel['respect']}, fear {rel['fear']}"
+        )
+
+    relationship_text = "\n".join(relationships) if relationships else "No relationships yet."
+
+    skills_text = "\n".join([
+        f"{skill}: {value}"
+        for skill, value in agent.skills.items()
+    ])
+
+    text = f"""
+Skills:
+{skills_text}
+
+Recent Memories:
+{memories}
+
+Relationships:
+{relationship_text}
+"""
+
+    console.print(Panel(text, title=f"{agent.name} Details"))
