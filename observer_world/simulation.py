@@ -50,6 +50,7 @@ class Simulation:
             "strength_worship": 0
         }
         self.factions = {}
+        self.faction_conflicts = []
 
     def unlock_milestone(self, key, text, logs):
         if key in self.milestones:
@@ -323,6 +324,103 @@ class Simulation:
             if agent.faction and agent.faction in self.factions:
                 self.factions[agent.faction]["members"].append(agent.name)
 
+    def update_faction_influence(self, logs):
+        if self.hour != 20:
+            return
+
+        if not self.factions:
+            return
+
+        for faction_name, data in self.factions.items():
+            members = data["members"]
+
+            if not members:
+                data["influence"] = 0
+                continue
+
+            influence = len(members) * 5
+
+            for member_name in members:
+                member = next((a for a in self.agents if a.name == member_name), None)
+
+                if not member:
+                    continue
+
+                influence += member.wealth
+                influence += member.skills["social"]
+                influence += member.skills["combat"] // 2
+
+                if member.role == "Leader":
+                    influence += 15
+
+                if member.role == "Guard":
+                    influence += 8
+
+                if member.role == "Merchant":
+                    influence += 6
+
+            data["influence"] = influence
+
+            if influence >= 40:
+                logs.append(f"{faction_name} has become influential.")
+
+            if influence >= 70:
+                logs.append(f"{faction_name} is now a major power in the settlement.")
+
+    def handle_faction_conflict(self, logs):
+        if self.hour != 21:
+            return
+
+        if len(self.factions) < 2:
+            return
+
+        active_factions = [
+            (name, data) for name, data in self.factions.items()
+            if data.get("members")
+        ]
+
+        if len(active_factions) < 2:
+            return
+
+        faction_a, data_a = random.choice(active_factions)
+        faction_b, data_b = random.choice([
+            item for item in active_factions
+            if item[0] != faction_a
+        ])
+
+        influence_gap = abs(data_a.get("influence", 0) - data_b.get("influence", 0))
+
+        conflict_chance = 0.05
+        conflict_chance += self.village_tension / 300
+
+        if data_a["reason"] != data_b["reason"]:
+            conflict_chance += 0.05
+
+        if random.random() > conflict_chance:
+            return
+
+        conflict = {
+            "day": self.day,
+            "hour": self.hour,
+            "factions": [faction_a, faction_b],
+            "reason": "influence dispute"
+        }
+
+        self.faction_conflicts.append(conflict)
+
+        self.village_tension = min(self.village_tension + 10, 100)
+
+        logs.append(f"Faction conflict erupted between {faction_a} and {faction_b}.")
+        logs.append(f"Village tension increased to {self.village_tension}.")
+
+        if influence_gap > 30:
+            stronger = faction_a if data_a.get("influence", 0) > data_b.get("influence", 0) else faction_b
+            logs.append(f"{stronger} dominated the dispute through influence.")
+        else:
+            logs.append("Neither faction gained clear control from the dispute.")
+
+        self.add_history(f"Faction conflict: {faction_a} vs {faction_b}.")
+
     def check_milestones(self, logs):
         alive = [a for a in self.agents if a.alive]
         dead = [a for a in self.agents if not a.alive]
@@ -513,6 +611,8 @@ class Simulation:
         self.run_traditions(logs)
         self.update_beliefs(logs)
         self.update_factions(logs)
+        self.update_faction_influence(logs)
+        self.handle_faction_conflict(logs)
         self.check_milestones(logs)
 
         self.hour += 1
@@ -1163,6 +1263,9 @@ class Simulation:
                 - agent.aggression // 2
             )
 
+            if agent.faction and agent.faction in self.factions:
+                score += self.factions[agent.faction].get("influence", 0) // 2
+
             if score > best_score:
                 best_score = score
                 best_candidate = agent
@@ -1633,6 +1736,14 @@ class Simulation:
                 severity += leader_rel["fear"] * 0.3
 
                 logs.append(f"Leader {self.leader}'s opinion influenced the trial.")
+
+        if accused.faction and accused.faction in self.factions:
+            faction = self.factions[accused.faction]
+            faction_influence = faction.get("influence", 0)
+
+            if faction_influence > 50:
+                severity -= 10
+                logs.append(f"{accused.faction} protected {accused.name} during the trial.")
 
         if crime == "stealing food":
             severity += 10

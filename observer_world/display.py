@@ -174,6 +174,7 @@ def show_factions(console, sim):
 
     for name, data in sim.factions.items():
         members = ", ".join(data["members"]) if data["members"] else "No active members"
-        lines.append(f"{name} ({data['reason']}): {members}")
+        influence = data.get("influence", 0)
+        lines.append(f"{name} ({data['reason']}) | Influence: {influence} | Members: {members}")
 
     console.print(Panel("\n".join(lines), title="Factions"))
