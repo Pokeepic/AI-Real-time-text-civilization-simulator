@@ -8,6 +8,14 @@ class Simulation:
         self.agents = agents
         self.day = 1
         self.hour = 8
+        self.world_history = []
+
+    def add_history(self, event):
+        record = f"Day {self.day}, {self.hour}:00 — {event}"
+        self.world_history.append(record)
+
+        if len(self.world_history) > 50:
+            self.world_history.pop(0)
 
     def tick(self):
         logs = []
@@ -19,12 +27,15 @@ class Simulation:
             if action == "explore":
                 new_location = random.choice(LOCATIONS)
                 agent.location = new_location
-                logs.append(f"{agent.name} moved to {agent.location}.")
+                logs.append(f"{agent.name} explored and moved to {agent.location}.")
 
             elif action == "gather food":
-                food_found = random.randint(5, 20)
+                food_found = random.randint(5, 20) + agent.skills["hunting"]
                 agent.hunger = max(agent.hunger - food_found, 0)
+                agent.improve_skill("hunting", 1)
+
                 logs.append(f"{agent.name} gathered food at {agent.location}. Hunger -{food_found}.")
+                logs.append(f"{agent.name}'s hunting improved to {agent.skills['hunting']}.")
 
             elif action == "sleep":
                 agent.energy = min(agent.energy + 30, 100)
@@ -32,6 +43,17 @@ class Simulation:
 
             elif action == "talk":
                 logs.extend(self.handle_talk(agent))
+
+            elif action == "argue":
+                logs.extend(self.handle_argument(agent))
+
+            elif action == "help":
+                logs.extend(self.handle_help(agent))
+
+            elif action == "practice":
+                skill = random.choice(list(agent.skills.keys()))
+                agent.improve_skill(skill, 1)
+                logs.append(f"{agent.name} practiced {skill}. {skill.capitalize()} is now {agent.skills[skill]}.")
 
             else:
                 logs.append(f"{agent.name} stayed at {agent.location} and chose to {action}.")
@@ -41,67 +63,148 @@ class Simulation:
         if self.hour >= 24:
             self.hour = 0
             self.day += 1
+            logs.append(f"--- A new day begins. Day {self.day}. ---")
 
         return logs
 
-    def handle_talk(self, agent):
-        logs = []
-
-        nearby_agents = [
+    def nearby_agents(self, agent):
+        return [
             other for other in self.agents
             if other.name != agent.name and other.location == agent.location
         ]
 
-        if not nearby_agents:
+    def handle_talk(self, agent):
+        logs = []
+
+        nearby = self.nearby_agents(agent)
+
+        if not nearby:
             logs.append(f"{agent.name} wanted to talk, but no one was nearby.")
             return logs
 
-        other = random.choice(nearby_agents)
+        other = random.choice(nearby)
 
-        conversation_type = self.choose_conversation(agent, other)
+        if random.random() < 0.35:
+            logs.extend(self.handle_teaching(agent, other))
+            return logs
 
-        if conversation_type == "friendly":
-            trust_gain = random.randint(1, 5)
-            agent.change_trust(other.name, trust_gain)
-            other.change_trust(agent.name, trust_gain)
+        trust_gain = random.randint(1, 4)
+        friendship_gain = random.randint(1, 3)
 
-            agent.social = min(agent.social + 15, 100)
-            other.social = min(other.social + 10, 100)
+        agent.change_relationship(other.name, "trust", trust_gain)
+        other.change_relationship(agent.name, "trust", trust_gain)
 
-            memory_a = f"Had a friendly talk with {other.name}."
-            memory_b = f"Had a friendly talk with {agent.name}."
+        agent.change_relationship(other.name, "friendship", friendship_gain)
+        other.change_relationship(agent.name, "friendship", friendship_gain)
 
-            agent.remember(memory_a)
-            other.remember(memory_b)
+        agent.social = min(agent.social + 15, 100)
+        other.social = min(other.social + 10, 100)
 
-            logs.append(f"{agent.name} talked with {other.name} at {agent.location}.")
-            logs.append(f'{agent.name}: "We should work together if we want to survive."')
-            logs.append(f'{other.name}: "I agree. Alone, this place feels too large."')
-            logs.append(f"Trust increased between {agent.name} and {other.name} by {trust_gain}.")
+        agent.remember(f"Had a calm conversation with {other.name}.")
+        other.remember(f"Had a calm conversation with {agent.name}.")
 
-        elif conversation_type == "argument":
-            trust_loss = random.randint(1, 7)
-            agent.change_trust(other.name, -trust_loss)
-            other.change_trust(agent.name, -trust_loss)
-
-            memory_a = f"Argued with {other.name}."
-            memory_b = f"Argued with {agent.name}."
-
-            agent.remember(memory_a)
-            other.remember(memory_b)
-
-            logs.append(f"{agent.name} argued with {other.name} at {agent.location}.")
-            logs.append(f'{agent.name}: "You never listen when it matters."')
-            logs.append(f'{other.name}: "And you think shouting makes you right?"')
-            logs.append(f"Trust decreased between {agent.name} and {other.name} by {trust_loss}.")
+        logs.append(f"{agent.name} talked with {other.name} at {agent.location}.")
+        logs.append(f'{agent.name}: "We should understand this place better."')
+        logs.append(f'{other.name}: "Then we should share what we learn."')
+        logs.append(f"Trust +{trust_gain}, Friendship +{friendship_gain}.")
 
         return logs
 
-    def choose_conversation(self, agent, other):
-        aggression_average = (agent.aggression + other.aggression) / 2
-        kindness_average = (agent.kindness + other.kindness) / 2
+    def handle_argument(self, agent):
+        logs = []
 
-        if aggression_average > kindness_average and random.random() < 0.5:
-            return "argument"
+        nearby = self.nearby_agents(agent)
 
-        return "friendly"
+        if not nearby:
+            logs.append(f"{agent.name} looked irritated, but no one was nearby.")
+            return logs
+
+        other = random.choice(nearby)
+
+        trust_loss = random.randint(2, 8)
+        fear_gain = random.randint(1, 5)
+
+        agent.change_relationship(other.name, "trust", -trust_loss)
+        other.change_relationship(agent.name, "trust", -trust_loss)
+
+        other.change_relationship(agent.name, "fear", fear_gain)
+
+        agent.remember(f"Argued with {other.name}.")
+        other.remember(f"{agent.name} argued with me.")
+
+        logs.append(f"{agent.name} argued with {other.name} at {agent.location}.")
+        logs.append(f'{agent.name}: "You are slowing everyone down."')
+        logs.append(f'{other.name}: "Say that again and see what happens."')
+        logs.append(f"Trust -{trust_loss}. {other.name}'s fear toward {agent.name} +{fear_gain}.")
+
+        self.add_history(f"{agent.name} and {other.name} had a serious argument.")
+
+        return logs
+
+    def handle_help(self, agent):
+        logs = []
+
+        nearby = self.nearby_agents(agent)
+
+        if not nearby:
+            logs.append(f"{agent.name} wanted to help someone, but no one was nearby.")
+            return logs
+
+        other = random.choice(nearby)
+
+        help_amount = random.randint(5, 15)
+
+        other.hunger = max(other.hunger - help_amount, 0)
+        other.energy = min(other.energy + 5, 100)
+
+        agent.change_relationship(other.name, "friendship", 4)
+        other.change_relationship(agent.name, "trust", 6)
+        other.change_relationship(agent.name, "friendship", 4)
+
+        agent.remember(f"Helped {other.name}.")
+        other.remember(f"{agent.name} helped me when I needed it.")
+
+        logs.append(f"{agent.name} helped {other.name} at {agent.location}.")
+        logs.append(f'{other.name}: "I will remember this."')
+        logs.append(f"{other.name}'s hunger reduced by {help_amount}.")
+        logs.append(f"{other.name}'s trust toward {agent.name} +6.")
+
+        return logs
+
+    def handle_teaching(self, teacher, student):
+        logs = []
+
+        skill = random.choice(list(teacher.skills.keys()))
+
+        if teacher.skills[skill] <= student.skills[skill]:
+            logs.append(f"{teacher.name} tried to teach {student.name} {skill}, but they had little to offer.")
+            return logs
+
+        learning_chance = 0.4
+        learning_chance += student.curiosity / 300
+        learning_chance += teacher.skills["teaching"] / 100
+        learning_chance -= student.pride / 400
+
+        logs.append(f"{teacher.name} taught {student.name} about {skill} at {teacher.location}.")
+
+        if random.random() < learning_chance:
+            student.improve_skill(skill, 1)
+            teacher.improve_skill("teaching", 1)
+
+            student.change_relationship(teacher.name, "respect", 5)
+            student.change_relationship(teacher.name, "trust", 3)
+            teacher.change_relationship(student.name, "friendship", 2)
+
+            student.remember(f"{teacher.name} taught me {skill}.")
+            teacher.remember(f"Taught {student.name} {skill}.")
+
+            logs.append(f"{student.name} learned successfully.")
+            logs.append(f"{student.name}'s {skill} improved to {student.skills[skill]}.")
+            logs.append(f"{student.name}'s respect toward {teacher.name} +5.")
+
+            self.add_history(f"{teacher.name} taught {student.name} {skill}.")
+        else:
+            student.remember(f"Failed to understand {teacher.name}'s lesson about {skill}.")
+            logs.append(f"{student.name} failed to understand the lesson.")
+
+        return logs
