@@ -42,6 +42,13 @@ class Simulation:
             "trade": 0
         }
         self.traditions = []
+        self.beliefs = {
+            "nature_spirits": 0,
+            "ancestor_memory": 0,
+            "leader_destiny": 0,
+            "healing_faith": 0,
+            "strength_worship": 0
+        }
 
     def unlock_milestone(self, key, text, logs):
         if key in self.milestones:
@@ -202,6 +209,46 @@ class Simulation:
                         agent.improve_skill("social", 1)
 
                 logs.append("Market Day increased wealth and social skill.")
+
+    def update_beliefs(self, logs):
+        if self.hour != 22:
+            return
+
+        if self.weather in ["Storm", "Snow"]:
+            self.beliefs["nature_spirits"] += 1
+
+        if self.death_records:
+            self.beliefs["ancestor_memory"] += 1
+
+        if self.leader:
+            self.beliefs["leader_destiny"] += 1
+
+        if "Clinic" in self.settlement["buildings"]:
+            self.beliefs["healing_faith"] += 1
+
+        if "Trial of Strength" in self.traditions:
+            self.beliefs["strength_worship"] += 1
+
+        dominant = max(self.beliefs, key=self.beliefs.get)
+
+        if self.beliefs[dominant] > 5:
+            logs.append(f"A shared belief is forming around {dominant.replace('_', ' ')}.")
+
+    def get_belief_identity(self):
+        dominant = max(self.beliefs, key=self.beliefs.get)
+
+        if self.beliefs[dominant] < 8:
+            return "None"
+
+        names = {
+            "nature_spirits": "Belief in Nature Spirits",
+            "ancestor_memory": "Ancestor Reverence",
+            "leader_destiny": "Chosen Leader Myth",
+            "healing_faith": "Faith in Healers",
+            "strength_worship": "Cult of Strength"
+        }
+
+        return names.get(dominant, "None")
 
     def check_milestones(self, logs):
         alive = [a for a in self.agents if a.alive]
@@ -391,6 +438,7 @@ class Simulation:
         self.update_culture(logs)
         self.create_tradition(logs)
         self.run_traditions(logs)
+        self.update_beliefs(logs)
         self.check_milestones(logs)
 
         self.hour += 1

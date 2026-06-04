@@ -98,6 +98,7 @@ Settlement: {sim.settlement['name'] or 'None'}
 Stage: {sim.settlement_stage}
 Culture: {sim.get_culture_identity()}
 Traditions: {', '.join(sim.traditions) if sim.traditions else 'None'}
+Belief: {sim.get_belief_identity()}
 Leader: {sim.leader or 'None'}
 Buildings: {', '.join(sim.settlement['buildings']) if sim.settlement['buildings'] else 'None'}
 Shelter Progress: {sim.settlement['shelter_progress']}/100
@@ -106,6 +107,7 @@ Current Project: {sim.current_project['name'] + ' ' + str(sim.current_project['p
 Village Tension: {sim.village_tension}
 Laws: {', '.join(sim.laws) if sim.laws else 'None'}
 Culture Scores: {sim.culture}
+Belief Scores: {sim.beliefs}
 """
     console.print(Panel(text, title="World Resources"))
 
