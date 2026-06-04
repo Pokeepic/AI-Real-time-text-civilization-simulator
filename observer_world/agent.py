@@ -1,7 +1,7 @@
 import random
 
-from utils import clamp
 from config import CONFIG
+from utils import clamp
 
 
 class Agent:

@@ -1,9 +1,9 @@
 import random
 
 from world import LOCATIONS
-from utils import find_agent, clamp
 from dialogue import get_line
 from config import CONFIG, get_setting, get_scenario, ACTIVE_SCENARIO
+from utils import find_agent, clamp
 
 
 class Simulation:
