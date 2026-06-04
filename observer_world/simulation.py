@@ -69,6 +69,7 @@ class Simulation:
         ]
         self.world_state = "Ongoing"
         self.collapse_reasons = []
+        self.world_name = self.generate_world_name()
 
     def unlock_milestone(self, key, text, logs):
         if key in self.milestones:
@@ -547,8 +548,10 @@ class Simulation:
         if len(exiles) < 3:
             return
 
-        if any(s["name"] == "Ash Hollow" for s in self.extra_settlements):
+        if len(self.extra_settlements) >= 1:
             return
+
+        settlement_name = self.generate_settlement_name()
 
         founder = max(
             exiles,
@@ -556,7 +559,7 @@ class Simulation:
         )
 
         new_settlement = {
-            "name": "Ash Hollow",
+            "name": settlement_name,
             "founder": founder.name,
             "leader": founder.name,
             "population": len(exiles),
@@ -585,16 +588,16 @@ class Simulation:
         self.extra_settlements.append(new_settlement)
 
         for exile in exiles:
-            exile.location = "Ash Hollow"
+            exile.location = settlement_name
 
-        logs.append(f"The exiles founded a new camp: Ash Hollow.")
+        logs.append(f"The exiles founded a new camp: {settlement_name}.")
         logs.append(f"Founder: {founder.name}. Population: {len(exiles)}.")
-        self.add_history(f"Exiles founded Ash Hollow under {founder.name}.")
+        self.add_history(f"Exiles founded {settlement_name} under {founder.name}.")
 
     def get_agent_settlement(self, agent):
-        if agent.location == "Ash Hollow":
+        if self.is_extra_settlement_location(agent.location):
             return next(
-                (s for s in self.extra_settlements if s["name"] == "Ash Hollow"),
+                (s for s in self.extra_settlements if s["name"] == agent.location),
                 None
             )
 
@@ -663,13 +666,7 @@ class Simulation:
         if not self.extra_settlements:
             return
 
-        ash_hollow = next(
-            (s for s in self.extra_settlements if s["name"] == "Ash Hollow"),
-            None
-        )
-
-        if not ash_hollow:
-            return
+        first_settlement = self.extra_settlements[0]
 
         for agent in self.agents:
             if not agent.alive or agent.age < 18:
@@ -678,8 +675,8 @@ class Simulation:
             if agent.location == "Exiled Lands":
                 continue
 
-            # Main settlement -> Ash Hollow
-            if agent.location != "Ash Hollow":
+            # Main settlement -> Extra settlement
+            if not self.is_extra_settlement_location(agent.location):
                 desire_to_leave = 0
 
                 if self.village_tension > 70:
@@ -693,24 +690,24 @@ class Simulation:
                 if agent.faction == "Reform Seekers":
                     desire_to_leave += 25
 
-                if agent.greed > 70 and ash_hollow["relationship_to_main"] < 0:
+                if agent.greed > 70 and first_settlement["relationship_to_main"] < 0:
                     desire_to_leave += 15
 
                 if agent.partner:
                     desire_to_leave -= 10
 
                 if random.randint(1, 100) < desire_to_leave:
-                    agent.location = "Ash Hollow"
-                    ash_hollow["population"] += 1
+                    agent.location = first_settlement["name"]
+                    first_settlement["population"] += 1
 
-                    logs.append(f"{agent.name} migrated to Ash Hollow.")
-                    self.add_history(f"{agent.name} left the main settlement for Ash Hollow.")
+                    logs.append(f"{agent.name} migrated to {first_settlement['name']}.")
+                    self.add_history(f"{agent.name} left the main settlement for {first_settlement['name']}.")
 
-            # Ash Hollow -> Main settlement
+            # Extra settlement -> Main settlement
             else:
                 desire_to_return = 0
 
-                if ash_hollow["relationship_to_main"] > 20:
+                if first_settlement["relationship_to_main"] > 20:
                     desire_to_return += 20
 
                 if agent.kindness > 70:
@@ -721,10 +718,10 @@ class Simulation:
 
                 if random.randint(1, 100) < desire_to_return:
                     agent.location = "Camp"
-                    ash_hollow["population"] = max(0, ash_hollow["population"] - 1)
+                    first_settlement["population"] = max(0, first_settlement["population"] - 1)
 
-                    logs.append(f"{agent.name} returned from Ash Hollow to the main settlement.")
-                    self.add_history(f"{agent.name} returned from Ash Hollow.")
+                    logs.append(f"{agent.name} returned from {first_settlement['name']} to the main settlement.")
+                    self.add_history(f"{agent.name} returned from {first_settlement['name']}.")
 
     def handle_extra_settlement_growth(self, logs):
         if self.hour != 14:
@@ -900,7 +897,7 @@ class Simulation:
         if settlement_name == "main":
             residents = [
                 a for a in self.agents
-                if a.alive and a.location != "Ash Hollow" and a.location != "Exiled Lands"
+                if a.alive and not self.is_extra_settlement_location(a.location) and a.location != "Exiled Lands"
             ]
 
         power = 0
@@ -1046,7 +1043,7 @@ class Simulation:
         if settlement_name == "main":
             candidates = [
                 a for a in self.agents
-                if a.alive and a.location != "Ash Hollow" and a.location != "Exiled Lands"
+                if a.alive and not self.is_extra_settlement_location(a.location) and a.location != "Exiled Lands"
             ]
         else:
             candidates = [
@@ -1500,7 +1497,7 @@ class Simulation:
         alive = [a for a in self.agents if a.alive]
         main_alive = [
             a for a in self.agents
-            if a.alive and a.location != "Exiled Lands" and a.location != "Ash Hollow"
+            if a.alive and a.location != "Exiled Lands" and not self.is_extra_settlement_location(a.location)
         ]
 
         if len(alive) == 0:
@@ -1583,7 +1580,7 @@ class Simulation:
         if any(s["relationship_to_main"] <= -50 for s in self.extra_settlements):
             self.unlock_milestone("settlement_rivalry", "A serious rivalry between settlements began.", logs)
 
-        if any(a.location == "Ash Hollow" for a in self.agents):
+        if any(self.is_extra_settlement_location(a.location) for a in self.agents if a.alive):
             self.unlock_milestone("first_migration", "The first migration between settlements occurred.", logs)
 
         if self.wars:
@@ -1949,7 +1946,7 @@ class Simulation:
         if agent.skills["social"] >= 8 and agent.skills["farming"] >= 5:
             agent.role = "Merchant"
 
-        if self.leader == agent.name and agent.location != "Ash Hollow":
+        if self.leader == agent.name and not self.is_extra_settlement_location(agent.location):
             agent.role = "Leader"
 
         for settlement in self.extra_settlements:
@@ -2643,7 +2640,7 @@ class Simulation:
             self.settlement["buildings"].append("Shelter")
 
             if self.settlement["name"] is None:
-                self.settlement["name"] = "First Hearth"
+                self.settlement["name"] = self.generate_settlement_name()
 
             logs.append("A permanent shelter has been completed.")
             logs.append(f"Settlement founded: {self.settlement['name']}.")
