@@ -37,6 +37,7 @@ class Simulation:
         logs = []
 
         for agent in self.agents:
+            self.assign_role(agent)
             agent.update_needs()
             action = agent.choose_action()
 
@@ -108,6 +109,29 @@ class Simulation:
             logs.append(f"--- A new day begins. Day {self.day}. ---")
 
         return logs
+
+    def assign_role(self, agent):
+        if agent.location == "Exiled Lands":
+            agent.role = "Exile"
+            return
+
+        best_skill = max(agent.skills, key=agent.skills.get)
+
+        if best_skill == "hunting":
+            agent.role = "Hunter"
+        elif best_skill == "building":
+            agent.role = "Builder"
+        elif best_skill == "farming":
+            agent.role = "Farmer"
+        elif best_skill == "social":
+            agent.role = "Mediator"
+        elif best_skill == "teaching":
+            agent.role = "Teacher"
+        else:
+            agent.role = "Wanderer"
+
+        if self.leader == agent.name:
+            agent.role = "Leader"
 
     def check_leadership(self, logs):
         if self.settlement["name"] is None:

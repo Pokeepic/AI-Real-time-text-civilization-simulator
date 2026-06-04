@@ -27,6 +27,7 @@ class Agent:
 
         self.memories = []
         self.relationships = {}
+        self.role = "Wanderer"
 
     def update_needs(self):
         self.hunger = min(self.hunger + 5, 100)
@@ -89,5 +90,23 @@ class Agent:
 
         if self.aggression > 75:
             choices += ["fight"]
+
+        if self.role == "Hunter":
+            choices += ["gather food", "gather food"]
+
+        if self.role == "Builder":
+            choices += ["gather materials", "build"]
+
+        if self.role == "Farmer":
+            choices += ["gather food", "observe"]
+
+        if self.role == "Mediator":
+            choices += ["talk", "help"]
+
+        if self.role == "Teacher":
+            choices += ["talk", "practice"]
+
+        if self.role == "Leader":
+            choices += ["talk", "help", "observe"]
 
         return random.choice(choices)

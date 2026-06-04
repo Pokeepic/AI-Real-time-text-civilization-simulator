@@ -6,6 +6,7 @@ def show_agent_status(console, agents):
     table = Table(title="AI Status")
 
     table.add_column("Name")
+    table.add_column("Role")
     table.add_column("Location")
     table.add_column("Hunger")
     table.add_column("Energy")
@@ -17,6 +18,7 @@ def show_agent_status(console, agents):
 
         table.add_row(
             agent.name,
+            agent.role,
             agent.location,
             str(agent.hunger),
             str(agent.energy),
