@@ -51,6 +51,7 @@ class Simulation:
         }
         self.factions = {}
         self.faction_conflicts = []
+        self.rebellions = []
 
     def unlock_milestone(self, key, text, logs):
         if key in self.milestones:
@@ -421,6 +422,102 @@ class Simulation:
 
         self.add_history(f"Faction conflict: {faction_a} vs {faction_b}.")
 
+    def handle_rebellion(self, logs):
+        if self.hour != 22:
+            return
+
+        if not self.leader:
+            return
+
+        if self.village_tension < 70:
+            return
+
+        rebel_factions = [
+            (name, data) for name, data in self.factions.items()
+            if data.get("members")
+            and name != "Leader Loyalists"
+            and data.get("influence", 0) >= 50
+        ]
+
+        if not rebel_factions:
+            return
+
+        faction_name, faction_data = random.choice(rebel_factions)
+
+        leader = next((a for a in self.agents if a.name == self.leader), None)
+
+        if not leader:
+            return
+
+        rebellion_power = faction_data.get("influence", 0) + self.village_tension
+
+        loyalist_power = 0
+
+        if "Leader Loyalists" in self.factions:
+            loyalist_power += self.factions["Leader Loyalists"].get("influence", 0)
+
+        loyalist_power += leader.skills["social"] * 3
+        loyalist_power += leader.skills["combat"] * 2
+        loyalist_power += leader.discipline
+
+        logs.append(f"Rebellion began against leader {self.leader}.")
+        logs.append(f"Rebel faction: {faction_name}.")
+
+        rebellion_record = {
+            "day": self.day,
+            "hour": self.hour,
+            "against": self.leader,
+            "faction": faction_name
+        }
+
+        self.rebellions.append(rebellion_record)
+
+        if rebellion_power > loyalist_power:
+            old_leader = self.leader
+
+            possible_new_leaders = [
+                a for a in self.agents
+                if a.name in faction_data["members"] and a.alive
+            ]
+
+            if possible_new_leaders:
+                new_leader = max(
+                    possible_new_leaders,
+                    key=lambda a: a.skills["social"] + a.skills["combat"] + a.discipline
+                )
+
+                self.leader = new_leader.name
+                new_leader.role = "Leader"
+
+                leader.change_relationship(new_leader.name, "trust", -30)
+                new_leader.change_relationship(leader.name, "trust", -30)
+
+                self.village_tension = max(self.village_tension - 25, 0)
+
+                logs.append(f"The rebellion succeeded.")
+                logs.append(f"{old_leader} was overthrown.")
+                logs.append(f"{new_leader.name} became the new leader.")
+
+                self.add_history(f"{old_leader} was overthrown by {new_leader.name} of {faction_name}.")
+            else:
+                logs.append("The rebellion succeeded, but no clear leader emerged.")
+                self.leader = None
+                self.village_tension = min(self.village_tension + 10, 100)
+        else:
+            self.village_tension = max(self.village_tension - 10, 0)
+
+            logs.append("The rebellion failed.")
+            logs.append(f"{self.leader} remained in power.")
+
+            for member_name in faction_data["members"]:
+                rebel = next((a for a in self.agents if a.name == member_name), None)
+
+                if rebel and rebel.alive:
+                    rebel.change_relationship(self.leader, "fear", 10)
+                    rebel.change_relationship(self.leader, "trust", -10)
+
+            self.add_history(f"A rebellion by {faction_name} against {self.leader} failed.")
+
     def check_milestones(self, logs):
         alive = [a for a in self.agents if a.alive]
         dead = [a for a in self.agents if not a.alive]
@@ -613,6 +710,7 @@ class Simulation:
         self.update_factions(logs)
         self.update_faction_influence(logs)
         self.handle_faction_conflict(logs)
+        self.handle_rebellion(logs)
         self.check_milestones(logs)
 
         self.hour += 1

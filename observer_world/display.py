@@ -149,6 +149,8 @@ Total Born: {max(0, len(sim.agents) - 10)}
 Highest Generation: {highest_generation}
 
 Total Crimes Recorded: {total_crimes}
+Faction Conflicts: {len(sim.faction_conflicts)}
+Rebellions: {len(sim.rebellions)}
 Laws Created: {len(sim.laws)}
 Buildings Built: {len(sim.settlement['buildings'])}
 
