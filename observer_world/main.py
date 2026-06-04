@@ -1,4 +1,5 @@
 import time
+import keyboard
 
 from rich.console import Console
 
@@ -39,11 +40,17 @@ else:
     agents = sim.agents
 
 selected_agent_index = 0
+paused = False
+speed = 2
 
 while True:
     console.clear()
 
     console.print(f"\nDAY {sim.day} | HOUR {sim.hour}:00", style="bold green")
+    console.print(
+        "Controls: [P] Pause | [+] Faster | [-] Slower | [Q] Save & Quit",
+        style="dim"
+    )
 
     logs = sim.tick()
 
@@ -77,4 +84,26 @@ while True:
     if selected_agent_index >= len(agents):
         selected_agent_index = 0
 
-    time.sleep(2)
+    if keyboard.is_pressed("p"):
+        paused = not paused
+        time.sleep(0.5)
+
+    if keyboard.is_pressed("+"):
+        speed = max(0.2, speed - 0.2)
+        time.sleep(0.3)
+
+    if keyboard.is_pressed("-"):
+        speed += 0.2
+        time.sleep(0.3)
+
+    if keyboard.is_pressed("q"):
+        save_world(sim)
+        console.print("World saved. Exiting.", style="bold yellow")
+        break
+
+    if paused:
+        console.print("\nPAUSED — Press P to resume.", style="bold red")
+        time.sleep(0.5)
+        continue
+
+    time.sleep(speed)
