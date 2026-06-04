@@ -39,7 +39,7 @@ class Simulation:
         for agent in self.agents:
             self.assign_role(agent)
             agent.update_needs()
-            action = agent.choose_action()
+            action = agent.choose_action(self.hour)
 
             if action == "explore":
                 new_location = random.choice(LOCATIONS)

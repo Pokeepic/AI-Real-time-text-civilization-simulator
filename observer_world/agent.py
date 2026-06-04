@@ -58,7 +58,7 @@ class Agent:
     def improve_skill(self, skill, amount=1):
         self.skills[skill] = min(100, self.skills[skill] + amount)
 
-    def choose_action(self):
+    def choose_action(self, hour):
         if self.hunger > 70:
             return "gather food"
 
@@ -67,6 +67,34 @@ class Agent:
 
         if self.social < 35:
             return "talk"
+
+        # Night behavior
+        if hour >= 22 or hour <= 5:
+            if self.energy < 80:
+                return "sleep"
+            return random.choice(["rest", "observe"])
+
+        # Morning behavior
+        if 6 <= hour <= 11:
+            if self.role == "Hunter":
+                return random.choice(["gather food", "explore"])
+            if self.role == "Builder":
+                return random.choice(["gather materials", "build"])
+            if self.role == "Farmer":
+                return random.choice(["gather food", "observe"])
+
+        # Afternoon behavior
+        if 12 <= hour <= 17:
+            if self.role == "Teacher":
+                return "talk"
+            if self.role == "Mediator":
+                return random.choice(["talk", "help"])
+            if self.role == "Leader":
+                return random.choice(["observe", "talk", "help"])
+
+        # Evening behavior
+        if 18 <= hour <= 21:
+            return random.choice(["talk", "rest", "observe"])
 
         choices = ["rest", "observe", "walk", "talk"]
 
