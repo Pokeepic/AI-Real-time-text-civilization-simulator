@@ -72,8 +72,15 @@ Faction: {agent.faction or 'None'}
 Inventory: {agent.inventory}
 Wealth: {agent.wealth}
 Debts: {agent.debts if agent.debts else 'None'}
-Risk Taking: {agent.risk_taking}
+
+Personality:
+Curiosity: {agent.curiosity}
+Kindness: {agent.kindness}
+Aggression: {agent.aggression}
+Discipline: {agent.discipline}
+Pride: {agent.pride}
 Greed: {agent.greed}
+Risk Taking: {agent.risk_taking}
 
 Skills:
 {skills_text}

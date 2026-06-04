@@ -1255,6 +1255,64 @@ class Simulation:
                 agent.write_journal(self.day, self.hour, thought)
                 logs.append(f"{agent.name} wrote a journal entry.")
 
+    def handle_personality_drift(self, logs):
+        if self.hour != 0:
+            return
+
+        for agent in self.agents:
+            if not agent.alive:
+                continue
+
+            old_kindness = agent.kindness
+            old_aggression = agent.aggression
+            old_discipline = agent.discipline
+            old_pride = agent.pride
+            old_greed = agent.greed
+
+            recent_memories = " ".join(agent.memories[-5:]).lower()
+
+            if "helped" in recent_memories or "healed" in recent_memories:
+                agent.kindness = min(agent.kindness + 1, 100)
+                agent.aggression = max(agent.aggression - 1, 1)
+
+            if "argued" in recent_memories or "fought" in recent_memories or "attacked" in recent_memories:
+                agent.aggression = min(agent.aggression + 1, 100)
+                agent.kindness = max(agent.kindness - 1, 1)
+
+            if "taught" in recent_memories or "learned" in recent_memories:
+                agent.curiosity = min(agent.curiosity + 1, 100)
+                agent.discipline = min(agent.discipline + 1, 100)
+
+            if "stole" in recent_memories or "gamble" in recent_memories:
+                agent.greed = min(agent.greed + 1, 100)
+                agent.discipline = max(agent.discipline - 1, 1)
+
+            if agent.role == "Guard":
+                agent.discipline = min(agent.discipline + 1, 100)
+
+            if agent.role == "Leader":
+                agent.pride = min(agent.pride + 1, 100)
+
+            changed = []
+
+            if agent.kindness != old_kindness:
+                changed.append(f"kindness {old_kindness}->{agent.kindness}")
+
+            if agent.aggression != old_aggression:
+                changed.append(f"aggression {old_aggression}->{agent.aggression}")
+
+            if agent.discipline != old_discipline:
+                changed.append(f"discipline {old_discipline}->{agent.discipline}")
+
+            if agent.pride != old_pride:
+                changed.append(f"pride {old_pride}->{agent.pride}")
+
+            if agent.greed != old_greed:
+                changed.append(f"greed {old_greed}->{agent.greed}")
+
+            if changed and random.random() < 0.25:
+                logs.append(f"{agent.name}'s personality shifted: {', '.join(changed)}.")
+
     def check_milestones(self, logs):
         alive = [a for a in self.agents if a.alive]
         dead = [a for a in self.agents if not a.alive]
@@ -1501,6 +1559,7 @@ class Simulation:
         self.generate_extra_settlement_research(logs)
         self.unlock_extra_settlement_technology(logs)
         self.handle_journals(logs)
+        self.handle_personality_drift(logs)
         self.check_milestones(logs)
 
         self.hour += 1
