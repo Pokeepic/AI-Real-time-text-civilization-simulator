@@ -3,6 +3,7 @@ import random
 from world import LOCATIONS
 from utils import find_agent, clamp
 from dialogue import get_line
+from config import CONFIG
 
 
 class Simulation:
@@ -1843,7 +1844,7 @@ class Simulation:
 
     def apply_weather_effects(self, agent, logs):
         if self.weather in ["Cold", "Snow", "Storm"] and agent.location != "Camp":
-            if random.random() < 0.08:
+            if random.random() < CONFIG["weather_sickness_chance"]:
                 damage = random.randint(3, 10)
                 agent.health = max(agent.health - damage, 0)
                 agent.status = "Sick"
@@ -2370,9 +2371,9 @@ class Simulation:
                 continue
 
             if agent.partner and not agent.pregnant:
-                if random.random() < 0.01:
+                if random.random() < CONFIG["birth_chance"]:
                     agent.pregnant = True
-                    agent.pregnancy_timer = 5
+                    agent.pregnancy_timer = CONFIG["pregnancy_timer"]
 
                     logs.append(f"{agent.name} and {agent.partner}'s family may grow soon.")
                     self.add_history(f"{agent.name} and {agent.partner} are expecting a child.")
@@ -2451,7 +2452,7 @@ class Simulation:
             if not agent.alive:
                 continue
 
-            if self.day % 5 == 0:
+            if self.day % CONFIG["aging_every_days"] == 0:
                 agent.age += 1
 
                 if agent.age == 6:
@@ -2467,7 +2468,7 @@ class Simulation:
                     self.add_history(f"{agent.name} became an adult.")
 
                 elif agent.age > 80:
-                    if random.random() < 0.08:
+                    if random.random() < CONFIG["weather_sickness_chance"]:
                         agent.alive = False
                         agent.status = "Dead"
                         logs.append(f"{agent.name} died of old age.")

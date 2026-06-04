@@ -1,6 +1,7 @@
 import random
 
 from utils import clamp
+from config import CONFIG
 
 
 class Agent:
@@ -80,7 +81,7 @@ class Agent:
     def remember(self, memory):
         self.memories.append(memory)
 
-        if len(self.memories) > 15:
+        if len(self.memories) > CONFIG["max_memories"]:
             self.memories.pop(0)
 
     def get_relationship(self, other_name):
@@ -250,5 +251,5 @@ class Agent:
         entry = f"Day {day}, {hour}:00 — {thought}"
         self.journal.append(entry)
 
-        if len(self.journal) > 20:
+        if len(self.journal) > CONFIG["max_journal_entries"]:
             self.journal.pop(0)

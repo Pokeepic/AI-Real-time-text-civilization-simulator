@@ -5,6 +5,7 @@ from rich.console import Console
 
 from agent import Agent
 from simulation import Simulation
+from config import CONFIG
 from display import (
     show_agent_status,
     show_world_history,
@@ -24,10 +25,7 @@ from archive import archive_logs, export_chronicles
 
 console = Console()
 
-names = [
-    "Mira", "Kai", "Lena", "Rook", "Niko",
-    "Aria", "Daren", "Nova", "Eli", "Zane"
-]
+names = CONFIG["starting_names"][:CONFIG["starting_population"]]
 
 sim = load_world()
 
@@ -39,7 +37,7 @@ else:
 
 paused = False
 running = True
-speed = 2
+speed = CONFIG["default_speed"]
 selected_agent_index = 0
 inspect_agent_name = None
 
@@ -104,7 +102,7 @@ while running:
     logs = sim.tick()
     archive_logs(sim, logs)
 
-    if sim.hour % 6 == 0:
+    if sim.hour % CONFIG["autosave_every_hours"] == 0:
         save_world(sim)
         export_chronicles(sim)
         logs.append("World autosaved and chronicles exported.")
