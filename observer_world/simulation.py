@@ -33,6 +33,14 @@ class Simulation:
         self.current_project = None
         self.milestones = set()
         self.settlement_stage = "Camp"
+        self.culture = {
+            "cooperation": 0,
+            "fear": 0,
+            "discipline": 0,
+            "violence": 0,
+            "knowledge": 0,
+            "trade": 0
+        }
 
     def unlock_milestone(self, key, text, logs):
         if key in self.milestones:
@@ -41,6 +49,63 @@ class Simulation:
         self.milestones.add(key)
         logs.append(f"MILESTONE UNLOCKED: {text}")
         self.add_history(f"Milestone unlocked: {text}")
+
+    def update_culture(self, logs):
+        if self.hour != 20:
+            return
+
+        alive = [a for a in self.agents if a.alive and a.location != "Exiled Lands"]
+
+        if not alive:
+            return
+
+        avg_kindness = sum(a.kindness for a in alive) / len(alive)
+        avg_aggression = sum(a.aggression for a in alive) / len(alive)
+        avg_discipline = sum(a.discipline for a in alive) / len(alive)
+
+        teachers = len([a for a in alive if a.role == "Teacher"])
+        merchants = len([a for a in alive if a.role == "Merchant"])
+        guards = len([a for a in alive if a.role == "Guard"])
+
+        if avg_kindness > 55:
+            self.culture["cooperation"] += 1
+
+        if avg_aggression > 60 or self.village_tension > 60:
+            self.culture["violence"] += 1
+
+        if avg_discipline > 55:
+            self.culture["discipline"] += 1
+
+        if teachers > 0:
+            self.culture["knowledge"] += teachers
+
+        if merchants > 0:
+            self.culture["trade"] += merchants
+
+        if guards > 0 and self.village_tension > 30:
+            self.culture["fear"] += guards
+
+        dominant = max(self.culture, key=self.culture.get)
+
+        if self.culture[dominant] > 0:
+            logs.append(f"The culture of {self.settlement['name'] or 'the camp'} is slowly leaning toward {dominant}.")
+
+    def get_culture_identity(self):
+        dominant = max(self.culture, key=self.culture.get)
+
+        if self.culture[dominant] < 10:
+            return "Undefined"
+
+        identities = {
+            "cooperation": "Cooperative Society",
+            "fear": "Fear-Driven Society",
+            "discipline": "Disciplined Society",
+            "violence": "Violent Society",
+            "knowledge": "Knowledge-Seeking Society",
+            "trade": "Trade-Oriented Society"
+        }
+
+        return identities.get(dominant, "Undefined")
 
     def check_milestones(self, logs):
         alive = [a for a in self.agents if a.alive]
@@ -227,6 +292,7 @@ class Simulation:
         self.choose_village_project(logs)
         self.check_leadership(logs)
         self.update_settlement_stage(logs)
+        self.update_culture(logs)
         self.check_milestones(logs)
 
         self.hour += 1
