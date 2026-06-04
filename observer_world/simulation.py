@@ -143,6 +143,7 @@ class Simulation:
                 logs.append(f"{agent.name} stayed at {agent.location} and chose to {action}.")
 
         self.handle_family_growth(logs)
+        self.handle_aging(logs)
         self.check_leadership(logs)
 
         self.hour += 1
@@ -352,16 +353,25 @@ class Simulation:
                     from agent import Agent
                     child = Agent(child_name)
 
+                    partner = next((a for a in self.agents if a.name == agent.partner), None)
+
                     child.age = 0
                     child.location = agent.location
+                    child.parents = [agent.name, agent.partner]
                     child.family.append(agent.name)
                     child.family.append(agent.partner)
+
+                    if partner:
+                        child.generation = max(agent.generation, partner.generation) + 1
+                    else:
+                        child.generation = agent.generation + 1
+
+                    self.inherit_traits(child, agent, partner)
 
                     self.agents.append(child)
 
                     agent.family.append(child_name)
 
-                    partner = next((a for a in self.agents if a.name == agent.partner), None)
                     if partner:
                         partner.family.append(child_name)
 
@@ -373,6 +383,62 @@ class Simulation:
     def generate_child_name(self):
         syllables = ["ra", "mi", "ka", "lo", "zen", "ari", "no", "el", "sha", "rin"]
         return random.choice(syllables).capitalize() + random.choice(syllables)
+
+    def inherit_traits(self, child, parent_a, parent_b):
+        traits = ["curiosity", "kindness", "aggression", "discipline", "pride"]
+
+        for trait in traits:
+            value_a = getattr(parent_a, trait)
+
+            if parent_b:
+                value_b = getattr(parent_b, trait)
+                inherited = (value_a + value_b) // 2
+            else:
+                inherited = value_a
+
+            mutation = random.randint(-10, 10)
+            setattr(child, trait, max(1, min(100, inherited + mutation)))
+
+        for skill in child.skills:
+            skill_a = parent_a.skills.get(skill, 1)
+
+            if parent_b:
+                skill_b = parent_b.skills.get(skill, 1)
+                inherited_skill = max(1, (skill_a + skill_b) // 4)
+            else:
+                inherited_skill = max(1, skill_a // 3)
+
+            child.skills[skill] = inherited_skill
+
+    def handle_aging(self, logs):
+        if self.hour != 0:
+            return
+
+        for agent in self.agents:
+            if not agent.alive:
+                continue
+
+            if self.day % 5 == 0:
+                agent.age += 1
+
+                if agent.age == 6:
+                    logs.append(f"{agent.name} is no longer a toddler.")
+                    self.add_history(f"{agent.name} reached childhood.")
+
+                elif agent.age == 13:
+                    logs.append(f"{agent.name} became a teenager.")
+                    self.add_history(f"{agent.name} became a teenager.")
+
+                elif agent.age == 18:
+                    logs.append(f"{agent.name} reached adulthood.")
+                    self.add_history(f"{agent.name} became an adult.")
+
+                elif agent.age > 80:
+                    if random.random() < 0.08:
+                        agent.alive = False
+                        agent.status = "Dead"
+                        logs.append(f"{agent.name} died of old age.")
+                        self.record_death(agent, "old age")
 
     def check_leadership(self, logs):
         if self.settlement["name"] is None:

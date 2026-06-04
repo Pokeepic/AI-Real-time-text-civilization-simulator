@@ -8,6 +8,8 @@ def show_agent_status(console, agents):
     table.add_column("Name")
     table.add_column("Role")
     table.add_column("Location")
+    table.add_column("Age")
+    table.add_column("Gen")
     table.add_column("Hunger")
     table.add_column("Energy")
     table.add_column("Social")
@@ -22,6 +24,8 @@ def show_agent_status(console, agents):
             agent.name,
             agent.role,
             agent.location,
+            str(agent.age),
+            str(agent.generation),
             str(agent.hunger),
             str(agent.energy),
             str(agent.social),

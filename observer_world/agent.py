@@ -37,6 +37,8 @@ class Agent:
         self.family = []
         self.pregnant = False
         self.pregnancy_timer = 0
+        self.parents = []
+        self.generation = 1
 
     def update_needs(self):
         self.hunger = min(self.hunger + 5, 100)
@@ -84,6 +86,15 @@ class Agent:
         self.skills[skill] = min(100, self.skills[skill] + amount)
 
     def choose_action(self, hour):
+        if self.age < 6:
+            return random.choice(["rest", "observe"])
+
+        if self.age < 13:
+            return random.choice(["observe", "talk", "rest"])
+
+        if self.age < 18:
+            return random.choice(["observe", "talk", "practice", "help"])
+
         if self.hunger > 70:
             return "gather food"
 
