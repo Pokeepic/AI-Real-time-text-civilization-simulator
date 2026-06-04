@@ -53,6 +53,7 @@ class Simulation:
         self.faction_conflicts = []
         self.rebellions = []
         self.extra_settlements = []
+        self.wars = []
 
     def unlock_milestone(self, key, text, logs):
         if key in self.milestones:
@@ -873,6 +874,122 @@ class Simulation:
                 logs.append(f'{settlement["name"]} created a law: "Food must be rationed".')
                 self.add_history(f'{settlement["name"]} created law: Food must be rationed.')
 
+    def calculate_settlement_power(self, settlement_name):
+        residents = [
+            a for a in self.agents
+            if a.alive and a.location == settlement_name
+        ]
+
+        if settlement_name == "main":
+            residents = [
+                a for a in self.agents
+                if a.alive and a.location != "Ash Hollow" and a.location != "Exiled Lands"
+            ]
+
+        power = 0
+
+        for agent in residents:
+            power += agent.skills["combat"] * 3
+            power += agent.discipline
+            power += agent.health // 5
+
+            if agent.role == "Guard":
+                power += 15
+
+            if agent.role == "Leader":
+                power += 10
+
+        return power
+
+    def handle_settlement_war(self, logs):
+        if self.hour != 23:
+            return
+
+        for settlement in self.extra_settlements:
+            relation = settlement["relationship_to_main"]
+
+            if relation > -70:
+                continue
+
+            war_chance = 0.08
+            war_chance += settlement["tension"] / 300
+            war_chance += self.village_tension / 400
+
+            if random.random() > war_chance:
+                continue
+
+            main_power = self.calculate_settlement_power("main")
+            other_power = self.calculate_settlement_power(settlement["name"])
+
+            logs.append(f"War broke out between {self.settlement['name'] or 'the main settlement'} and {settlement['name']}.")
+            logs.append(f"Main power: {main_power}. {settlement['name']} power: {other_power}.")
+
+            war_record = {
+                "day": self.day,
+                "hour": self.hour,
+                "enemy": settlement["name"],
+                "main_power": main_power,
+                "enemy_power": other_power
+            }
+
+            self.wars.append(war_record)
+
+            if main_power >= other_power:
+                logs.append(f"The main settlement defended itself successfully.")
+                settlement["relationship_to_main"] += 20
+                settlement["tension"] += 10
+                self.village_tension = max(self.village_tension - 10, 0)
+
+                self.apply_war_losses(settlement["name"], logs)
+
+                self.add_history(f"The main settlement won a conflict against {settlement['name']}.")
+
+            else:
+                stolen_food = min(self.resources["food"], random.randint(20, 50))
+                self.resources["food"] -= stolen_food
+                self.village_tension = min(self.village_tension + 20, 100)
+                settlement["relationship_to_main"] -= 10
+
+                logs.append(f"{settlement['name']} overwhelmed the main settlement.")
+                logs.append(f"Food lost: {stolen_food}.")
+
+                self.apply_war_losses("main", logs)
+
+                self.add_history(f"{settlement['name']} defeated the main settlement in conflict.")
+
+    def apply_war_losses(self, settlement_name, logs):
+        if settlement_name == "main":
+            candidates = [
+                a for a in self.agents
+                if a.alive and a.location != "Ash Hollow" and a.location != "Exiled Lands"
+            ]
+        else:
+            candidates = [
+                a for a in self.agents
+                if a.alive and a.location == settlement_name
+            ]
+
+        if not candidates:
+            return
+
+        casualty_count = min(len(candidates), random.randint(0, 2))
+
+        for _ in range(casualty_count):
+            victim = random.choice(candidates)
+            damage = random.randint(20, 60)
+
+            victim.health = max(victim.health - damage, 0)
+
+            logs.append(f"{victim.name} was injured during the conflict. Health -{damage}.")
+
+            if victim.health <= 0:
+                victim.alive = False
+                victim.status = "Dead"
+                logs.append(f"{victim.name} died from conflict injuries.")
+                self.record_death(victim, "settlement conflict")
+
+            candidates.remove(victim)
+
     def check_milestones(self, logs):
         alive = [a for a in self.agents if a.alive]
         dead = [a for a in self.agents if not a.alive]
@@ -925,6 +1042,9 @@ class Simulation:
 
         if any(a.location == "Ash Hollow" for a in self.agents):
             self.unlock_milestone("first_migration", "The first migration between settlements occurred.", logs)
+
+        if self.wars:
+            self.unlock_milestone("first_war", "The first war between settlements occurred.", logs)
 
     def add_history(self, event):
         record = f"Day {self.day}, {self.hour}:00 — {event}"
@@ -1099,6 +1219,7 @@ class Simulation:
         self.update_extra_settlement_leaders(logs)
         self.update_extra_settlement_culture(logs)
         self.update_extra_settlement_laws(logs)
+        self.handle_settlement_war(logs)
         self.check_milestones(logs)
 
         self.hour += 1
