@@ -70,6 +70,7 @@ Partner: {agent.partner or 'None'}
 Family: {', '.join(agent.family) if agent.family else 'None'}
 Faction: {agent.faction or 'None'}
 Life Goal: {agent.life_goal or 'None'}
+Completed Goals: {', '.join(agent.completed_goals[-5:]) if agent.completed_goals else 'None'}
 Inventory: {agent.inventory}
 Wealth: {agent.wealth}
 Debts: {agent.debts if agent.debts else 'None'}

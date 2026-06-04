@@ -54,6 +54,7 @@ class Agent:
         self.faction = None
         self.journal = []
         self.life_goal = None
+        self.completed_goals = []
 
     def update_needs(self):
         self.hunger = clamp(self.hunger + 5, 0, 100)

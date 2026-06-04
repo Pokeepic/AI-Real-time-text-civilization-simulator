@@ -1370,6 +1370,59 @@ class Simulation:
                     logs.append(f"{agent.name}'s life goal changed from {old_goal} to {agent.life_goal}.")
                     agent.write_journal(self.day, self.hour, f"My path feels different now. I want to {agent.life_goal}.")
 
+    def check_goal_progress(self, logs):
+        if self.hour != 8:
+            return
+
+        for agent in self.agents:
+            if not agent.alive or not agent.life_goal:
+                continue
+
+            goal = agent.life_goal
+            completed = False
+
+            if goal == "become leader" and agent.role == "Leader":
+                completed = True
+
+            elif goal == "become wealthy" and agent.wealth >= 10:
+                completed = True
+
+            elif goal == "become great healer" and agent.skills["medicine"] >= 12:
+                completed = True
+
+            elif goal == "seek knowledge" and agent.skills["teaching"] >= 12:
+                completed = True
+
+            elif goal == "become protector" and agent.skills["combat"] >= 12:
+                completed = True
+
+            elif goal == "protect family" and agent.family and agent.health >= 70:
+                completed = True
+
+            elif goal == "seek revenge":
+                recent = " ".join(agent.memories[-10:]).lower()
+                if "fought" in recent or "attacked" in recent or "severe violence" in recent:
+                    completed = True
+
+            elif goal == "live peacefully" and agent.age >= 40 and agent.health >= 70:
+                completed = True
+
+            elif goal == "master a craft":
+                if max(agent.skills.values()) >= 15:
+                    completed = True
+
+            elif goal == "find belonging" and agent.faction is not None:
+                completed = True
+
+            if completed:
+                agent.completed_goals.append(goal)
+                agent.write_journal(self.day, self.hour, f"I feel I have fulfilled my goal: {goal}.")
+                logs.append(f"{agent.name} fulfilled their life goal: {goal}.")
+                self.add_history(f"{agent.name} fulfilled life goal: {goal}.")
+
+                agent.life_goal = None
+                self.assign_life_goal(agent)
+
     def check_milestones(self, logs):
         alive = [a for a in self.agents if a.alive]
         dead = [a for a in self.agents if not a.alive]
@@ -1618,6 +1671,7 @@ class Simulation:
         self.handle_journals(logs)
         self.handle_personality_drift(logs)
         self.update_life_goals(logs)
+        self.check_goal_progress(logs)
         self.check_milestones(logs)
 
         self.hour += 1
