@@ -161,6 +161,9 @@ class Simulation:
             elif action == "severe violence":
                 logs.extend(self.handle_severe_violence(agent))
 
+            elif action == "patrol":
+                logs.extend(self.handle_patrol(agent))
+
             else:
                 logs.append(f"{agent.name} stayed at {agent.location} and chose to {action}.")
 
@@ -248,6 +251,8 @@ class Simulation:
             agent.role = "Teacher"
         elif best_skill == "medicine":
             agent.role = "Medic"
+        elif best_skill == "combat":
+            agent.role = "Guard"
         else:
             agent.role = "Wanderer"
 
@@ -949,6 +954,54 @@ class Simulation:
 
         self.crime_records[agent_name].append(record)
 
+    def handle_patrol(self, guard):
+        logs = []
+
+        if guard.location == "Exiled Lands":
+            logs.append(f"{guard.name} wandered alone in exile.")
+            return logs
+
+        guard.improve_skill("combat", 1)
+        guard.energy = max(guard.energy - 5, 0)
+
+        suspicious_agents = []
+
+        for other in self.nearby_agents(guard):
+            if not other.alive:
+                continue
+
+            risk_score = (
+                other.aggression
+                + other.greed // 2
+                + other.risk_taking // 2
+                - other.kindness // 2
+            )
+
+            if risk_score > 120:
+                suspicious_agents.append(other)
+
+        logs.append(f"{guard.name} patrolled {guard.location}.")
+        logs.append(f"{guard.name}'s combat improved to {guard.skills['combat']}.")
+
+        if suspicious_agents:
+            suspect = random.choice(suspicious_agents)
+
+            suspect.change_relationship(guard.name, "fear", 5)
+            guard.change_relationship(suspect.name, "trust", -3)
+
+            logs.append(f"{guard.name} kept an eye on {suspect.name}.")
+            logs.append(f"{suspect.name}'s fear toward {guard.name} +5.")
+
+            if random.random() < 0.25:
+                self.village_tension = max(self.village_tension - 5, 0)
+                logs.append(f"The patrol calmed the area. Village tension -5.")
+        else:
+            if random.random() < 0.2:
+                self.village_tension = max(self.village_tension - 2, 0)
+                logs.append(f"The quiet patrol made people feel safer. Village tension -2.")
+
+        return logs
+
     def handle_severe_violence(self, agent):
         logs = []
 
@@ -963,6 +1016,11 @@ class Simulation:
 
         target = random.choice(nearby)
 
+        guards = [
+            other for other in self.nearby_agents(agent)
+            if other.alive and other.role == "Guard"
+        ]
+
         hatred = -agent.get_relationship(target.name)["trust"]
         aggression = agent.aggression
         fear = agent.get_relationship(target.name)["fear"]
@@ -974,6 +1032,29 @@ class Simulation:
             logs.append(f"{agent.name} nearly attacked {target.name}, but held back.")
             agent.remember(f"Nearly attacked {target.name}, but stopped.")
             return logs
+
+        if guards:
+            guard = random.choice(guards)
+
+            stop_chance = 0.35 + guard.skills["combat"] / 150
+            stop_chance -= agent.aggression / 400
+
+            logs.append(f"{guard.name} noticed the danger and tried to intervene.")
+
+            if random.random() < stop_chance:
+                agent.change_relationship(guard.name, "fear", 8)
+                guard.change_relationship(agent.name, "trust", -10)
+
+                self.village_tension = max(self.village_tension - 5, 0)
+
+                logs.append(f"{guard.name} stopped {agent.name} before the attack became deadly.")
+                logs.append(f"{agent.name}'s fear toward {guard.name} +8.")
+                logs.append(f"Village tension decreased to {self.village_tension}.")
+
+                self.add_history(f"{guard.name} prevented violence by {agent.name}.")
+                return logs
+            else:
+                logs.append(f"{guard.name} failed to stop the attack.")
 
         damage = random.randint(25, 70)
         target.health = max(target.health - damage, 0)
@@ -1074,6 +1155,15 @@ class Simulation:
 
         if crime == "murder":
             severity += 70
+
+        guard_count = len([
+            a for a in self.agents
+            if a.alive and a.role == "Guard" and a.location != "Exiled Lands"
+        ])
+
+        if guard_count > 0 and crime in ["fighting", "severe violence", "murder"]:
+            severity += guard_count * 3
+            logs.append(f"The presence of guards made the village less tolerant of violence.")
 
         if severity < 35:
             punishment = "warning"
