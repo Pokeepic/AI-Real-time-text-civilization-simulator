@@ -15,6 +15,7 @@ from display import (
     show_milestones,
     show_factions,
     show_extra_settlements,
+    show_location_population,
 )
 from save_system import save_world, load_world
 from archive import archive_logs
@@ -106,6 +107,9 @@ while running:
 
     console.print()
     show_statistics(console, sim)
+
+    console.print()
+    show_location_population(console, sim)
 
     console.print()
     show_milestones(console, sim)

@@ -196,3 +196,23 @@ def show_extra_settlements(console, sim):
         )
 
     console.print(Panel("\n".join(lines), title="Other Settlements"))
+
+
+def show_location_population(console, sim):
+    counts = {}
+
+    for agent in sim.agents:
+        if not agent.alive:
+            continue
+
+        counts[agent.location] = counts.get(agent.location, 0) + 1
+
+    if not counts:
+        return
+
+    lines = []
+
+    for location, count in sorted(counts.items()):
+        lines.append(f"{location}: {count}")
+
+    console.print(Panel("\n".join(lines), title="Population by Location"))
