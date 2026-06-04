@@ -19,3 +19,8 @@ def load_world():
 
     with open(SAVE_FILE, "rb") as file:
         return pickle.load(file)
+
+
+def delete_save():
+    if os.path.exists(SAVE_FILE):
+        os.remove(SAVE_FILE)

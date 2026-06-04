@@ -19,7 +19,7 @@ from display import (
     show_chronicles,
     show_eras,
 )
-from save_system import save_world, load_world
+from save_system import save_world, load_world, delete_save
 from archive import archive_logs, export_chronicles
 
 console = Console()
@@ -44,8 +44,13 @@ selected_agent_index = 0
 inspect_agent_name = None
 
 
+def create_new_world():
+    agents = [Agent(name) for name in names]
+    return Simulation(agents)
+
+
 def command_listener():
-    global paused, running, speed, inspect_agent_name
+    global paused, running, speed, inspect_agent_name, sim
 
     while running:
         command = input().strip()
@@ -68,6 +73,11 @@ def command_listener():
         elif command == "clear inspect":
             inspect_agent_name = None
 
+        elif command == "reset":
+            delete_save()
+            sim = create_new_world()
+            inspect_agent_name = None
+
         elif command == "quit":
             save_world(sim)
             export_chronicles(sim)
@@ -82,7 +92,7 @@ while running:
 
     console.print(f"\nDAY {sim.day} | HOUR {sim.hour}:00", style="bold green")
     console.print(
-        "Commands: pause | resume | speed 1 | inspect Mira | clear inspect | quit",
+        "Commands: pause | resume | speed 1 | inspect Mira | clear inspect | reset | quit",
         style="dim"
     )
 
