@@ -2,6 +2,7 @@ import random
 
 from world import LOCATIONS
 from utils import find_agent, clamp
+from dialogue import get_line
 
 
 class Simulation:
@@ -2363,6 +2364,7 @@ class Simulation:
             agent.remember(f"{witness.name} saw me stealing food.")
 
             logs.append(f"{witness.name} saw {agent.name} stealing.")
+            logs.append(f'{witness.name}: "{get_line(witness, "crime")}"')
             logs.append(f"{witness.name}'s trust toward {agent.name} -15.")
 
             self.add_history(f"{agent.name} was caught stealing food by {witness.name}.")
@@ -2736,8 +2738,8 @@ class Simulation:
         other.remember(f"Had a calm conversation with {agent.name}.")
 
         logs.append(f"{agent.name} talked with {other.name} at {agent.location}.")
-        logs.append(f'{agent.name}: "We should understand this place better."')
-        logs.append(f'{other.name}: "Then we should share what we learn."')
+        logs.append(f'{agent.name}: "{get_line(agent, "survival")}"')
+        logs.append(f'{other.name}: "{get_line(other, "survival")}"')
         logs.append(f"Trust +{trust_gain}, Friendship +{friendship_gain}.")
 
         return logs
@@ -2765,8 +2767,8 @@ class Simulation:
         other.remember(f"{agent.name} argued with me.")
 
         logs.append(f"{agent.name} argued with {other.name} at {agent.location}.")
-        logs.append(f'{agent.name}: "You are slowing everyone down."')
-        logs.append(f'{other.name}: "Say that again and see what happens."')
+        logs.append(f'{agent.name}: "{get_line(agent, "argument")}"')
+        logs.append(f'{other.name}: "{get_line(other, "argument")}"')
         logs.append(f"Trust -{trust_loss}. {other.name}'s fear toward {agent.name} +{fear_gain}.")
 
         self.add_history(f"{agent.name} and {other.name} had a serious argument.")
@@ -2818,6 +2820,7 @@ class Simulation:
         learning_chance -= student.pride / 400
 
         logs.append(f"{teacher.name} taught {student.name} about {skill} at {teacher.location}.")
+        logs.append(f'{teacher.name}: "{get_line(teacher, "teaching")}"')
 
         if random.random() < learning_chance:
             student.improve_skill(skill, 1)
