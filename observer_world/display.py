@@ -66,6 +66,8 @@ def show_agent_details(console, agent):
     text = f"""
 Partner: {agent.partner or 'None'}
 Family: {', '.join(agent.family) if agent.family else 'None'}
+Inventory: {agent.inventory}
+Wealth: {agent.wealth}
 
 Skills:
 {skills_text}

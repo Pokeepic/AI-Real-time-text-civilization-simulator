@@ -83,6 +83,7 @@ class Simulation:
 
                 agent.hunger = max(agent.hunger - food_found // 2, 0)
                 self.resources["food"] += food_found // 2
+                agent.inventory["food"] += max(1, food_found // 4)
                 agent.improve_skill("hunting", 1)
 
                 logs.append(f"{agent.name} gathered food at {agent.location}.")
@@ -118,6 +119,9 @@ class Simulation:
                 self.resources["wood"] += wood
                 self.resources["stone"] += stone
 
+                agent.inventory["wood"] += max(1, wood // 3)
+                agent.inventory["stone"] += max(1, stone // 3)
+
                 agent.improve_skill("building", 1)
 
                 logs.append(f"{agent.name} gathered materials at {agent.location}.")
@@ -141,6 +145,9 @@ class Simulation:
 
             elif action == "learn":
                 logs.extend(self.handle_learning(agent))
+
+            elif action == "trade":
+                logs.extend(self.handle_trade(agent))
 
             else:
                 logs.append(f"{agent.name} stayed at {agent.location} and chose to {action}.")
@@ -231,6 +238,9 @@ class Simulation:
             agent.role = "Medic"
         else:
             agent.role = "Wanderer"
+
+        if agent.skills["social"] >= 8 and agent.skills["farming"] >= 5:
+            agent.role = "Merchant"
 
         if self.leader == agent.name:
             agent.role = "Leader"
@@ -335,6 +345,59 @@ class Simulation:
         else:
             child.remember(f"Struggled to learn {skill} from {teacher.name}.")
             logs.append(f"{child.name} struggled to understand the lesson.")
+
+        return logs
+
+    def handle_trade(self, agent):
+        logs = []
+
+        nearby = [
+            other for other in self.nearby_agents(agent)
+            if other.alive and other.age >= 13
+        ]
+
+        if not nearby:
+            logs.append(f"{agent.name} wanted to trade, but no one was nearby.")
+            return logs
+
+        other = random.choice(nearby)
+
+        possible_items = [
+            item for item, amount in agent.inventory.items()
+            if amount > 0
+        ]
+
+        wanted_items = [
+            item for item, amount in other.inventory.items()
+            if amount > 0
+        ]
+
+        if not possible_items or not wanted_items:
+            logs.append(f"{agent.name} and {other.name} tried to trade, but neither had enough goods.")
+            return logs
+
+        give_item = random.choice(possible_items)
+        receive_item = random.choice(wanted_items)
+
+        agent.inventory[give_item] -= 1
+        other.inventory[give_item] = other.inventory.get(give_item, 0) + 1
+
+        other.inventory[receive_item] -= 1
+        agent.inventory[receive_item] = agent.inventory.get(receive_item, 0) + 1
+
+        agent.wealth += 1
+        other.wealth += 1
+
+        agent.change_relationship(other.name, "trust", 2)
+        other.change_relationship(agent.name, "trust", 2)
+
+        agent.remember(f"Traded {give_item} with {other.name}.")
+        other.remember(f"Traded {receive_item} with {agent.name}.")
+
+        logs.append(f"{agent.name} traded with {other.name} at {agent.location}.")
+        logs.append(f"{agent.name} gave 1 {give_item} and received 1 {receive_item}.")
+        logs.append(f"{other.name} gave 1 {receive_item} and received 1 {give_item}.")
+        logs.append(f"Trust between them +2.")
 
         return logs
 

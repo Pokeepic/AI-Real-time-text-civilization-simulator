@@ -39,6 +39,12 @@ class Agent:
         self.pregnancy_timer = 0
         self.parents = []
         self.generation = 1
+        self.inventory = {
+            "food": random.randint(0, 5),
+            "wood": random.randint(0, 3),
+            "stone": random.randint(0, 2)
+        }
+        self.wealth = 0
 
     def update_needs(self):
         self.hunger = min(self.hunger + 5, 100)
@@ -177,6 +183,12 @@ class Agent:
 
         if self.role == "Medic":
             choices += ["heal", "help", "observe"]
+
+        if self.role == "Merchant":
+            choices += ["trade", "talk", "observe"]
+
+        if self.social < 60 and self.age >= 18:
+            choices += ["trade"]
 
         if self.social < 50 and self.kindness > 50:
             choices += ["bond"]
