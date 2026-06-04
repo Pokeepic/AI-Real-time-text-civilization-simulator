@@ -698,6 +698,63 @@ class Simulation:
                     logs.append(f"{agent.name} returned from Ash Hollow to the main settlement.")
                     self.add_history(f"{agent.name} returned from Ash Hollow.")
 
+    def handle_extra_settlement_growth(self, logs):
+        if self.hour != 14:
+            return
+
+        for settlement in self.extra_settlements:
+            resources = settlement.get("resources", {})
+            buildings = settlement.get("buildings", [])
+
+            population = len([
+                a for a in self.agents
+                if a.alive and a.location == settlement["name"]
+            ])
+
+            settlement["population"] = population
+
+            if population <= 0:
+                continue
+
+            if "Shelter" not in buildings:
+                project = "Shelter"
+                wood_cost = 10
+                stone_cost = 5
+
+            elif "Farm" not in buildings:
+                project = "Farm"
+                wood_cost = 15
+                stone_cost = 5
+
+            elif "Guard Post" not in buildings and settlement["tension"] > 40:
+                project = "Guard Post"
+                wood_cost = 20
+                stone_cost = 10
+
+            else:
+                continue
+
+            if resources.get("wood", 0) >= wood_cost and resources.get("stone", 0) >= stone_cost:
+                resources["wood"] -= wood_cost
+                resources["stone"] -= stone_cost
+                buildings.append(project)
+
+                logs.append(f"{settlement['name']} completed a new building: {project}.")
+
+                if project == "Shelter":
+                    settlement["stage"] = "Settlement"
+                    logs.append(f"{settlement['name']} is no longer just a camp.")
+
+                elif project == "Farm":
+                    resources["food"] += 20
+                    logs.append(f"{settlement['name']}'s Farm produced food +20.")
+
+                elif project == "Guard Post":
+                    settlement["tension"] = max(settlement["tension"] - 15, 0)
+                    logs.append(f"{settlement['name']}'s Guard Post reduced local tension.")
+
+                self.add_history(f"{settlement['name']} built {project}.")
+
     def check_milestones(self, logs):
         alive = [a for a in self.agents if a.alive]
         dead = [a for a in self.agents if not a.alive]
@@ -767,6 +824,7 @@ class Simulation:
             logs.append(f"Weather changed: {self.weather}. Season: {self.season}.")
 
         self.apply_building_effects(logs)
+        self.apply_extra_settlement_effects(logs)
 
         for agent in self.agents:
             if not agent.alive:
@@ -919,6 +977,7 @@ class Simulation:
         self.handle_exile_settlements(logs)
         self.handle_settlement_relations(logs)
         self.handle_migration(logs)
+        self.handle_extra_settlement_growth(logs)
         self.check_milestones(logs)
 
         self.hour += 1
@@ -1011,6 +1070,24 @@ class Simulation:
                 tension_drop = random.randint(3, 8)
                 self.village_tension = clamp(self.village_tension - tension_drop, 0, 100)
                 logs.append(f"The Guard Post reduced village tension by {tension_drop}.")
+
+    def apply_extra_settlement_effects(self, logs):
+        if self.hour != 6:
+            return
+
+        for settlement in self.extra_settlements:
+            resources = settlement.get("resources", {})
+            buildings = settlement.get("buildings", [])
+
+            if "Farm" in buildings:
+                food_gain = random.randint(8, 18)
+                resources["food"] += food_gain
+                logs.append(f"{settlement['name']}'s Farm produced food +{food_gain}.")
+
+            if "Guard Post" in buildings and settlement["tension"] > 0:
+                tension_drop = random.randint(2, 6)
+                settlement["tension"] = max(settlement["tension"] - tension_drop, 0)
+                logs.append(f"{settlement['name']}'s Guard Post reduced tension by {tension_drop}.")
 
     def assign_role(self, agent):
         if agent.location == "Exiled Lands":
