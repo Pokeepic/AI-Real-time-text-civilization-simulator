@@ -565,7 +565,9 @@ class Simulation:
                 "violence": 0,
                 "knowledge": 0,
                 "trade": 0
-            }
+            },
+            "technologies": [],
+            "research_points": 0
         }
 
         self.extra_settlements.append(new_settlement)
@@ -1145,6 +1147,81 @@ class Simulation:
 
                 return
 
+    def generate_extra_settlement_research(self, logs):
+        if self.hour != 17:
+            return
+
+        for settlement in self.extra_settlements:
+            residents = [
+                a for a in self.agents
+                if a.alive and a.location == settlement["name"]
+            ]
+
+            if not residents:
+                continue
+
+            points = 0
+
+            for agent in residents:
+                if agent.role == "Teacher":
+                    points += 2
+                if agent.role == "Medic":
+                    points += 1
+                if agent.role == "Builder":
+                    points += 1
+
+                points += agent.skills["teaching"] // 5
+
+            if self.get_extra_settlement_culture_identity(settlement) == "Knowledge-Seeking Society":
+                points += 5
+
+            settlement["research_points"] += points
+
+            if points > 0:
+                logs.append(f"{settlement['name']} generated {points} research points.")
+
+    def unlock_extra_settlement_technology(self, logs):
+        for settlement in self.extra_settlements:
+            technologies = settlement.get("technologies", [])
+            research_points = settlement.get("research_points", 0)
+            buildings = settlement.get("buildings", [])
+
+            tech_tree = [
+                {
+                    "name": "Basic Tools",
+                    "cost": 30,
+                    "requirement": lambda: True
+                },
+                {
+                    "name": "Crop Rotation",
+                    "cost": 60,
+                    "requirement": lambda: "Farm" in buildings
+                },
+                {
+                    "name": "Herbal Medicine",
+                    "cost": 70,
+                    "requirement": lambda: "Clinic" in buildings
+                },
+                {
+                    "name": "Stone Construction",
+                    "cost": 120,
+                    "requirement": lambda: "Basic Tools" in technologies
+                },
+            ]
+
+            for tech in tech_tree:
+                if tech["name"] in technologies:
+                    continue
+
+                if research_points >= tech["cost"] and tech["requirement"]():
+                    settlement["research_points"] -= tech["cost"]
+                    settlement["technologies"].append(tech["name"])
+
+                    logs.append(f'{settlement["name"]} unlocked technology: {tech["name"]}.')
+                    self.add_history(f'{settlement["name"]} unlocked technology: {tech["name"]}.')
+
+                    break
+
     def check_milestones(self, logs):
         alive = [a for a in self.agents if a.alive]
         dead = [a for a in self.agents if not a.alive]
@@ -1300,11 +1377,14 @@ class Simulation:
                     wood = max(1, wood // 2)
                     stone = max(1, stone // 2)
 
-                if "Basic Tools" in self.technologies:
+                agent_settlement = self.get_agent_settlement(agent)
+
+                if agent_settlement and "Basic Tools" in agent_settlement.get("technologies", []):
                     wood += 3
                     stone += 2
-
-                agent_settlement = self.get_agent_settlement(agent)
+                elif not agent_settlement and "Basic Tools" in self.technologies:
+                    wood += 3
+                    stone += 2
 
                 if agent_settlement:
                     agent_settlement["resources"]["wood"] += wood
@@ -1385,6 +1465,8 @@ class Simulation:
         self.handle_settlement_war(logs)
         self.generate_research(logs)
         self.unlock_technology(logs)
+        self.generate_extra_settlement_research(logs)
+        self.unlock_extra_settlement_technology(logs)
         self.check_milestones(logs)
 
         self.hour += 1
@@ -1500,6 +1582,10 @@ class Simulation:
 
             if "Farm" in buildings:
                 food_gain = random.randint(8, 18)
+
+                if "Crop Rotation" in settlement.get("technologies", []):
+                    food_gain += 10
+
                 resources["food"] += food_gain
                 logs.append(f"{settlement['name']}'s Farm produced food +{food_gain}.")
 

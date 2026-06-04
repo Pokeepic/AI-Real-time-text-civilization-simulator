@@ -197,12 +197,15 @@ def show_extra_settlements(console, sim):
         buildings = settlement.get("buildings", [])
         culture_identity = sim.get_extra_settlement_culture_identity(settlement)
         laws = settlement.get("laws", [])
+        techs = settlement.get("technologies", [])
+        research = settlement.get("research_points", 0)
 
         lines.append(
             f"{settlement['name']} | Founder: {settlement['founder']} | Leader: {settlement.get('leader', 'None')} | "
             f"Population: {settlement['population']} | Stage: {settlement['stage']} | "
             f"Relation to Main: {settlement['relationship_to_main']}\n"
             f"Culture: {culture_identity} | Laws: {', '.join(laws) if laws else 'None'}\n"
+            f"Research: {research} | Techs: {', '.join(techs) if techs else 'None'}\n"
             f"Resources: food {resources.get('food', 0)}, wood {resources.get('wood', 0)}, stone {resources.get('stone', 0)} | "
             f"Buildings: {', '.join(buildings) if buildings else 'None'}"
         )
