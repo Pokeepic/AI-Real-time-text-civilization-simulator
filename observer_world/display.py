@@ -193,7 +193,7 @@ def show_extra_settlements(console, sim):
         buildings = settlement.get("buildings", [])
 
         lines.append(
-            f"{settlement['name']} | Founder: {settlement['founder']} | "
+            f"{settlement['name']} | Founder: {settlement['founder']} | Leader: {settlement.get('leader', 'None')} | "
             f"Population: {settlement['population']} | Stage: {settlement['stage']} | "
             f"Relation to Main: {settlement['relationship_to_main']}\n"
             f"Resources: food {resources.get('food', 0)}, wood {resources.get('wood', 0)}, stone {resources.get('stone', 0)} | "

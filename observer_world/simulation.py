@@ -542,6 +542,7 @@ class Simulation:
         new_settlement = {
             "name": "Ash Hollow",
             "founder": founder.name,
+            "leader": founder.name,
             "population": len(exiles),
             "stage": "Camp",
             "tension": 30,
@@ -754,6 +755,40 @@ class Simulation:
                     logs.append(f"{settlement['name']}'s Guard Post reduced local tension.")
 
                 self.add_history(f"{settlement['name']} built {project}.")
+
+    def update_extra_settlement_leaders(self, logs):
+        if self.hour != 18:
+            return
+
+        for settlement in self.extra_settlements:
+            residents = [
+                a for a in self.agents
+                if a.alive
+                and a.age >= 18
+                and a.location == settlement["name"]
+            ]
+
+            if not residents:
+                settlement["leader"] = None
+                continue
+
+            best_candidate = max(
+                residents,
+                key=lambda a: (
+                    a.skills["social"] * 3
+                    + a.skills["combat"] * 2
+                    + a.discipline
+                    + a.aggression // 2
+                    + a.wealth
+                )
+            )
+
+            old_leader = settlement.get("leader")
+
+            if old_leader != best_candidate.name:
+                settlement["leader"] = best_candidate.name
+                logs.append(f"{best_candidate.name} became the leader of {settlement['name']}.")
+                self.add_history(f"{best_candidate.name} became leader of {settlement['name']}.")
 
     def check_milestones(self, logs):
         alive = [a for a in self.agents if a.alive]
@@ -978,6 +1013,7 @@ class Simulation:
         self.handle_settlement_relations(logs)
         self.handle_migration(logs)
         self.handle_extra_settlement_growth(logs)
+        self.update_extra_settlement_leaders(logs)
         self.check_milestones(logs)
 
         self.hour += 1
@@ -1116,8 +1152,12 @@ class Simulation:
         if agent.skills["social"] >= 8 and agent.skills["farming"] >= 5:
             agent.role = "Merchant"
 
-        if self.leader == agent.name:
+        if self.leader == agent.name and agent.location != "Ash Hollow":
             agent.role = "Leader"
+
+        for settlement in self.extra_settlements:
+            if settlement.get("leader") == agent.name and agent.location == settlement["name"]:
+                agent.role = "Leader"
 
     def handle_heal(self, medic):
         logs = []
