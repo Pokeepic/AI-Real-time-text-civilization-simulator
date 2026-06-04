@@ -121,6 +121,9 @@ class Simulation:
             elif action == "fight":
                 logs.extend(self.handle_fight(agent))
 
+            elif action == "heal":
+                logs.extend(self.handle_heal(agent))
+
             else:
                 logs.append(f"{agent.name} stayed at {agent.location} and chose to {action}.")
 
@@ -184,11 +187,58 @@ class Simulation:
             agent.role = "Mediator"
         elif best_skill == "teaching":
             agent.role = "Teacher"
+        elif best_skill == "medicine":
+            agent.role = "Medic"
         else:
             agent.role = "Wanderer"
 
         if self.leader == agent.name:
             agent.role = "Leader"
+
+    def handle_heal(self, medic):
+        logs = []
+
+        patients = [
+            agent for agent in self.agents
+            if agent.alive
+            and agent.name != medic.name
+            and agent.health < 80
+            and agent.location == medic.location
+        ]
+
+        if not patients:
+            logs.append(f"{medic.name} looked for someone to heal, but no one nearby needed care.")
+            return logs
+
+        patient = min(patients, key=lambda a: a.health)
+
+        heal_amount = random.randint(5, 15) + medic.skills["medicine"]
+        patient.health = min(patient.health + heal_amount, 100)
+
+        medic.improve_skill("medicine", 1)
+
+        patient.change_relationship(medic.name, "trust", 8)
+        patient.change_relationship(medic.name, "respect", 5)
+        medic.change_relationship(patient.name, "friendship", 3)
+
+        patient.remember(f"{medic.name} treated my injuries.")
+        medic.remember(f"Healed {patient.name}.")
+
+        if patient.health >= 60:
+            patient.status = "Healthy"
+        elif patient.health >= 30:
+            patient.status = "Injured"
+        else:
+            patient.status = "Critical"
+
+        logs.append(f"{medic.name} treated {patient.name} at {medic.location}.")
+        logs.append(f"{patient.name}'s health +{heal_amount}. Current health: {patient.health}.")
+        logs.append(f"{patient.name}'s trust toward {medic.name} +8.")
+        logs.append(f"{medic.name}'s medicine improved to {medic.skills['medicine']}.")
+
+        self.add_history(f"{medic.name} healed {patient.name}.")
+
+        return logs
 
     def check_leadership(self, logs):
         if self.settlement["name"] is None:

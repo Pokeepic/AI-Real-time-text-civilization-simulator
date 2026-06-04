@@ -23,6 +23,7 @@ class Agent:
             "farming": random.randint(1, 5),
             "social": random.randint(1, 5),
             "teaching": random.randint(1, 5),
+            "medicine": random.randint(1, 5),
         }
 
         self.memories = []
@@ -108,6 +109,8 @@ class Agent:
                 return "talk"
             if self.role == "Mediator":
                 return random.choice(["talk", "help"])
+            if self.role == "Medic":
+                return random.choice(["heal", "help", "observe"])
             if self.role == "Leader":
                 return random.choice(["observe", "talk", "help"])
 
@@ -155,5 +158,8 @@ class Agent:
 
         if self.role == "Leader":
             choices += ["talk", "help", "observe"]
+
+        if self.role == "Medic":
+            choices += ["heal", "help", "observe"]
 
         return random.choice(choices)
