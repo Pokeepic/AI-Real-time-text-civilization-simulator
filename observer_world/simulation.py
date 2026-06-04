@@ -41,6 +41,7 @@ class Simulation:
             "knowledge": 0,
             "trade": 0
         }
+        self.traditions = []
 
     def unlock_milestone(self, key, text, logs):
         if key in self.milestones:
@@ -106,6 +107,101 @@ class Simulation:
         }
 
         return identities.get(dominant, "Undefined")
+
+    def create_tradition(self, logs):
+        if self.hour != 21:
+            return
+
+        identity = self.get_culture_identity()
+
+        if identity == "Undefined":
+            return
+
+        if len(self.traditions) >= 3:
+            return
+
+        tradition_map = {
+            "Cooperative Society": "Sharing Feast",
+            "Fear-Driven Society": "Night Watch",
+            "Disciplined Society": "Training Day",
+            "Violent Society": "Trial of Strength",
+            "Knowledge-Seeking Society": "Story Circle",
+            "Trade-Oriented Society": "Market Day"
+        }
+
+        tradition = tradition_map.get(identity)
+
+        if tradition and tradition not in self.traditions:
+            self.traditions.append(tradition)
+            logs.append(f"New tradition created: {tradition}.")
+            self.add_history(f"A new tradition began: {tradition}.")
+
+    def run_traditions(self, logs):
+        if self.day % 7 != 0 or self.hour != 18:
+            return
+
+        for tradition in self.traditions:
+            logs.append(f"Tradition held: {tradition}.")
+
+            if tradition == "Sharing Feast":
+                if self.resources["food"] >= 20:
+                    self.resources["food"] -= 20
+                    self.village_tension = clamp(self.village_tension - 15, 0, 100)
+
+                    for agent in self.agents:
+                        if agent.alive and agent.location != "Exiled Lands":
+                            agent.social = min(agent.social + 20, 100)
+
+                    logs.append("The Sharing Feast reduced tension and raised social bonds.")
+                else:
+                    logs.append("The Sharing Feast failed because there was not enough food.")
+                    self.village_tension = clamp(self.village_tension + 8, 0, 100)
+
+            elif tradition == "Night Watch":
+                self.village_tension = clamp(self.village_tension - 8, 0, 100)
+
+                for agent in self.agents:
+                    if agent.alive and agent.role == "Guard":
+                        agent.improve_skill("combat", 1)
+
+                logs.append("The Night Watch made the settlement feel safer.")
+
+            elif tradition == "Training Day":
+                for agent in self.agents:
+                    if agent.alive and agent.age >= 13 and agent.location != "Exiled Lands":
+                        agent.discipline = min(agent.discipline + 1, 100)
+                        agent.improve_skill("combat", 1)
+
+                logs.append("Training Day improved discipline and combat readiness.")
+
+            elif tradition == "Trial of Strength":
+                fighters = [
+                    a for a in self.agents
+                    if a.alive and a.age >= 18 and a.location != "Exiled Lands"
+                ]
+
+                if len(fighters) >= 2:
+                    winner = random.choice(fighters)
+                    winner.improve_skill("combat", 2)
+                    winner.wealth += 2
+                    self.village_tension = clamp(self.village_tension + 5, 0, 100)
+                    logs.append(f"{winner.name} won the Trial of Strength.")
+
+            elif tradition == "Story Circle":
+                for agent in self.agents:
+                    if agent.alive and agent.age < 18 and agent.location != "Exiled Lands":
+                        agent.improve_skill("teaching", 1)
+                        agent.improve_skill("social", 1)
+
+                logs.append("The Story Circle helped children learn from village stories.")
+
+            elif tradition == "Market Day":
+                for agent in self.agents:
+                    if agent.alive and agent.age >= 13 and agent.location != "Exiled Lands":
+                        agent.wealth += 1
+                        agent.improve_skill("social", 1)
+
+                logs.append("Market Day increased wealth and social skill.")
 
     def check_milestones(self, logs):
         alive = [a for a in self.agents if a.alive]
@@ -293,6 +389,8 @@ class Simulation:
         self.check_leadership(logs)
         self.update_settlement_stage(logs)
         self.update_culture(logs)
+        self.create_tradition(logs)
+        self.run_traditions(logs)
         self.check_milestones(logs)
 
         self.hour += 1

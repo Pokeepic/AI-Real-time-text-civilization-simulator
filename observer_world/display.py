@@ -97,6 +97,7 @@ Stone: {sim.resources['stone']}
 Settlement: {sim.settlement['name'] or 'None'}
 Stage: {sim.settlement_stage}
 Culture: {sim.get_culture_identity()}
+Traditions: {', '.join(sim.traditions) if sim.traditions else 'None'}
 Leader: {sim.leader or 'None'}
 Buildings: {', '.join(sim.settlement['buildings']) if sim.settlement['buildings'] else 'None'}
 Shelter Progress: {sim.settlement['shelter_progress']}/100
