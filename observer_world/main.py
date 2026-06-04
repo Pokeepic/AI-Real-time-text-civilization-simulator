@@ -2,8 +2,8 @@ import time
 
 from rich.console import Console
 
-from observer_world.agent import Agent
-from observer_world.simulation import Simulation
+from agent import Agent
+from simulation import Simulation
 
 console = Console()
 
