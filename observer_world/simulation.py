@@ -25,6 +25,8 @@ class Simulation:
         self.laws = []
         self.crime_records = {}
         self.leader = None
+        self.weather = "Clear"
+        self.season = "Spring"
 
     def add_history(self, event):
         record = f"Day {self.day}, {self.hour}:00 — {event}"
@@ -35,6 +37,11 @@ class Simulation:
 
     def tick(self):
         logs = []
+
+        if self.hour == 6:
+            self.update_season()
+            self.update_weather()
+            logs.append(f"Weather changed: {self.weather}. Season: {self.season}.")
 
         for agent in self.agents:
             self.assign_role(agent)
@@ -48,6 +55,16 @@ class Simulation:
 
             elif action == "gather food":
                 food_found = random.randint(5, 20) + agent.skills["hunting"]
+
+                if self.weather in ["Storm", "Snow"]:
+                    food_found = max(1, food_found // 2)
+
+                if self.season == "Winter":
+                    food_found = max(1, food_found // 2)
+
+                if self.weather == "Rain":
+                    food_found += 2
+
                 agent.hunger = max(agent.hunger - food_found // 2, 0)
                 self.resources["food"] += food_found // 2
                 agent.improve_skill("hunting", 1)
@@ -77,6 +94,10 @@ class Simulation:
             elif action == "gather materials":
                 wood = random.randint(3, 10)
                 stone = random.randint(1, 6)
+
+                if self.weather in ["Storm", "Snow"]:
+                    wood = max(1, wood // 2)
+                    stone = max(1, stone // 2)
 
                 self.resources["wood"] += wood
                 self.resources["stone"] += stone
@@ -109,6 +130,23 @@ class Simulation:
             logs.append(f"--- A new day begins. Day {self.day}. ---")
 
         return logs
+
+    def update_season(self):
+        season_cycle = ["Spring", "Summer", "Autumn", "Winter"]
+        season_index = ((self.day - 1) // 10) % len(season_cycle)
+        self.season = season_cycle[season_index]
+
+    def update_weather(self):
+        if self.season == "Spring":
+            options = ["Clear", "Rain", "Cloudy", "Windy"]
+        elif self.season == "Summer":
+            options = ["Clear", "Hot", "Dry", "Storm"]
+        elif self.season == "Autumn":
+            options = ["Cloudy", "Rain", "Windy", "Cold"]
+        else:
+            options = ["Cold", "Snow", "Storm", "Clear"]
+
+        self.weather = random.choice(options)
 
     def assign_role(self, agent):
         if agent.location == "Exiled Lands":

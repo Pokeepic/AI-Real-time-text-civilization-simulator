@@ -71,6 +71,9 @@ Relationships:
 
 def show_resources(console, sim):
     text = f"""
+Season: {sim.season}
+Weather: {sim.weather}
+
 Food: {sim.resources['food']}
 Wood: {sim.resources['wood']}
 Stone: {sim.resources['stone']}
