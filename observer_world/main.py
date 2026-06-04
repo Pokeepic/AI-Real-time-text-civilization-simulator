@@ -4,7 +4,7 @@ from rich.console import Console
 
 from agent import Agent
 from simulation import Simulation
-from display import show_agent_status, show_world_history, show_agent_details
+from display import show_agent_status, show_world_history, show_agent_details, show_resources
 
 console = Console()
 
@@ -39,6 +39,9 @@ while True:
 
     console.print()
     show_agent_status(console, agents)
+
+    console.print()
+    show_resources(console, sim)
 
     console.print()
     show_world_history(console, sim)

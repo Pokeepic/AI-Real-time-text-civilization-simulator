@@ -9,6 +9,18 @@ class Simulation:
         self.day = 1
         self.hour = 8
         self.world_history = []
+        self.resources = {
+            "food": 0,
+            "wood": 0,
+            "stone": 0
+        }
+
+        self.settlement = {
+            "name": None,
+            "buildings": [],
+            "shelter_progress": 0
+        }
+        
 
     def add_history(self, event):
         record = f"Day {self.day}, {self.hour}:00 — {event}"
@@ -31,10 +43,12 @@ class Simulation:
 
             elif action == "gather food":
                 food_found = random.randint(5, 20) + agent.skills["hunting"]
-                agent.hunger = max(agent.hunger - food_found, 0)
+                agent.hunger = max(agent.hunger - food_found // 2, 0)
+                self.resources["food"] += food_found // 2
                 agent.improve_skill("hunting", 1)
 
-                logs.append(f"{agent.name} gathered food at {agent.location}. Hunger -{food_found}.")
+                logs.append(f"{agent.name} gathered food at {agent.location}.")
+                logs.append(f"{food_found // 2} food was added to shared storage.")
                 logs.append(f"{agent.name}'s hunting improved to {agent.skills['hunting']}.")
 
             elif action == "sleep":
@@ -55,6 +69,22 @@ class Simulation:
                 agent.improve_skill(skill, 1)
                 logs.append(f"{agent.name} practiced {skill}. {skill.capitalize()} is now {agent.skills[skill]}.")
 
+            elif action == "gather materials":
+                wood = random.randint(3, 10)
+                stone = random.randint(1, 6)
+
+                self.resources["wood"] += wood
+                self.resources["stone"] += stone
+
+                agent.improve_skill("building", 1)
+
+                logs.append(f"{agent.name} gathered materials at {agent.location}.")
+                logs.append(f"Shared resources gained: wood +{wood}, stone +{stone}.")
+                logs.append(f"{agent.name}'s building improved to {agent.skills['building']}.")
+
+            elif action == "build":
+                logs.extend(self.handle_build(agent))
+
             else:
                 logs.append(f"{agent.name} stayed at {agent.location} and chose to {action}.")
 
@@ -72,6 +102,42 @@ class Simulation:
             other for other in self.agents
             if other.name != agent.name and other.location == agent.location
         ]
+
+    def handle_build(self, agent):
+        logs = []
+
+        if "Shelter" in self.settlement["buildings"]:
+            logs.append(f"{agent.name} maintained the shelter.")
+            agent.improve_skill("building", 1)
+            return logs
+
+        if self.resources["wood"] < 10 or self.resources["stone"] < 5:
+            logs.append(f"{agent.name} wanted to build, but the group lacked materials.")
+            return logs
+
+        self.resources["wood"] -= 10
+        self.resources["stone"] -= 5
+
+        progress = random.randint(10, 25) + agent.skills["building"]
+        self.settlement["shelter_progress"] += progress
+
+        agent.improve_skill("building", 1)
+
+        logs.append(f"{agent.name} worked on the first shelter.")
+        logs.append(f"Shelter progress +{progress}. Total: {self.settlement['shelter_progress']}/100.")
+
+        if self.settlement["shelter_progress"] >= 100:
+            self.settlement["buildings"].append("Shelter")
+
+            if self.settlement["name"] is None:
+                self.settlement["name"] = "First Hearth"
+
+            logs.append("A permanent shelter has been completed.")
+            logs.append(f"Settlement founded: {self.settlement['name']}.")
+
+            self.add_history(f"Settlement founded: {self.settlement['name']}.")
+
+        return logs
 
     def handle_talk(self, agent):
         logs = []

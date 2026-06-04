@@ -81,4 +81,7 @@ class Agent:
         if self.aggression > 70:
             choices += ["argue"]
 
+        if self.skills["building"] >= 3 or self.discipline > 55:
+            choices += ["gather materials", "build"]
+
         return random.choice(choices)
