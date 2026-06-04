@@ -545,7 +545,13 @@ class Simulation:
             "population": len(exiles),
             "stage": "Camp",
             "tension": 30,
-            "relationship_to_main": -20
+            "relationship_to_main": -20,
+            "resources": {
+                "food": 20,
+                "wood": 10,
+                "stone": 5
+            },
+            "buildings": []
         }
 
         self.extra_settlements.append(new_settlement)
@@ -556,6 +562,15 @@ class Simulation:
         logs.append(f"The exiles founded a new camp: Ash Hollow.")
         logs.append(f"Founder: {founder.name}. Population: {len(exiles)}.")
         self.add_history(f"Exiles founded Ash Hollow under {founder.name}.")
+
+    def get_agent_settlement(self, agent):
+        if agent.location == "Ash Hollow":
+            return next(
+                (s for s in self.extra_settlements if s["name"] == "Ash Hollow"),
+                None
+            )
+
+        return None
 
     def handle_settlement_relations(self, logs):
         if self.hour != 15:
@@ -790,7 +805,14 @@ class Simulation:
                     food_found += 2
 
                 agent.hunger = max(agent.hunger - food_found // 2, 0)
-                self.resources["food"] += food_found // 2
+
+                agent_settlement = self.get_agent_settlement(agent)
+
+                if agent_settlement:
+                    agent_settlement["resources"]["food"] += food_found // 2
+                else:
+                    self.resources["food"] += food_found // 2
+
                 agent.inventory["food"] += max(1, food_found // 4)
                 agent.improve_skill("hunting", 1)
 
@@ -824,8 +846,14 @@ class Simulation:
                     wood = max(1, wood // 2)
                     stone = max(1, stone // 2)
 
-                self.resources["wood"] += wood
-                self.resources["stone"] += stone
+                agent_settlement = self.get_agent_settlement(agent)
+
+                if agent_settlement:
+                    agent_settlement["resources"]["wood"] += wood
+                    agent_settlement["resources"]["stone"] += stone
+                else:
+                    self.resources["wood"] += wood
+                    self.resources["stone"] += stone
 
                 agent.inventory["wood"] += max(1, wood // 3)
                 agent.inventory["stone"] += max(1, stone // 3)
