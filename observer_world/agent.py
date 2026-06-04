@@ -28,11 +28,30 @@ class Agent:
         self.memories = []
         self.relationships = {}
         self.role = "Wanderer"
+        self.health = 100
+        self.alive = True
+        self.status = "Healthy"
 
     def update_needs(self):
         self.hunger = min(self.hunger + 5, 100)
         self.energy = max(self.energy - 3, 0)
         self.social = max(self.social - 2, 0)
+
+        if self.hunger >= 95:
+            self.health = max(self.health - 5, 0)
+
+        if self.energy <= 5:
+            self.health = max(self.health - 2, 0)
+
+        if self.health <= 0:
+            self.alive = False
+            self.status = "Dead"
+        elif self.health < 30:
+            self.status = "Critical"
+        elif self.health < 60:
+            self.status = "Injured"
+        else:
+            self.status = "Healthy"
 
     def remember(self, memory):
         self.memories.append(memory)

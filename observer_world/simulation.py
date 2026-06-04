@@ -44,8 +44,12 @@ class Simulation:
             logs.append(f"Weather changed: {self.weather}. Season: {self.season}.")
 
         for agent in self.agents:
+            if not agent.alive:
+                continue
+
             self.assign_role(agent)
             agent.update_needs()
+            self.apply_weather_effects(agent, logs)
             action = agent.choose_action(self.hour)
 
             if action == "explore":
@@ -147,6 +151,21 @@ class Simulation:
             options = ["Cold", "Snow", "Storm", "Clear"]
 
         self.weather = random.choice(options)
+
+    def apply_weather_effects(self, agent, logs):
+        if self.weather in ["Cold", "Snow", "Storm"] and agent.location != "Camp":
+            if random.random() < 0.08:
+                damage = random.randint(3, 10)
+                agent.health = max(agent.health - damage, 0)
+                agent.status = "Sick"
+
+                logs.append(f"{agent.name} became sick from harsh weather. Health -{damage}.")
+
+                if agent.health <= 0:
+                    agent.alive = False
+                    agent.status = "Dead"
+                    logs.append(f"{agent.name} died from exposure.")
+                    self.add_history(f"{agent.name} died from exposure.")
 
     def assign_role(self, agent):
         if agent.location == "Exiled Lands":
@@ -327,6 +346,17 @@ class Simulation:
 
         agent.energy = max(agent.energy - 15, 0)
         other.energy = max(other.energy - 20, 0)
+
+        damage = random.randint(5, 20)
+        other.health = max(other.health - damage, 0)
+
+        if other.health <= 0:
+            other.alive = False
+            other.status = "Dead"
+            logs.append(f"{other.name} died after the fight.")
+            self.add_history(f"{other.name} died after a fight with {agent.name}.")
+        else:
+            logs.append(f"{other.name} was injured. Health -{damage}.")
 
         agent.remember(f"Fought with {other.name}.")
         other.remember(f"{agent.name} attacked me.")

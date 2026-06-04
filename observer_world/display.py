@@ -11,6 +11,8 @@ def show_agent_status(console, agents):
     table.add_column("Hunger")
     table.add_column("Energy")
     table.add_column("Social")
+    table.add_column("Health")
+    table.add_column("Status")
     table.add_column("Best Skill")
 
     for agent in agents:
@@ -23,6 +25,8 @@ def show_agent_status(console, agents):
             str(agent.hunger),
             str(agent.energy),
             str(agent.social),
+            str(agent.health),
+            agent.status,
             f"{best_skill} ({agent.skills[best_skill]})"
         )
 
