@@ -21,17 +21,10 @@ names = [
 ]
 
 agents = [Agent(name) for name in names]
-
 sim = Simulation(agents)
 
 while True:
-
-    console.clear()
-
-    console.print(
-        f"\nDAY {sim.day} | HOUR {sim.hour}:00\n",
-        style="bold green"
-    )
+    console.print(f"\nDAY {sim.day} | HOUR {sim.hour}:00", style="bold green")
 
     logs = sim.tick()
 
