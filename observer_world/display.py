@@ -180,3 +180,19 @@ def show_factions(console, sim):
         lines.append(f"{name} ({data['reason']}) | Influence: {influence} | Members: {members}")
 
     console.print(Panel("\n".join(lines), title="Factions"))
+
+
+def show_extra_settlements(console, sim):
+    if not sim.extra_settlements:
+        return
+
+    lines = []
+
+    for settlement in sim.extra_settlements:
+        lines.append(
+            f"{settlement['name']} | Founder: {settlement['founder']} | "
+            f"Population: {settlement['population']} | Stage: {settlement['stage']} | "
+            f"Relation to Main: {settlement['relationship_to_main']}"
+        )
+
+    console.print(Panel("\n".join(lines), title="Other Settlements"))

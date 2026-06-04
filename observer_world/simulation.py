@@ -52,6 +52,7 @@ class Simulation:
         self.factions = {}
         self.faction_conflicts = []
         self.rebellions = []
+        self.extra_settlements = []
 
     def unlock_milestone(self, key, text, logs):
         if key in self.milestones:
@@ -518,6 +519,44 @@ class Simulation:
 
             self.add_history(f"A rebellion by {faction_name} against {self.leader} failed.")
 
+    def handle_exile_settlements(self, logs):
+        if self.hour != 12:
+            return
+
+        exiles = [
+            a for a in self.agents
+            if a.alive and a.location == "Exiled Lands"
+        ]
+
+        if len(exiles) < 3:
+            return
+
+        if any(s["name"] == "Ash Hollow" for s in self.extra_settlements):
+            return
+
+        founder = max(
+            exiles,
+            key=lambda a: a.skills["social"] + a.discipline + a.aggression
+        )
+
+        new_settlement = {
+            "name": "Ash Hollow",
+            "founder": founder.name,
+            "population": len(exiles),
+            "stage": "Camp",
+            "tension": 30,
+            "relationship_to_main": -20
+        }
+
+        self.extra_settlements.append(new_settlement)
+
+        for exile in exiles:
+            exile.location = "Ash Hollow"
+
+        logs.append(f"The exiles founded a new camp: Ash Hollow.")
+        logs.append(f"Founder: {founder.name}. Population: {len(exiles)}.")
+        self.add_history(f"Exiles founded Ash Hollow under {founder.name}.")
+
     def check_milestones(self, logs):
         alive = [a for a in self.agents if a.alive]
         dead = [a for a in self.agents if not a.alive]
@@ -711,6 +750,7 @@ class Simulation:
         self.update_faction_influence(logs)
         self.handle_faction_conflict(logs)
         self.handle_rebellion(logs)
+        self.handle_exile_settlements(logs)
         self.check_milestones(logs)
 
         self.hour += 1

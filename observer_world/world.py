@@ -4,5 +4,6 @@ LOCATIONS = [
     "Hill",
     "Camp",
     "Plains",
-    "Exiled Lands"
+    "Exiled Lands",
+    "Ash Hollow"
 ]
