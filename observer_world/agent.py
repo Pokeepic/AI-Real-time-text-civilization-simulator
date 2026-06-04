@@ -45,6 +45,9 @@ class Agent:
             "stone": random.randint(0, 2)
         }
         self.wealth = 0
+        self.debts = {}
+        self.risk_taking = random.randint(1, 100)
+        self.greed = random.randint(1, 100)
 
     def update_needs(self):
         self.hunger = min(self.hunger + 5, 100)
@@ -189,6 +192,12 @@ class Agent:
 
         if self.social < 60 and self.age >= 18:
             choices += ["trade"]
+
+        if self.age >= 18 and self.risk_taking > 65:
+            choices += ["gamble"]
+
+        if self.age >= 18 and self.greed > 70:
+            choices += ["gamble", "trade"]
 
         if self.social < 50 and self.kindness > 50:
             choices += ["bond"]

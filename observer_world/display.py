@@ -68,6 +68,9 @@ Partner: {agent.partner or 'None'}
 Family: {', '.join(agent.family) if agent.family else 'None'}
 Inventory: {agent.inventory}
 Wealth: {agent.wealth}
+Debts: {agent.debts if agent.debts else 'None'}
+Risk Taking: {agent.risk_taking}
+Greed: {agent.greed}
 
 Skills:
 {skills_text}

@@ -149,6 +149,9 @@ class Simulation:
             elif action == "trade":
                 logs.extend(self.handle_trade(agent))
 
+            elif action == "gamble":
+                logs.extend(self.handle_gamble(agent))
+
             else:
                 logs.append(f"{agent.name} stayed at {agent.location} and chose to {action}.")
 
@@ -398,6 +401,73 @@ class Simulation:
         logs.append(f"{agent.name} gave 1 {give_item} and received 1 {receive_item}.")
         logs.append(f"{other.name} gave 1 {receive_item} and received 1 {give_item}.")
         logs.append(f"Trust between them +2.")
+
+        return logs
+
+    def handle_gamble(self, agent):
+        logs = []
+
+        nearby = [
+            other for other in self.nearby_agents(agent)
+            if other.alive and other.age >= 18
+        ]
+
+        if not nearby:
+            logs.append(f"{agent.name} wanted to gamble, but no one was nearby.")
+            return logs
+
+        other = random.choice(nearby)
+
+        stake = random.randint(1, 3)
+
+        if agent.wealth < stake and other.wealth < stake:
+            logs.append(f"{agent.name} and {other.name} wanted to gamble, but neither had enough wealth.")
+            return logs
+
+        logs.append(f"{agent.name} gambled with {other.name} at {agent.location}.")
+        logs.append(f"Stake: {stake} wealth.")
+
+        agent_score = random.randint(1, 100) + agent.risk_taking // 5
+        other_score = random.randint(1, 100) + other.risk_taking // 5
+
+        if agent_score >= other_score:
+            winner = agent
+            loser = other
+        else:
+            winner = other
+            loser = agent
+
+        winner.wealth += stake
+
+        if loser.wealth >= stake:
+            loser.wealth -= stake
+            logs.append(f"{winner.name} won {stake} wealth from {loser.name}.")
+        else:
+            debt = stake - loser.wealth
+            loser.wealth = 0
+            loser.debts[winner.name] = loser.debts.get(winner.name, 0) + debt
+
+            logs.append(f"{winner.name} won, but {loser.name} could not fully pay.")
+            logs.append(f"{loser.name} now owes {winner.name} {debt} wealth.")
+
+            winner.change_relationship(loser.name, "trust", -5)
+            loser.change_relationship(winner.name, "fear", 3)
+
+        loser.change_relationship(winner.name, "trust", -3)
+        winner.change_relationship(loser.name, "respect", -1)
+
+        self.village_tension += 3
+
+        winner.remember(f"Won a gamble against {loser.name}.")
+        loser.remember(f"Lost a gamble against {winner.name}.")
+
+        logs.append(f"Village tension increased to {self.village_tension}.")
+
+        if loser.debts:
+            logs.append(f"{loser.name}'s debts: {loser.debts}")
+
+        if self.village_tension > 60:
+            self.add_history(f"Gambling caused rising tension in {self.settlement['name'] or 'the camp'}.")
 
         return logs
 
