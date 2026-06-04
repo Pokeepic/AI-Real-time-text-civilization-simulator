@@ -58,6 +58,8 @@ class Simulation:
         self.treaties = []
         self.technologies = []
         self.research_points = 0
+        self.daily_events = []
+        self.chronicles = []
 
     def unlock_milestone(self, key, text, logs):
         if key in self.milestones:
@@ -1423,6 +1425,35 @@ class Simulation:
                 agent.life_goal = None
                 self.assign_life_goal(agent)
 
+    def create_daily_chronicle(self, logs):
+        if not self.daily_events:
+            return
+
+        important_keywords = [
+            "died", "born", "founded", "leader", "war", "rebellion",
+            "technology", "milestone", "trial", "exiled", "treaty",
+            "completed", "fulfilled", "murder", "settlement"
+        ]
+
+        important_events = [
+            event for event in self.daily_events
+            if any(keyword in event.lower() for keyword in important_keywords)
+        ]
+
+        if important_events:
+            summary = f"Day {self.day - 1} Chronicle: " + " ".join(important_events[:5])
+        else:
+            alive_count = len([a for a in self.agents if a.alive])
+            summary = f"Day {self.day - 1} Chronicle: The day passed quietly. Population alive: {alive_count}."
+
+        self.chronicles.append(summary)
+
+        if len(self.chronicles) > 30:
+            self.chronicles.pop(0)
+
+        logs.append(summary)
+        self.daily_events = []
+
     def check_milestones(self, logs):
         alive = [a for a in self.agents if a.alive]
         dead = [a for a in self.agents if not a.alive]
@@ -1491,6 +1522,7 @@ class Simulation:
 
     def tick(self):
         logs = []
+        starting_day = self.day
 
         if self.hour == 6:
             self.update_season()
@@ -1680,6 +1712,11 @@ class Simulation:
             self.hour = 0
             self.day += 1
             logs.append(f"--- A new day begins. Day {self.day}. ---")
+
+        self.daily_events.extend(logs)
+
+        if self.day != starting_day:
+            self.create_daily_chronicle(logs)
 
         return logs
 

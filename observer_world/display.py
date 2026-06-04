@@ -245,3 +245,11 @@ def show_location_population(console, sim):
         lines.append(f"{location}: {count}")
 
     console.print(Panel("\n".join(lines), title="Population by Location"))
+
+
+def show_chronicles(console, sim):
+    if not sim.chronicles:
+        return
+
+    recent = "\n\n".join(sim.chronicles[-3:])
+    console.print(Panel(recent, title="Daily Chronicles"))
