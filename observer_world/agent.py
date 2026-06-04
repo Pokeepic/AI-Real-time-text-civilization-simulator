@@ -1,5 +1,7 @@
 import random
 
+from utils import clamp
+
 
 class Agent:
     def __init__(self, name):
@@ -51,9 +53,9 @@ class Agent:
         self.greed = random.randint(1, 100)
 
     def update_needs(self):
-        self.hunger = min(self.hunger + 5, 100)
-        self.energy = max(self.energy - 3, 0)
-        self.social = max(self.social - 2, 0)
+        self.hunger = clamp(self.hunger + 5, 0, 100)
+        self.energy = clamp(self.energy - 3, 0, 100)
+        self.social = clamp(self.social - 2, 0, 100)
 
         if self.hunger >= 95:
             self.health = max(self.health - 5, 0)
@@ -90,7 +92,7 @@ class Agent:
 
     def change_relationship(self, other_name, key, amount):
         rel = self.get_relationship(other_name)
-        rel[key] = max(-100, min(100, rel[key] + amount))
+        rel[key] = clamp(rel[key] + amount, -100, 100)
 
     def improve_skill(self, skill, amount=1):
         self.skills[skill] = min(100, self.skills[skill] + amount)

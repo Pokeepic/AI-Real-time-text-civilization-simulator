@@ -1,6 +1,7 @@
 import random
 
 from world import LOCATIONS
+from utils import find_agent, clamp
 
 
 class Simulation:
@@ -263,7 +264,7 @@ class Simulation:
         if "Guard Post" in buildings:
             if self.village_tension > 0:
                 tension_drop = random.randint(3, 8)
-                self.village_tension = max(self.village_tension - tension_drop, 0)
+                self.village_tension = clamp(self.village_tension - tension_drop, 0, 100)
                 logs.append(f"The Guard Post reduced village tension by {tension_drop}.")
 
     def assign_role(self, agent):
@@ -510,7 +511,7 @@ class Simulation:
         loser.change_relationship(winner.name, "trust", -3)
         winner.change_relationship(loser.name, "respect", -1)
 
-        self.village_tension += 3
+        self.village_tension = clamp(self.village_tension + 3, 0, 100)
 
         winner.remember(f"Won a gamble against {loser.name}.")
         loser.remember(f"Lost a gamble against {winner.name}.")
@@ -533,9 +534,9 @@ class Simulation:
             return logs
 
         creditor_name = random.choice(list(agent.debts.keys()))
-        creditor = next((a for a in self.agents if a.name == creditor_name and a.alive), None)
+        creditor = find_agent(self.agents, creditor_name)
 
-        if not creditor:
+        if not creditor or not creditor.alive:
             logs.append(f"{agent.name}'s creditor was gone, so the debt faded from memory.")
             del agent.debts[creditor_name]
             return logs
@@ -610,7 +611,7 @@ class Simulation:
             debtor.change_relationship(agent.name, "trust", -8)
             agent.change_relationship(debtor.name, "trust", -12)
 
-            self.village_tension += 8
+            self.village_tension = clamp(self.village_tension + 8, 0, 100)
             logs.append(f"Village tension increased to {self.village_tension}.")
 
             if random.random() < 0.35:
@@ -624,7 +625,7 @@ class Simulation:
             debtor.change_relationship(agent.name, "fear", 8)
             agent.change_relationship(debtor.name, "trust", -6)
 
-            self.village_tension += 5
+            self.village_tension = clamp(self.village_tension + 5, 0, 100)
             logs.append(f"Village tension increased to {self.village_tension}.")
 
         return logs
@@ -705,7 +706,7 @@ class Simulation:
                     from agent import Agent
                     child = Agent(child_name)
 
-                    partner = next((a for a in self.agents if a.name == agent.partner), None)
+                    partner = find_agent(self.agents, agent.partner)
 
                     child.age = 0
                     child.location = agent.location
@@ -871,7 +872,7 @@ class Simulation:
         if not possible_projects:
             return
 
-        leader = next((a for a in self.agents if a.name == self.leader), None)
+        leader = find_agent(self.agents, self.leader)
 
         if not leader:
             return
@@ -940,7 +941,7 @@ class Simulation:
                 logs.append("The village now has a place for healing.")
 
             elif project_name == "Guard Post":
-                self.village_tension = max(self.village_tension - 15, 0)
+                self.village_tension = clamp(self.village_tension - 15, 0, 100)
                 logs.append("The Guard Post made the village feel safer. Village tension -15.")
 
             self.current_project = None
@@ -999,7 +1000,7 @@ class Simulation:
         self.resources["food"] -= stolen
         agent.hunger = max(agent.hunger - stolen, 0)
 
-        self.village_tension += 5
+        self.village_tension = clamp(self.village_tension + 5, 0, 100)
 
         agent.remember(f"Stole {stolen} food from storage.")
 
@@ -1053,7 +1054,7 @@ class Simulation:
 
         other.change_relationship(agent.name, "fear", fear_gain)
 
-        self.village_tension += random.randint(8, 18)
+        self.village_tension = clamp(self.village_tension + random.randint(8, 18), 0, 100)
 
         agent.energy = max(agent.energy - 15, 0)
         other.energy = max(other.energy - 20, 0)
@@ -1140,11 +1141,11 @@ class Simulation:
             logs.append(f"{suspect.name}'s fear toward {guard.name} +5.")
 
             if random.random() < 0.25:
-                self.village_tension = max(self.village_tension - 5, 0)
+                self.village_tension = clamp(self.village_tension - 5, 0, 100)
                 logs.append(f"The patrol calmed the area. Village tension -5.")
         else:
             if random.random() < 0.2:
-                self.village_tension = max(self.village_tension - 2, 0)
+                self.village_tension = clamp(self.village_tension - 2, 0, 100)
                 logs.append(f"The quiet patrol made people feel safer. Village tension -2.")
 
         return logs
@@ -1195,7 +1196,7 @@ class Simulation:
                 agent.change_relationship(guard.name, "fear", 8)
                 guard.change_relationship(agent.name, "trust", -10)
 
-                self.village_tension = max(self.village_tension - 5, 0)
+                self.village_tension = clamp(self.village_tension - 5, 0, 100)
 
                 logs.append(f"{guard.name} stopped {agent.name} before the attack became deadly.")
                 logs.append(f"{agent.name}'s fear toward {guard.name} +8.")
@@ -1210,7 +1211,7 @@ class Simulation:
         target.health = max(target.health - damage, 0)
 
         agent.energy = max(agent.energy - 25, 0)
-        self.village_tension += 20
+        self.village_tension = clamp(self.village_tension + 20, 0, 100)
 
         logs.append(f"{agent.name} committed severe violence against {target.name} at {agent.location}.")
         logs.append(f"{target.name}'s health -{damage}.")
@@ -1284,7 +1285,7 @@ class Simulation:
         severity = self.village_tension - avg_trust + avg_fear
 
         if self.leader:
-            leader_agent = next((a for a in self.agents if a.name == self.leader), None)
+            leader_agent = find_agent(self.agents, self.leader)
 
             if leader_agent:
                 leader_rel = leader_agent.get_relationship(accused.name)
@@ -1325,7 +1326,7 @@ class Simulation:
         logs.append(f"Trial result: {punishment}.")
 
         if punishment == "warning":
-            self.village_tension = max(self.village_tension - 5, 0)
+            self.village_tension = clamp(self.village_tension - 5, 0, 100)
             accused.remember(f"Received a warning for {crime}.")
             logs.append(f"{accused.name} was warned by the group.")
 
@@ -1334,7 +1335,7 @@ class Simulation:
                 logs.append('New law created: "No stealing from storage".')
 
         elif punishment == "labor":
-            self.village_tension = max(self.village_tension - 10, 0)
+            self.village_tension = clamp(self.village_tension - 10, 0, 100)
             accused.energy = max(accused.energy - 25, 0)
             accused.remember(f"Was punished with labor for {crime}.")
             logs.append(f"{accused.name} was punished with forced labor.")
@@ -1345,7 +1346,7 @@ class Simulation:
                 logs.append('New law created: "Crimes must be judged by the group".')
 
         else:
-            self.village_tension = max(self.village_tension - 20, 0)
+            self.village_tension = clamp(self.village_tension - 20, 0, 100)
             accused.location = "Exiled Lands"
             accused.remember(f"Was exiled from the settlement for {crime}.")
             logs.append(f"{accused.name} was exiled from the settlement.")
