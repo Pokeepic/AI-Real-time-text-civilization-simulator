@@ -71,6 +71,33 @@ class Simulation:
         self.collapse_reasons = []
         self.world_name = self.generate_world_name()
 
+    def generate_world_name(self):
+        prefixes = ["Eld", "Aru", "Nora", "Vey", "Sol", "Mira", "Kael", "Orin"]
+        suffixes = ["mere", "vale", "reach", "hollow", "fall", "spire", "wood", "heim"]
+
+        return random.choice(prefixes) + random.choice(suffixes)
+
+    def generate_settlement_name(self):
+        first = ["First", "Old", "New", "Stone", "River", "Ash", "Sun", "Moon"]
+        second = ["Hearth", "Hollow", "Rest", "Crossing", "Gate", "Field", "Watch"]
+
+        return random.choice(first) + " " + random.choice(second)
+
+    def is_extra_settlement_location(self, location):
+        return any(s["name"] == location for s in self.extra_settlements)
+
+    def get_extra_settlement_by_name(self, name):
+        return next(
+            (s for s in self.extra_settlements if s["name"] == name),
+            None
+        )
+
+    def get_first_extra_settlement(self):
+        if not self.extra_settlements:
+            return None
+
+        return self.extra_settlements[0]
+
     def unlock_milestone(self, key, text, logs):
         if key in self.milestones:
             return
@@ -595,13 +622,7 @@ class Simulation:
         self.add_history(f"Exiles founded {settlement_name} under {founder.name}.")
 
     def get_agent_settlement(self, agent):
-        if self.is_extra_settlement_location(agent.location):
-            return next(
-                (s for s in self.extra_settlements if s["name"] == agent.location),
-                None
-            )
-
-        return None
+        return self.get_extra_settlement_by_name(agent.location)
 
     def handle_settlement_relations(self, logs):
         if self.hour != 15:
@@ -663,10 +684,10 @@ class Simulation:
         if self.hour != 10:
             return
 
-        if not self.extra_settlements:
-            return
+        extra_settlement = self.get_first_extra_settlement()
 
-        first_settlement = self.extra_settlements[0]
+        if not extra_settlement:
+            return
 
         for agent in self.agents:
             if not agent.alive or agent.age < 18:
@@ -690,24 +711,24 @@ class Simulation:
                 if agent.faction == "Reform Seekers":
                     desire_to_leave += 25
 
-                if agent.greed > 70 and first_settlement["relationship_to_main"] < 0:
+                if agent.greed > 70 and extra_settlement["relationship_to_main"] < 0:
                     desire_to_leave += 15
 
                 if agent.partner:
                     desire_to_leave -= 10
 
                 if random.randint(1, 100) < desire_to_leave:
-                    agent.location = first_settlement["name"]
-                    first_settlement["population"] += 1
+                    agent.location = extra_settlement["name"]
+                    extra_settlement["population"] += 1
 
-                    logs.append(f"{agent.name} migrated to {first_settlement['name']}.")
-                    self.add_history(f"{agent.name} left the main settlement for {first_settlement['name']}.")
+                    logs.append(f"{agent.name} migrated to {extra_settlement['name']}.")
+                    self.add_history(f"{agent.name} left the main settlement for {extra_settlement['name']}.")
 
             # Extra settlement -> Main settlement
             else:
                 desire_to_return = 0
 
-                if first_settlement["relationship_to_main"] > 20:
+                if extra_settlement["relationship_to_main"] > 20:
                     desire_to_return += 20
 
                 if agent.kindness > 70:
@@ -718,10 +739,10 @@ class Simulation:
 
                 if random.randint(1, 100) < desire_to_return:
                     agent.location = "Camp"
-                    first_settlement["population"] = max(0, first_settlement["population"] - 1)
+                    extra_settlement["population"] = max(0, extra_settlement["population"] - 1)
 
-                    logs.append(f"{agent.name} returned from {first_settlement['name']} to the main settlement.")
-                    self.add_history(f"{agent.name} returned from {first_settlement['name']}.")
+                    logs.append(f"{agent.name} returned from {extra_settlement['name']} to the main settlement.")
+                    self.add_history(f"{agent.name} returned from {extra_settlement['name']}.")
 
     def handle_extra_settlement_growth(self, logs):
         if self.hour != 14:
