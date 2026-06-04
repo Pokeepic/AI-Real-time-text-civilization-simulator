@@ -1,6 +1,6 @@
 import random
 
-from world import LOCATIONS
+from observer_world.world import LOCATIONS
 
 
 class Simulation:
