@@ -1,6 +1,8 @@
 from rich.table import Table
 from rich.panel import Panel
 
+from config import ACTIVE_DIFFICULTY
+
 
 def show_agent_status(console, agents):
     table = Table(title="AI Status")
@@ -104,6 +106,7 @@ def show_resources(console, sim):
     text = f"""
 Season: {sim.season}
 Weather: {sim.weather}
+Difficulty: {ACTIVE_DIFFICULTY}
 
 Food: {sim.resources['food']}
 Wood: {sim.resources['wood']}

@@ -3,7 +3,7 @@ import random
 from world import LOCATIONS
 from utils import find_agent, clamp
 from dialogue import get_line
-from config import CONFIG
+from config import CONFIG, get_setting
 
 
 class Simulation:
@@ -455,7 +455,7 @@ class Simulation:
 
         self.faction_conflicts.append(conflict)
 
-        self.village_tension = min(self.village_tension + 10, 100)
+        self.village_tension = min(self.village_tension + int(10 * get_setting("tension_multiplier")), 100)
 
         logs.append(f"Faction conflict erupted between {faction_a} and {faction_b}.")
         logs.append(f"Village tension increased to {self.village_tension}.")
@@ -661,7 +661,7 @@ class Simulation:
                 stolen_food = min(self.resources["food"], random.randint(5, 20))
                 self.resources["food"] -= stolen_food
                 settlement["relationship_to_main"] -= 5
-                self.village_tension = min(self.village_tension + 15, 100)
+                self.village_tension = min(self.village_tension + int(15 * get_setting("tension_multiplier")), 100)
 
                 logs.append(f"{settlement['name']} raided the main settlement.")
                 logs.append(f"Food stolen: {stolen_food}. Relations -5. Tension +15.")
@@ -1051,7 +1051,7 @@ class Simulation:
             else:
                 stolen_food = min(self.resources["food"], random.randint(20, 50))
                 self.resources["food"] -= stolen_food
-                self.village_tension = min(self.village_tension + 20, 100)
+                self.village_tension = min(self.village_tension + int(20 * get_setting("tension_multiplier")), 100)
                 settlement["relationship_to_main"] -= 10
 
                 logs.append(f"{settlement['name']} overwhelmed the main settlement.")
@@ -1670,6 +1670,8 @@ class Simulation:
                 if self.weather == "Rain":
                     food_found += 2
 
+                food_found = int(food_found * get_setting("resource_multiplier"))
+
                 agent.hunger = max(agent.hunger - food_found // 2, 0)
 
                 agent_settlement = self.get_agent_settlement(agent)
@@ -1720,6 +1722,9 @@ class Simulation:
                 elif not agent_settlement and "Basic Tools" in self.technologies:
                     wood += 3
                     stone += 2
+
+                wood = int(wood * get_setting("resource_multiplier"))
+                stone = int(stone * get_setting("resource_multiplier"))
 
                 if agent_settlement:
                     agent_settlement["resources"]["wood"] += wood
@@ -1844,7 +1849,7 @@ class Simulation:
 
     def apply_weather_effects(self, agent, logs):
         if self.weather in ["Cold", "Snow", "Storm"] and agent.location != "Camp":
-            if random.random() < CONFIG["weather_sickness_chance"]:
+            if random.random() < get_setting("weather_sickness_chance"):
                 damage = random.randint(3, 10)
                 agent.health = max(agent.health - damage, 0)
                 agent.status = "Sick"
@@ -2371,7 +2376,7 @@ class Simulation:
                 continue
 
             if agent.partner and not agent.pregnant:
-                if random.random() < CONFIG["birth_chance"]:
+                if random.random() < get_setting("birth_chance"):
                     agent.pregnant = True
                     agent.pregnancy_timer = CONFIG["pregnancy_timer"]
 
@@ -2468,7 +2473,7 @@ class Simulation:
                     self.add_history(f"{agent.name} became an adult.")
 
                 elif agent.age > 80:
-                    if random.random() < CONFIG["weather_sickness_chance"]:
+                    if random.random() < get_setting("weather_sickness_chance"):
                         agent.alive = False
                         agent.status = "Dead"
                         logs.append(f"{agent.name} died of old age.")
@@ -2744,7 +2749,7 @@ class Simulation:
         agent.energy = max(agent.energy - 15, 0)
         other.energy = max(other.energy - 20, 0)
 
-        damage = random.randint(5, 20)
+        damage = int(random.randint(5, 20) * get_setting("violence_multiplier"))
         other.health = max(other.health - damage, 0)
 
         if other.health <= 0:
@@ -2892,11 +2897,11 @@ class Simulation:
             else:
                 logs.append(f"{guard.name} failed to stop the attack.")
 
-        damage = random.randint(25, 70)
+        damage = int(random.randint(25, 70) * get_setting("violence_multiplier"))
         target.health = max(target.health - damage, 0)
 
         agent.energy = max(agent.energy - 25, 0)
-        self.village_tension = clamp(self.village_tension + 20, 0, 100)
+        self.village_tension = clamp(self.village_tension + int(20 * get_setting("tension_multiplier")), 0, 100)
 
         logs.append(f"{agent.name} committed severe violence against {target.name} at {agent.location}.")
         logs.append(f"{target.name}'s health -{damage}.")
