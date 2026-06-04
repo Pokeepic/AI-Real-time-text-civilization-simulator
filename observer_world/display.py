@@ -76,5 +76,7 @@ Stone: {sim.resources['stone']}
 Settlement: {sim.settlement['name'] or 'None'}
 Buildings: {', '.join(sim.settlement['buildings']) if sim.settlement['buildings'] else 'None'}
 Shelter Progress: {sim.settlement['shelter_progress']}/100
+
+Village Tension: {sim.village_tension}
 """
     console.print(Panel(text, title="World Resources"))

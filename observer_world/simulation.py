@@ -21,6 +21,7 @@ class Simulation:
             "shelter_progress": 0
         }
         
+        self.village_tension = 0
 
     def add_history(self, event):
         record = f"Day {self.day}, {self.hour}:00 — {event}"
@@ -85,6 +86,12 @@ class Simulation:
             elif action == "build":
                 logs.extend(self.handle_build(agent))
 
+            elif action == "steal food":
+                logs.extend(self.handle_steal_food(agent))
+
+            elif action == "fight":
+                logs.extend(self.handle_fight(agent))
+
             else:
                 logs.append(f"{agent.name} stayed at {agent.location} and chose to {action}.")
 
@@ -136,6 +143,86 @@ class Simulation:
             logs.append(f"Settlement founded: {self.settlement['name']}.")
 
             self.add_history(f"Settlement founded: {self.settlement['name']}.")
+
+        return logs
+
+    def handle_steal_food(self, agent):
+        logs = []
+
+        if self.resources["food"] <= 0:
+            logs.append(f"{agent.name} considered stealing food, but storage was empty.")
+            return logs
+
+        stolen = random.randint(3, 10)
+        stolen = min(stolen, self.resources["food"])
+
+        self.resources["food"] -= stolen
+        agent.hunger = max(agent.hunger - stolen, 0)
+
+        self.village_tension += 5
+
+        agent.remember(f"Stole {stolen} food from storage.")
+
+        logs.append(f"{agent.name} secretly stole {stolen} food from storage.")
+        logs.append(f"Village tension increased to {self.village_tension}.")
+
+        caught_chance = 0.35
+
+        if random.random() < caught_chance:
+            witness = random.choice([
+                other for other in self.agents
+                if other.name != agent.name
+            ])
+
+            witness.change_relationship(agent.name, "trust", -15)
+            witness.change_relationship(agent.name, "respect", -5)
+            agent.change_relationship(witness.name, "fear", 3)
+
+            witness.remember(f"Saw {agent.name} stealing food.")
+            agent.remember(f"{witness.name} saw me stealing food.")
+
+            logs.append(f"{witness.name} saw {agent.name} stealing.")
+            logs.append(f"{witness.name}'s trust toward {agent.name} -15.")
+
+            self.add_history(f"{agent.name} was caught stealing food by {witness.name}.")
+
+        return logs
+
+    def handle_fight(self, agent):
+        logs = []
+
+        nearby = self.nearby_agents(agent)
+
+        if not nearby:
+            logs.append(f"{agent.name} looked ready to fight, but no one was nearby.")
+            return logs
+
+        other = random.choice(nearby)
+
+        trust_loss = random.randint(10, 25)
+        fear_gain = random.randint(5, 15)
+
+        agent.change_relationship(other.name, "trust", -trust_loss)
+        other.change_relationship(agent.name, "trust", -trust_loss)
+
+        other.change_relationship(agent.name, "fear", fear_gain)
+
+        self.village_tension += random.randint(8, 18)
+
+        agent.energy = max(agent.energy - 15, 0)
+        other.energy = max(other.energy - 20, 0)
+
+        agent.remember(f"Fought with {other.name}.")
+        other.remember(f"{agent.name} attacked me.")
+
+        logs.append(f"{agent.name} got into a fight with {other.name} at {agent.location}.")
+        logs.append(f'{agent.name}: "I am tired of pretending this is fine."')
+        logs.append(f'{other.name}: "Then you should have stayed away from me."')
+        logs.append(f"Trust between them -{trust_loss}.")
+        logs.append(f"{other.name}'s fear toward {agent.name} +{fear_gain}.")
+        logs.append(f"Village tension increased to {self.village_tension}.")
+
+        self.add_history(f"{agent.name} fought with {other.name}.")
 
         return logs
 
