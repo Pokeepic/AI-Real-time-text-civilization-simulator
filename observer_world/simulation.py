@@ -613,6 +613,76 @@ class Simulation:
                 logs.append(f"Tension grew between {settlement['name']} and the main settlement.")
                 logs.append("Relations -2.")
 
+    def handle_migration(self, logs):
+        if self.hour != 10:
+            return
+
+        if not self.extra_settlements:
+            return
+
+        ash_hollow = next(
+            (s for s in self.extra_settlements if s["name"] == "Ash Hollow"),
+            None
+        )
+
+        if not ash_hollow:
+            return
+
+        for agent in self.agents:
+            if not agent.alive or agent.age < 18:
+                continue
+
+            if agent.location == "Exiled Lands":
+                continue
+
+            # Main settlement -> Ash Hollow
+            if agent.location != "Ash Hollow":
+                desire_to_leave = 0
+
+                if self.village_tension > 70:
+                    desire_to_leave += 30
+
+                if self.leader:
+                    rel = agent.get_relationship(self.leader)
+                    if rel["fear"] > 30 or rel["trust"] < -30:
+                        desire_to_leave += 20
+
+                if agent.faction == "Reform Seekers":
+                    desire_to_leave += 25
+
+                if agent.greed > 70 and ash_hollow["relationship_to_main"] < 0:
+                    desire_to_leave += 15
+
+                if agent.partner:
+                    desire_to_leave -= 10
+
+                if random.randint(1, 100) < desire_to_leave:
+                    agent.location = "Ash Hollow"
+                    ash_hollow["population"] += 1
+
+                    logs.append(f"{agent.name} migrated to Ash Hollow.")
+                    self.add_history(f"{agent.name} left the main settlement for Ash Hollow.")
+
+            # Ash Hollow -> Main settlement
+            else:
+                desire_to_return = 0
+
+                if ash_hollow["relationship_to_main"] > 20:
+                    desire_to_return += 20
+
+                if agent.kindness > 70:
+                    desire_to_return += 15
+
+                if agent.family:
+                    desire_to_return += 15
+
+                if random.randint(1, 100) < desire_to_return:
+                    agent.location = "Camp"
+                    ash_hollow["population"] = max(0, ash_hollow["population"] - 1)
+
+                    logs.append(f"{agent.name} returned from Ash Hollow to the main settlement.")
+                    self.add_history(f"{agent.name} returned from Ash Hollow.")
+
     def check_milestones(self, logs):
         alive = [a for a in self.agents if a.alive]
         dead = [a for a in self.agents if not a.alive]
@@ -662,6 +732,9 @@ class Simulation:
 
         if any(s["relationship_to_main"] <= -50 for s in self.extra_settlements):
             self.unlock_milestone("settlement_rivalry", "A serious rivalry between settlements began.", logs)
+
+        if any(a.location == "Ash Hollow" for a in self.agents):
+            self.unlock_milestone("first_migration", "The first migration between settlements occurred.", logs)
 
     def add_history(self, event):
         record = f"Day {self.day}, {self.hour}:00 — {event}"
@@ -817,6 +890,7 @@ class Simulation:
         self.handle_rebellion(logs)
         self.handle_exile_settlements(logs)
         self.handle_settlement_relations(logs)
+        self.handle_migration(logs)
         self.check_milestones(logs)
 
         self.hour += 1
