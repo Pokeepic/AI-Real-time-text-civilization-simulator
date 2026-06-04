@@ -46,6 +46,8 @@ class Simulation:
             self.update_weather()
             logs.append(f"Weather changed: {self.weather}. Season: {self.season}.")
 
+        self.apply_building_effects(logs)
+
         for agent in self.agents:
             if not agent.alive:
                 continue
@@ -234,6 +236,36 @@ class Simulation:
 
         self.add_history(f"{agent.name} died. Cause: {cause}.")
 
+    def apply_building_effects(self, logs):
+        if self.hour != 6:
+            return
+
+        buildings = self.settlement["buildings"]
+
+        if "Farm" in buildings:
+            food_gain = random.randint(15, 30)
+            self.resources["food"] += food_gain
+            logs.append(f"The Farm produced food. Food +{food_gain}.")
+
+        if "Storage Hut" in buildings:
+            if random.random() < 0.15:
+                saved_food = random.randint(5, 15)
+                self.resources["food"] += saved_food
+                logs.append(f"The Storage Hut preserved supplies. Food saved +{saved_food}.")
+
+        if "Clinic" in buildings:
+            for agent in self.agents:
+                if agent.alive and agent.health < 70 and agent.location != "Exiled Lands":
+                    heal_amount = random.randint(3, 8)
+                    agent.health = min(agent.health + heal_amount, 100)
+                    logs.append(f"The Clinic helped {agent.name} recover. Health +{heal_amount}.")
+
+        if "Guard Post" in buildings:
+            if self.village_tension > 0:
+                tension_drop = random.randint(3, 8)
+                self.village_tension = max(self.village_tension - tension_drop, 0)
+                logs.append(f"The Guard Post reduced village tension by {tension_drop}.")
+
     def assign_role(self, agent):
         if agent.location == "Exiled Lands":
             agent.role = "Exile"
@@ -282,6 +314,10 @@ class Simulation:
         patient = min(patients, key=lambda a: a.health)
 
         heal_amount = random.randint(5, 15) + medic.skills["medicine"]
+
+        if "Clinic" in self.settlement["buildings"]:
+            heal_amount += 10
+
         patient.health = min(patient.health + heal_amount, 100)
 
         medic.improve_skill("medicine", 1)
@@ -972,6 +1008,9 @@ class Simulation:
 
         caught_chance = 0.35
 
+        if "Storage Hut" in self.settlement["buildings"]:
+            caught_chance += 0.25
+
         if random.random() < caught_chance:
             witness = random.choice([
                 other for other in self.agents
@@ -1135,6 +1174,9 @@ class Simulation:
         tension = self.village_tension
 
         violence_score = aggression + hatred + fear + tension
+
+        if "Guard Post" in self.settlement["buildings"]:
+            violence_score -= 25
 
         if violence_score < 140:
             logs.append(f"{agent.name} nearly attacked {target.name}, but held back.")
