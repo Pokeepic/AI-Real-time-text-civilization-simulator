@@ -22,6 +22,8 @@ class Simulation:
         }
         
         self.village_tension = 0
+        self.laws = []
+        self.crime_records = {}
 
     def add_history(self, event):
         record = f"Day {self.day}, {self.hour}:00 — {event}"
@@ -186,6 +188,9 @@ class Simulation:
 
             self.add_history(f"{agent.name} was caught stealing food by {witness.name}.")
 
+            self.record_crime(agent.name, "stealing food", witness.name)
+            logs.extend(self.handle_trial(agent, "stealing food"))
+
         return logs
 
     def handle_fight(self, agent):
@@ -223,6 +228,102 @@ class Simulation:
         logs.append(f"Village tension increased to {self.village_tension}.")
 
         self.add_history(f"{agent.name} fought with {other.name}.")
+
+        self.record_crime(agent.name, "fighting", other.name)
+
+        if self.village_tension >= 40:
+            logs.extend(self.handle_trial(agent, "fighting"))
+
+        return logs
+
+    def record_crime(self, agent_name, crime, witness_name):
+        if agent_name not in self.crime_records:
+            self.crime_records[agent_name] = []
+
+        record = {
+            "day": self.day,
+            "hour": self.hour,
+            "crime": crime,
+            "witness": witness_name
+        }
+
+        self.crime_records[agent_name].append(record)
+
+    def handle_trial(self, accused, crime):
+        logs = []
+
+        if self.settlement["name"] is None:
+            logs.append(f"The group was upset about {accused.name}'s {crime}, but no formal law existed yet.")
+            return logs
+
+        logs.append(f"A village trial was held for {accused.name}.")
+        logs.append(f"Accusation: {crime}.")
+
+        total_trust = 0
+        total_fear = 0
+        voters = 0
+
+        for agent in self.agents:
+            if agent.name == accused.name:
+                continue
+
+            rel = agent.get_relationship(accused.name)
+            total_trust += rel["trust"]
+            total_fear += rel["fear"]
+            voters += 1
+
+        avg_trust = total_trust / max(voters, 1)
+        avg_fear = total_fear / max(voters, 1)
+
+        severity = self.village_tension - avg_trust + avg_fear
+
+        if crime == "stealing food":
+            severity += 10
+
+        if crime == "fighting":
+            severity += 15
+
+        if severity < 35:
+            punishment = "warning"
+        elif severity < 70:
+            punishment = "labor"
+        else:
+            punishment = "exile"
+
+        logs.append(f"Trial result: {punishment}.")
+
+        if punishment == "warning":
+            self.village_tension = max(self.village_tension - 5, 0)
+            accused.remember(f"Received a warning for {crime}.")
+            logs.append(f"{accused.name} was warned by the group.")
+
+            if "No stealing from storage" not in self.laws and crime == "stealing food":
+                self.laws.append("No stealing from storage")
+                logs.append('New law created: "No stealing from storage".')
+
+        elif punishment == "labor":
+            self.village_tension = max(self.village_tension - 10, 0)
+            accused.energy = max(accused.energy - 25, 0)
+            accused.remember(f"Was punished with labor for {crime}.")
+            logs.append(f"{accused.name} was punished with forced labor.")
+            logs.append(f"{accused.name}'s energy -25.")
+
+            if "Crimes must be judged by the group" not in self.laws:
+                self.laws.append("Crimes must be judged by the group")
+                logs.append('New law created: "Crimes must be judged by the group".')
+
+        else:
+            self.village_tension = max(self.village_tension - 20, 0)
+            accused.location = "Exiled Lands"
+            accused.remember(f"Was exiled from the settlement for {crime}.")
+            logs.append(f"{accused.name} was exiled from the settlement.")
+            logs.append(f"{accused.name} moved to Exiled Lands.")
+
+            self.add_history(f"{accused.name} was exiled for {crime}.")
+
+            if "Exile for severe crimes" not in self.laws:
+                self.laws.append("Exile for severe crimes")
+                logs.append('New law created: "Exile for severe crimes".')
 
         return logs
 

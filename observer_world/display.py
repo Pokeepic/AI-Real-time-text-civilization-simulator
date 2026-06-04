@@ -78,5 +78,6 @@ Buildings: {', '.join(sim.settlement['buildings']) if sim.settlement['buildings'
 Shelter Progress: {sim.settlement['shelter_progress']}/100
 
 Village Tension: {sim.village_tension}
+Laws: {', '.join(sim.laws) if sim.laws else 'None'}
 """
     console.print(Panel(text, title="World Resources"))

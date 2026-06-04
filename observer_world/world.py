@@ -3,5 +3,6 @@ LOCATIONS = [
     "River",
     "Hill",
     "Camp",
-    "Plains"
+    "Plains",
+    "Exiled Lands"
 ]
