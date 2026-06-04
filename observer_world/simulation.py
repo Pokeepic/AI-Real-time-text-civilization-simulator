@@ -158,6 +158,9 @@ class Simulation:
             elif action == "demand debt":
                 logs.extend(self.handle_demand_debt(agent))
 
+            elif action == "severe violence":
+                logs.extend(self.handle_severe_violence(agent))
+
             else:
                 logs.append(f"{agent.name} stayed at {agent.location} and chose to {action}.")
 
@@ -946,6 +949,81 @@ class Simulation:
 
         self.crime_records[agent_name].append(record)
 
+    def handle_severe_violence(self, agent):
+        logs = []
+
+        nearby = [
+            other for other in self.nearby_agents(agent)
+            if other.alive and other.age >= 13
+        ]
+
+        if not nearby:
+            logs.append(f"{agent.name} had violent thoughts, but no one was nearby.")
+            return logs
+
+        target = random.choice(nearby)
+
+        hatred = -agent.get_relationship(target.name)["trust"]
+        aggression = agent.aggression
+        fear = agent.get_relationship(target.name)["fear"]
+        tension = self.village_tension
+
+        violence_score = aggression + hatred + fear + tension
+
+        if violence_score < 140:
+            logs.append(f"{agent.name} nearly attacked {target.name}, but held back.")
+            agent.remember(f"Nearly attacked {target.name}, but stopped.")
+            return logs
+
+        damage = random.randint(25, 70)
+        target.health = max(target.health - damage, 0)
+
+        agent.energy = max(agent.energy - 25, 0)
+        self.village_tension += 20
+
+        logs.append(f"{agent.name} committed severe violence against {target.name} at {agent.location}.")
+        logs.append(f"{target.name}'s health -{damage}.")
+        logs.append(f"Village tension increased to {self.village_tension}.")
+
+        witnesses = [
+            other for other in self.nearby_agents(agent)
+            if other.name != target.name and other.alive
+        ]
+
+        if witnesses:
+            witness = random.choice(witnesses)
+
+            witness.change_relationship(agent.name, "trust", -30)
+            witness.change_relationship(agent.name, "fear", 20)
+            witness.remember(f"Witnessed {agent.name} violently attack {target.name}.")
+
+            logs.append(f"{witness.name} witnessed the attack.")
+            logs.append(f"{witness.name}'s trust toward {agent.name} -30, fear +20.")
+
+            self.record_crime(agent.name, "severe violence", witness.name)
+
+        else:
+            logs.append("No one witnessed the attack directly.")
+            self.record_crime(agent.name, "severe violence", "unknown")
+
+        agent.remember(f"Committed severe violence against {target.name}.")
+        target.remember(f"{agent.name} severely attacked me.")
+
+        if target.health <= 0:
+            target.alive = False
+            target.status = "Dead"
+
+            logs.append(f"{target.name} died from the attack.")
+            self.record_death(target, f"severe attack by {agent.name}")
+
+            self.record_crime(agent.name, "murder", witnesses[0].name if witnesses else "unknown")
+            logs.extend(self.handle_trial(agent, "murder"))
+
+        elif self.village_tension >= 50:
+            logs.extend(self.handle_trial(agent, "severe violence"))
+
+        return logs
+
     def handle_trial(self, accused, crime):
         logs = []
 
@@ -990,6 +1068,12 @@ class Simulation:
 
         if crime == "fighting":
             severity += 15
+
+        if crime == "severe violence":
+            severity += 35
+
+        if crime == "murder":
+            severity += 70
 
         if severity < 35:
             punishment = "warning"
