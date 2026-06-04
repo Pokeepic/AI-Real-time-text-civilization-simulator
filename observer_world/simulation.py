@@ -31,6 +31,48 @@ class Simulation:
         self.death_records = []
         self.memorials = []
         self.current_project = None
+        self.milestones = set()
+        self.milestones = set()
+
+    def unlock_milestone(self, key, text, logs):
+        if key in self.milestones:
+            return
+
+        self.milestones.add(key)
+        logs.append(f"MILESTONE UNLOCKED: {text}")
+        self.add_history(f"Milestone unlocked: {text}")
+
+    def check_milestones(self, logs):
+        alive = [a for a in self.agents if a.alive]
+        dead = [a for a in self.agents if not a.alive]
+        children = [a for a in alive if a.age < 18]
+
+        if "Shelter" in self.settlement["buildings"]:
+            self.unlock_milestone("first_shelter", "First permanent shelter built.", logs)
+
+        if self.leader:
+            self.unlock_milestone("first_leader", f"{self.leader} became the first leader.", logs)
+
+        if self.laws:
+            self.unlock_milestone("first_law", "The first law was created.", logs)
+
+        if children:
+            self.unlock_milestone("first_child", "The first child was born.", logs)
+
+        if dead:
+            self.unlock_milestone("first_death", "The first death was recorded.", logs)
+
+        if len(alive) >= 20:
+            self.unlock_milestone("population_20", "Population reached 20.", logs)
+
+        if len(self.settlement["buildings"]) >= 4:
+            self.unlock_milestone("village_complete", "The village became a developed settlement.", logs)
+
+        if any(record["crime"] == "murder" for records in self.crime_records.values() for record in records):
+            self.unlock_milestone("first_murder", "The first murder was recorded.", logs)
+
+        if any(a.generation >= 2 and a.age >= 18 for a in self.agents):
+            self.unlock_milestone("generation_2_adult", "The second generation reached adulthood.", logs)
 
     def add_history(self, event):
         record = f"Day {self.day}, {self.hour}:00 — {event}"
@@ -175,6 +217,7 @@ class Simulation:
         self.handle_aging(logs)
         self.choose_village_project(logs)
         self.check_leadership(logs)
+        self.check_milestones(logs)
 
         self.hour += 1
 

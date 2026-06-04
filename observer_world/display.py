@@ -149,3 +149,11 @@ Roles: {role_text}
 """
 
     console.print(Panel(text, title="Civilization Statistics"))
+
+
+def show_milestones(console, sim):
+    if not sim.milestones:
+        return
+
+    text = "\n".join(sorted(sim.milestones))
+    console.print(Panel(text, title="Milestones"))
