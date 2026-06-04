@@ -19,7 +19,7 @@ from display import (
     show_chronicles,
 )
 from save_system import save_world, load_world
-from archive import archive_logs
+from archive import archive_logs, export_chronicles
 
 console = Console()
 
@@ -69,6 +69,7 @@ def command_listener():
 
         elif command == "quit":
             save_world(sim)
+            export_chronicles(sim)
             running = False
 
 
@@ -94,7 +95,8 @@ while running:
 
     if sim.hour % 6 == 0:
         save_world(sim)
-        logs.append("World autosaved.")
+        export_chronicles(sim)
+        logs.append("World autosaved and chronicles exported.")
 
     console.print("\n[bold cyan]Recent Events[/bold cyan]")
     for log in logs[-12:]:
