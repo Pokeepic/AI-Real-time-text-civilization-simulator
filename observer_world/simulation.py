@@ -54,6 +54,7 @@ class Simulation:
         self.rebellions = []
         self.extra_settlements = []
         self.wars = []
+        self.treaties = []
 
     def unlock_milestone(self, key, text, logs):
         if key in self.milestones:
@@ -901,6 +902,65 @@ class Simulation:
 
         return power
 
+    def handle_diplomacy(self, logs):
+        if self.hour != 16:
+            return
+
+        if not self.extra_settlements:
+            return
+
+        for settlement in self.extra_settlements:
+            relation = settlement["relationship_to_main"]
+
+            if relation < -30:
+                diplomacy_chance = 0.08
+
+                if self.leader:
+                    leader = next((a for a in self.agents if a.name == self.leader), None)
+                    if leader:
+                        diplomacy_chance += leader.skills["social"] / 100
+
+                if settlement.get("leader"):
+                    other_leader = next((a for a in self.agents if a.name == settlement["leader"]), None)
+                    if other_leader:
+                        diplomacy_chance += other_leader.skills["social"] / 150
+
+                if random.random() < diplomacy_chance:
+                    treaty = {
+                        "day": self.day,
+                        "hour": self.hour,
+                        "settlement": settlement["name"],
+                        "type": "peace talks"
+                    }
+
+                    self.treaties.append(treaty)
+
+                    relation_gain = random.randint(10, 25)
+                    settlement["relationship_to_main"] += relation_gain
+                    self.village_tension = max(self.village_tension - 10, 0)
+                    settlement["tension"] = max(settlement["tension"] - 10, 0)
+
+                    logs.append(f"Peace talks were held with {settlement['name']}.")
+                    logs.append(f"Relations improved by {relation_gain}.")
+                    logs.append("Tension decreased in both settlements.")
+
+                    self.add_history(f"Peace talks improved relations with {settlement['name']}.")
+
+            elif relation > 30:
+                if random.random() < 0.05:
+                    treaty = {
+                        "day": self.day,
+                        "hour": self.hour,
+                        "settlement": settlement["name"],
+                        "type": "friendship pact"
+                    }
+
+                    self.treaties.append(treaty)
+                    settlement["relationship_to_main"] += 10
+
+                    logs.append(f"{self.settlement['name'] or 'The main settlement'} and {settlement['name']} signed a friendship pact.")
+                    self.add_history(f"Friendship pact signed with {settlement['name']}.")
+
     def handle_settlement_war(self, logs):
         if self.hour != 23:
             return
@@ -914,6 +974,15 @@ class Simulation:
             war_chance = 0.08
             war_chance += settlement["tension"] / 300
             war_chance += self.village_tension / 400
+
+            recent_treaty = any(
+                treaty["settlement"] == settlement["name"]
+                and self.day - treaty["day"] <= 5
+                for treaty in self.treaties
+            )
+
+            if recent_treaty:
+                war_chance -= 0.05
 
             if random.random() > war_chance:
                 continue
@@ -1045,6 +1114,9 @@ class Simulation:
 
         if self.wars:
             self.unlock_milestone("first_war", "The first war between settlements occurred.", logs)
+
+        if self.treaties:
+            self.unlock_milestone("first_treaty", "The first diplomatic treaty was signed.", logs)
 
     def add_history(self, event):
         record = f"Day {self.day}, {self.hour}:00 — {event}"
@@ -1219,6 +1291,7 @@ class Simulation:
         self.update_extra_settlement_leaders(logs)
         self.update_extra_settlement_culture(logs)
         self.update_extra_settlement_laws(logs)
+        self.handle_diplomacy(logs)
         self.handle_settlement_war(logs)
         self.check_milestones(logs)
 
