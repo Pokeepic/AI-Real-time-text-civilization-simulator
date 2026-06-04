@@ -5,6 +5,7 @@ from rich.console import Console
 from agent import Agent
 from simulation import Simulation
 from save_system import save_world, load_world
+from archive import archive_logs
 from display import (
     show_agent_status,
     show_world_history,
@@ -45,6 +46,8 @@ while True:
     console.print(f"\nDAY {sim.day} | HOUR {sim.hour}:00", style="bold green")
 
     logs = sim.tick()
+
+    archive_logs(sim, logs)
 
     if sim.hour % 6 == 0:
         save_world(sim)
