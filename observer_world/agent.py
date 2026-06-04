@@ -53,6 +53,7 @@ class Agent:
         self.greed = random.randint(1, 100)
         self.faction = None
         self.journal = []
+        self.life_goal = None
 
     def update_needs(self):
         self.hunger = clamp(self.hunger + 5, 0, 100)
@@ -220,6 +221,27 @@ class Agent:
 
         if self.social < 50 and self.kindness > 50:
             choices += ["bond"]
+
+        if self.life_goal == "become leader":
+            choices += ["talk", "help", "observe"]
+
+        if self.life_goal == "become wealthy":
+            choices += ["trade", "gamble"]
+
+        if self.life_goal == "become great healer":
+            choices += ["heal", "help"]
+
+        if self.life_goal == "seek knowledge":
+            choices += ["learn", "practice", "talk"]
+
+        if self.life_goal == "become protector":
+            choices += ["patrol", "practice"]
+
+        if self.life_goal == "protect family":
+            choices += ["help", "gather food", "talk"]
+
+        if self.life_goal == "seek revenge":
+            choices += ["argue", "fight"]
 
         return random.choice(choices)
 
