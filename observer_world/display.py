@@ -95,6 +95,7 @@ Wood: {sim.resources['wood']}
 Stone: {sim.resources['stone']}
 
 Settlement: {sim.settlement['name'] or 'None'}
+Stage: {sim.settlement_stage}
 Leader: {sim.leader or 'None'}
 Buildings: {', '.join(sim.settlement['buildings']) if sim.settlement['buildings'] else 'None'}
 Shelter Progress: {sim.settlement['shelter_progress']}/100

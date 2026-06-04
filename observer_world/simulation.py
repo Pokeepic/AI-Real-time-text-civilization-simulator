@@ -32,7 +32,7 @@ class Simulation:
         self.memorials = []
         self.current_project = None
         self.milestones = set()
-        self.milestones = set()
+        self.settlement_stage = "Camp"
 
     def unlock_milestone(self, key, text, logs):
         if key in self.milestones:
@@ -73,6 +73,15 @@ class Simulation:
 
         if any(a.generation >= 2 and a.age >= 18 for a in self.agents):
             self.unlock_milestone("generation_2_adult", "The second generation reached adulthood.", logs)
+
+        if self.settlement_stage == "Village":
+            self.unlock_milestone("became_village", "The settlement became a village.", logs)
+
+        if self.settlement_stage == "Town":
+            self.unlock_milestone("became_town", "The settlement became a town.", logs)
+
+        if self.settlement_stage == "City":
+            self.unlock_milestone("became_city", "The settlement became a city.", logs)
 
     def add_history(self, event):
         record = f"Day {self.day}, {self.hour}:00 — {event}"
@@ -217,6 +226,7 @@ class Simulation:
         self.handle_aging(logs)
         self.choose_village_project(logs)
         self.check_leadership(logs)
+        self.update_settlement_stage(logs)
         self.check_milestones(logs)
 
         self.hour += 1
