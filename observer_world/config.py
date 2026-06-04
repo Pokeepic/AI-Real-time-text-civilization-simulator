@@ -53,6 +53,56 @@ DIFFICULTY_PRESETS = {
 
 ACTIVE_DIFFICULTY = "balanced"
 
+ACTIVE_SCENARIO = "peaceful_founders"
+
+SCENARIO_PRESETS = {
+    "peaceful_founders": {
+        "description": "A kind group trying to build a cooperative society.",
+        "kindness_bonus": 25,
+        "aggression_bonus": -20,
+        "starting_food": 40,
+        "starting_wood": 25,
+        "starting_stone": 15,
+    },
+
+    "violent_survivors": {
+        "description": "A tense group with high aggression and low trust.",
+        "kindness_bonus": -15,
+        "aggression_bonus": 30,
+        "starting_food": 20,
+        "starting_wood": 15,
+        "starting_stone": 10,
+    },
+
+    "scholar_village": {
+        "description": "Curious founders with strong teaching and research potential.",
+        "curiosity_bonus": 30,
+        "teaching_bonus": 3,
+        "starting_food": 30,
+        "starting_wood": 20,
+        "starting_stone": 15,
+    },
+
+    "merchant_camp": {
+        "description": "Social and greedy founders focused on trade and wealth.",
+        "social_bonus": 3,
+        "greed_bonus": 25,
+        "starting_food": 35,
+        "starting_wood": 20,
+        "starting_stone": 10,
+    },
+
+    "exile_colony": {
+        "description": "A broken group with high tension and survival pressure.",
+        "kindness_bonus": -10,
+        "aggression_bonus": 15,
+        "starting_food": 15,
+        "starting_wood": 10,
+        "starting_stone": 5,
+        "starting_tension": 40,
+    }
+}
+
 def get_setting(key):
     preset = DIFFICULTY_PRESETS[ACTIVE_DIFFICULTY]
 
@@ -60,3 +110,6 @@ def get_setting(key):
         return preset[key]
 
     return CONFIG[key]
+
+def get_scenario():
+    return SCENARIO_PRESETS[ACTIVE_SCENARIO]

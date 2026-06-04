@@ -1,7 +1,7 @@
 from rich.table import Table
 from rich.panel import Panel
 
-from config import ACTIVE_DIFFICULTY
+from config import ACTIVE_DIFFICULTY, ACTIVE_SCENARIO
 
 
 def show_agent_status(console, agents):
@@ -107,6 +107,7 @@ def show_resources(console, sim):
 Season: {sim.season}
 Weather: {sim.weather}
 Difficulty: {ACTIVE_DIFFICULTY}
+Scenario: {getattr(sim, "scenario", ACTIVE_SCENARIO)}
 
 Food: {sim.resources['food']}
 Wood: {sim.resources['wood']}

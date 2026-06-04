@@ -5,7 +5,7 @@ from rich.console import Console
 
 from agent import Agent
 from simulation import Simulation
-from config import CONFIG
+from config import CONFIG, get_scenario, ACTIVE_SCENARIO
 from display import (
     show_agent_status,
     show_world_history,
@@ -27,11 +27,33 @@ console = Console()
 
 names = CONFIG["starting_names"][:CONFIG["starting_population"]]
 
+
+def apply_scenario_to_agents(agents):
+    scenario = get_scenario()
+
+    for agent in agents:
+        agent.kindness = max(1, min(100, agent.kindness + scenario.get("kindness_bonus", 0)))
+        agent.aggression = max(1, min(100, agent.aggression + scenario.get("aggression_bonus", 0)))
+        agent.curiosity = max(1, min(100, agent.curiosity + scenario.get("curiosity_bonus", 0)))
+        agent.greed = max(1, min(100, agent.greed + scenario.get("greed_bonus", 0)))
+
+        if "teaching_bonus" in scenario:
+            agent.skills["teaching"] += scenario["teaching_bonus"]
+
+        if "social_bonus" in scenario:
+            agent.skills["social"] += scenario["social_bonus"]
+
+
+def create_new_world():
+    agents = [Agent(name) for name in names]
+    apply_scenario_to_agents(agents)
+    return Simulation(agents)
+
+
 sim = load_world()
 
 if sim is None:
-    agents = [Agent(name) for name in names]
-    sim = Simulation(agents)
+    sim = create_new_world()
 else:
     console.print("Loaded saved world.", style="bold yellow")
 
@@ -40,11 +62,6 @@ running = True
 speed = CONFIG["default_speed"]
 selected_agent_index = 0
 inspect_agent_name = None
-
-
-def create_new_world():
-    agents = [Agent(name) for name in names]
-    return Simulation(agents)
 
 
 def command_listener():

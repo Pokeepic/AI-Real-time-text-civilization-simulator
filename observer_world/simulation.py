@@ -3,7 +3,7 @@ import random
 from world import LOCATIONS
 from utils import find_agent, clamp
 from dialogue import get_line
-from config import CONFIG, get_setting
+from config import CONFIG, get_setting, get_scenario, ACTIVE_SCENARIO
 
 
 class Simulation:
@@ -18,13 +18,20 @@ class Simulation:
             "stone": 0
         }
 
+        scenario = get_scenario()
+
+        self.resources["food"] = scenario.get("starting_food", self.resources["food"])
+        self.resources["wood"] = scenario.get("starting_wood", self.resources["wood"])
+        self.resources["stone"] = scenario.get("starting_stone", self.resources["stone"])
+        self.village_tension = scenario.get("starting_tension", 0)
+        self.scenario = ACTIVE_SCENARIO
+
         self.settlement = {
             "name": None,
             "buildings": [],
             "shelter_progress": 0
         }
         
-        self.village_tension = 0
         self.laws = []
         self.crime_records = {}
         self.leader = None
