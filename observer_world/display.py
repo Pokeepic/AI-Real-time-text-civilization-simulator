@@ -107,6 +107,8 @@ Current Project: {sim.current_project['name'] + ' ' + str(sim.current_project['p
 
 Village Tension: {sim.village_tension}
 Laws: {', '.join(sim.laws) if sim.laws else 'None'}
+Research Points: {sim.research_points}
+Technologies: {', '.join(sim.technologies) if sim.technologies else 'None'}
 Culture Scores: {sim.culture}
 Belief Scores: {sim.beliefs}
 """

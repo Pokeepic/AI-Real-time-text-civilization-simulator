@@ -55,6 +55,8 @@ class Simulation:
         self.extra_settlements = []
         self.wars = []
         self.treaties = []
+        self.technologies = []
+        self.research_points = 0
 
     def unlock_milestone(self, key, text, logs):
         if key in self.milestones:
@@ -1059,6 +1061,90 @@ class Simulation:
 
             candidates.remove(victim)
 
+    def generate_research(self, logs):
+        if self.hour != 17:
+            return
+
+        alive = [
+            a for a in self.agents
+            if a.alive and a.location != "Exiled Lands"
+        ]
+
+        if not alive:
+            return
+
+        points = 0
+
+        for agent in alive:
+            if agent.role == "Teacher":
+                points += 2
+
+            if agent.role == "Medic":
+                points += 1
+
+            if agent.role == "Builder":
+                points += 1
+
+            points += agent.skills["teaching"] // 5
+
+        if self.get_culture_identity() == "Knowledge-Seeking Society":
+            points += 5
+
+        if "Story Circle" in self.traditions:
+            points += 3
+
+        self.research_points += points
+
+        if points > 0:
+            logs.append(f"The settlement generated {points} research points.")
+
+    def unlock_technology(self, logs):
+        tech_tree = [
+            {
+                "name": "Basic Tools",
+                "cost": 30,
+                "requirement": lambda: True
+            },
+            {
+                "name": "Crop Rotation",
+                "cost": 60,
+                "requirement": lambda: "Farm" in self.settlement["buildings"]
+            },
+            {
+                "name": "Herbal Medicine",
+                "cost": 70,
+                "requirement": lambda: "Clinic" in self.settlement["buildings"]
+            },
+            {
+                "name": "Written Records",
+                "cost": 90,
+                "requirement": lambda: self.get_culture_identity() == "Knowledge-Seeking Society"
+            },
+            {
+                "name": "Stone Construction",
+                "cost": 120,
+                "requirement": lambda: "Basic Tools" in self.technologies
+            },
+            {
+                "name": "Council Governance",
+                "cost": 150,
+                "requirement": lambda: len(self.laws) >= 3
+            }
+        ]
+
+        for tech in tech_tree:
+            if tech["name"] in self.technologies:
+                continue
+
+            if self.research_points >= tech["cost"] and tech["requirement"]():
+                self.research_points -= tech["cost"]
+                self.technologies.append(tech["name"])
+
+                logs.append(f"TECHNOLOGY UNLOCKED: {tech['name']}.")
+                self.add_history(f"Technology unlocked: {tech['name']}.")
+
+                return
+
     def check_milestones(self, logs):
         alive = [a for a in self.agents if a.alive]
         dead = [a for a in self.agents if not a.alive]
@@ -1214,6 +1300,10 @@ class Simulation:
                     wood = max(1, wood // 2)
                     stone = max(1, stone // 2)
 
+                if "Basic Tools" in self.technologies:
+                    wood += 3
+                    stone += 2
+
                 agent_settlement = self.get_agent_settlement(agent)
 
                 if agent_settlement:
@@ -1293,6 +1383,8 @@ class Simulation:
         self.update_extra_settlement_laws(logs)
         self.handle_diplomacy(logs)
         self.handle_settlement_war(logs)
+        self.generate_research(logs)
+        self.unlock_technology(logs)
         self.check_milestones(logs)
 
         self.hour += 1
@@ -1364,6 +1456,10 @@ class Simulation:
 
         if "Farm" in buildings:
             food_gain = random.randint(15, 30)
+
+            if "Crop Rotation" in self.technologies:
+                food_gain += 15
+
             self.resources["food"] += food_gain
             logs.append(f"The Farm produced food. Food +{food_gain}.")
 
@@ -1385,6 +1481,14 @@ class Simulation:
                 tension_drop = random.randint(3, 8)
                 self.village_tension = clamp(self.village_tension - tension_drop, 0, 100)
                 logs.append(f"The Guard Post reduced village tension by {tension_drop}.")
+
+        if "Written Records" in self.technologies and self.village_tension > 0:
+            self.village_tension = max(self.village_tension - 2, 0)
+            logs.append("Written records helped settle disputes. Village tension -2.")
+
+        if "Council Governance" in self.technologies and self.village_tension > 0:
+            self.village_tension = max(self.village_tension - 4, 0)
+            logs.append("Council governance reduced political tension. Village tension -4.")
 
     def apply_extra_settlement_effects(self, logs):
         if self.hour != 6:
@@ -1459,6 +1563,9 @@ class Simulation:
 
         if "Clinic" in self.settlement["buildings"]:
             heal_amount += 10
+
+        if "Herbal Medicine" in self.technologies:
+            heal_amount += 8
 
         patient.health = min(patient.health + heal_amount, 100)
 
