@@ -90,10 +90,10 @@ class Agent:
             return random.choice(["rest", "observe"])
 
         if self.age < 13:
-            return random.choice(["observe", "talk", "rest"])
+            return random.choice(["observe", "learn", "talk", "rest"])
 
         if self.age < 18:
-            return random.choice(["observe", "talk", "practice", "help"])
+            return random.choice(["learn", "practice", "help", "talk"])
 
         if self.hunger > 70:
             return "gather food"
@@ -170,7 +170,7 @@ class Agent:
             choices += ["talk", "help"]
 
         if self.role == "Teacher":
-            choices += ["talk", "practice"]
+            choices += ["talk", "practice", "help", "talk"]
 
         if self.role == "Leader":
             choices += ["talk", "help", "observe"]

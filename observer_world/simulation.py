@@ -139,6 +139,9 @@ class Simulation:
             elif action == "bond":
                 logs.extend(self.handle_bond(agent))
 
+            elif action == "learn":
+                logs.extend(self.handle_learning(agent))
+
             else:
                 logs.append(f"{agent.name} stayed at {agent.location} and chose to {action}.")
 
@@ -274,6 +277,64 @@ class Simulation:
         logs.append(f"{medic.name}'s medicine improved to {medic.skills['medicine']}.")
 
         self.add_history(f"{medic.name} healed {patient.name}.")
+
+        return logs
+
+    def handle_learning(self, child):
+        logs = []
+
+        teachers = [
+            agent for agent in self.nearby_agents(child)
+            if agent.alive
+            and agent.age >= 18
+            and (
+                agent.role == "Teacher"
+                or agent.name in child.parents
+                or agent.skills["teaching"] >= 5
+            )
+        ]
+
+        if not teachers:
+            logs.append(f"{child.name} wanted to learn, but no teacher was nearby.")
+            return logs
+
+        teacher = random.choice(teachers)
+
+        teachable_skills = [
+            skill for skill in teacher.skills
+            if teacher.skills[skill] > child.skills[skill]
+        ]
+
+        if not teachable_skills:
+            logs.append(f"{teacher.name} tried to teach {child.name}, but had nothing new to teach.")
+            return logs
+
+        skill = random.choice(teachable_skills)
+
+        learning_chance = 0.45
+        learning_chance += child.curiosity / 250
+        learning_chance += teacher.skills["teaching"] / 100
+        learning_chance += child.discipline / 300
+        learning_chance -= child.pride / 500
+
+        logs.append(f"{teacher.name} taught {child.name} basic {skill} at {child.location}.")
+
+        if random.random() < learning_chance:
+            child.improve_skill(skill, 1)
+            teacher.improve_skill("teaching", 1)
+
+            child.change_relationship(teacher.name, "respect", 4)
+            child.change_relationship(teacher.name, "trust", 3)
+            teacher.change_relationship(child.name, "friendship", 2)
+
+            child.remember(f"Learned {skill} from {teacher.name}.")
+            teacher.remember(f"Taught {child.name} {skill}.")
+
+            logs.append(f"{child.name} learned successfully.")
+            logs.append(f"{child.name}'s {skill} improved to {child.skills[skill]}.")
+        else:
+            child.remember(f"Struggled to learn {skill} from {teacher.name}.")
+            logs.append(f"{child.name} struggled to understand the lesson.")
 
         return logs
 
