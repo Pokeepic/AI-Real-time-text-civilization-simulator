@@ -112,3 +112,40 @@ def show_memorials(console, sim):
 
     recent_memorials = "\n".join(sim.memorials[-5:])
     console.print(Panel(recent_memorials, title="Memorials"))
+
+
+def show_statistics(console, sim):
+    alive = [a for a in sim.agents if a.alive]
+    dead = [a for a in sim.agents if not a.alive]
+    adults = [a for a in alive if a.age >= 18]
+    children = [a for a in alive if a.age < 18]
+
+    total_crimes = sum(len(records) for records in sim.crime_records.values())
+    highest_generation = max([a.generation for a in sim.agents], default=1)
+
+    role_counts = {}
+
+    for agent in alive:
+        role_counts[agent.role] = role_counts.get(agent.role, 0) + 1
+
+    role_text = ", ".join(
+        f"{role}: {count}" for role, count in role_counts.items()
+    ) if role_counts else "None"
+
+    text = f"""
+Population Alive: {len(alive)}
+Dead: {len(dead)}
+Adults: {len(adults)}
+Children: {len(children)}
+Total Born: {max(0, len(sim.agents) - 10)}
+
+Highest Generation: {highest_generation}
+
+Total Crimes Recorded: {total_crimes}
+Laws Created: {len(sim.laws)}
+Buildings Built: {len(sim.settlement['buildings'])}
+
+Roles: {role_text}
+"""
+
+    console.print(Panel(text, title="Civilization Statistics"))
