@@ -52,6 +52,7 @@ class Agent:
         self.risk_taking = random.randint(1, 100)
         self.greed = random.randint(1, 100)
         self.faction = None
+        self.journal = []
 
     def update_needs(self):
         self.hunger = clamp(self.hunger + 5, 0, 100)
@@ -221,3 +222,10 @@ class Agent:
             choices += ["bond"]
 
         return random.choice(choices)
+
+    def write_journal(self, day, hour, thought):
+        entry = f"Day {day}, {hour}:00 — {thought}"
+        self.journal.append(entry)
+
+        if len(self.journal) > 20:
+            self.journal.pop(0)

@@ -48,6 +48,8 @@ def show_world_history(console, sim):
 def show_agent_details(console, agent):
     memories = "\n".join(agent.memories[-5:]) if agent.memories else "No memories yet."
 
+    journal_text = "\n".join(agent.journal[-5:]) if agent.journal else "No journal entries yet."
+
     relationships = []
 
     for name, rel in agent.relationships.items():
@@ -78,6 +80,9 @@ Skills:
 
 Recent Memories:
 {memories}
+
+Journal:
+{journal_text}
 
 Relationships:
 {relationship_text}

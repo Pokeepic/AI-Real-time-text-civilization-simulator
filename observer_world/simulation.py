@@ -1223,6 +1223,38 @@ class Simulation:
 
                     break
 
+    def handle_journals(self, logs):
+        if self.hour != 23:
+            return
+
+        for agent in self.agents:
+            if not agent.alive:
+                continue
+
+            thought = None
+
+            if agent.health < 40:
+                thought = "I do not feel well. I wonder if I will survive much longer."
+
+            elif agent.hunger > 80:
+                thought = "Food has been on my mind all day."
+
+            elif agent.partner:
+                thought = f"I thought about {agent.partner} today."
+
+            elif agent.memories:
+                thought = f"I keep remembering: {agent.memories[-1]}"
+
+            elif agent.faction:
+                thought = f"My place in {agent.faction} may shape my future."
+
+            elif agent.role == "Leader":
+                thought = "Everyone looks to me, but leadership is heavier than it seems."
+
+            if thought:
+                agent.write_journal(self.day, self.hour, thought)
+                logs.append(f"{agent.name} wrote a journal entry.")
+
     def check_milestones(self, logs):
         alive = [a for a in self.agents if a.alive]
         dead = [a for a in self.agents if not a.alive]
@@ -1468,6 +1500,7 @@ class Simulation:
         self.unlock_technology(logs)
         self.generate_extra_settlement_research(logs)
         self.unlock_extra_settlement_technology(logs)
+        self.handle_journals(logs)
         self.check_milestones(logs)
 
         self.hour += 1
