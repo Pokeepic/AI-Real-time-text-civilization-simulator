@@ -557,6 +557,62 @@ class Simulation:
         logs.append(f"Founder: {founder.name}. Population: {len(exiles)}.")
         self.add_history(f"Exiles founded Ash Hollow under {founder.name}.")
 
+    def handle_settlement_relations(self, logs):
+        if self.hour != 15:
+            return
+
+        if not self.extra_settlements:
+            return
+
+        for settlement in self.extra_settlements:
+            relation = settlement["relationship_to_main"]
+
+            if relation >= 40:
+                event = random.choice(["trade", "alliance"])
+            elif relation <= -40:
+                event = random.choice(["raid", "threat"])
+            else:
+                event = random.choice(["trade", "tension", "nothing"])
+
+            if event == "trade":
+                food_gain = random.randint(5, 15)
+                self.resources["food"] += food_gain
+                settlement["relationship_to_main"] += 5
+
+                logs.append(f"{settlement['name']} traded with {self.settlement['name'] or 'the main camp'}.")
+                logs.append(f"Main storage gained food +{food_gain}. Relations +5.")
+
+            elif event == "alliance":
+                settlement["relationship_to_main"] += 3
+                self.village_tension = max(self.village_tension - 5, 0)
+
+                logs.append(f"{settlement['name']} reaffirmed friendly ties with the main settlement.")
+                logs.append("Village tension -5.")
+
+            elif event == "raid":
+                stolen_food = min(self.resources["food"], random.randint(5, 20))
+                self.resources["food"] -= stolen_food
+                settlement["relationship_to_main"] -= 5
+                self.village_tension = min(self.village_tension + 15, 100)
+
+                logs.append(f"{settlement['name']} raided the main settlement.")
+                logs.append(f"Food stolen: {stolen_food}. Relations -5. Tension +15.")
+
+                self.add_history(f"{settlement['name']} raided the main settlement.")
+
+            elif event == "threat":
+                settlement["relationship_to_main"] -= 3
+                self.village_tension = min(self.village_tension + 8, 100)
+
+                logs.append(f"{settlement['name']} sent threats to the main settlement.")
+                logs.append("Relations -3. Village tension +8.")
+
+            elif event == "tension":
+                settlement["relationship_to_main"] -= 2
+
+                logs.append(f"Tension grew between {settlement['name']} and the main settlement.")
+                logs.append("Relations -2.")
+
     def check_milestones(self, logs):
         alive = [a for a in self.agents if a.alive]
         dead = [a for a in self.agents if not a.alive]
@@ -597,6 +653,15 @@ class Simulation:
 
         if self.settlement_stage == "City":
             self.unlock_milestone("became_city", "The settlement became a city.", logs)
+
+        if self.extra_settlements:
+            self.unlock_milestone("second_settlement", "A second settlement was founded.", logs)
+
+        if any(s["relationship_to_main"] >= 50 for s in self.extra_settlements):
+            self.unlock_milestone("first_alliance", "The first alliance between settlements formed.", logs)
+
+        if any(s["relationship_to_main"] <= -50 for s in self.extra_settlements):
+            self.unlock_milestone("settlement_rivalry", "A serious rivalry between settlements began.", logs)
 
     def add_history(self, event):
         record = f"Day {self.day}, {self.hour}:00 — {event}"
@@ -751,6 +816,7 @@ class Simulation:
         self.handle_faction_conflict(logs)
         self.handle_rebellion(logs)
         self.handle_exile_settlements(logs)
+        self.handle_settlement_relations(logs)
         self.check_milestones(logs)
 
         self.hour += 1
