@@ -111,6 +111,7 @@ Stone: {sim.resources['stone']}
 
 Settlement: {sim.settlement['name'] or 'None'}
 Stage: {sim.settlement_stage}
+Era: {sim.current_era}
 Culture: {sim.get_culture_identity()}
 Traditions: {', '.join(sim.traditions) if sim.traditions else 'None'}
 Belief: {sim.get_belief_identity()}
@@ -253,3 +254,15 @@ def show_chronicles(console, sim):
 
     recent = "\n\n".join(sim.chronicles[-3:])
     console.print(Panel(recent, title="Daily Chronicles"))
+
+
+def show_eras(console, sim):
+    if not sim.eras:
+        return
+
+    lines = [
+        f"{era['name']} — started Day {era['start_day']}"
+        for era in sim.eras[-5:]
+    ]
+
+    console.print(Panel("\n".join(lines), title="Eras"))

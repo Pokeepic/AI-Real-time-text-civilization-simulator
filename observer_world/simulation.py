@@ -60,6 +60,13 @@ class Simulation:
         self.research_points = 0
         self.daily_events = []
         self.chronicles = []
+        self.current_era = "Age of Survival"
+        self.eras = [
+            {
+                "name": "Age of Survival",
+                "start_day": 1
+            }
+        ]
 
     def unlock_milestone(self, key, text, logs):
         if key in self.milestones:
@@ -1454,6 +1461,39 @@ class Simulation:
         logs.append(summary)
         self.daily_events = []
 
+    def update_era(self, logs):
+        alive = [a for a in self.agents if a.alive]
+
+        new_era = self.current_era
+
+        if self.wars:
+            new_era = "Age of War"
+
+        elif self.technologies:
+            new_era = "Age of Innovation"
+
+        elif self.extra_settlements:
+            new_era = "Age of Expansion"
+
+        elif self.settlement_stage in ["Village", "Town", "City"]:
+            new_era = "Age of Settlement"
+
+        elif len(alive) >= 15:
+            new_era = "Age of Growth"
+
+        if new_era != self.current_era:
+            self.current_era = new_era
+
+            era_record = {
+                "name": new_era,
+                "start_day": self.day
+            }
+
+            self.eras.append(era_record)
+
+            logs.append(f"NEW ERA BEGINS: {new_era}.")
+            self.add_history(f"New era began: {new_era}.")
+
     def check_milestones(self, logs):
         alive = [a for a in self.agents if a.alive]
         dead = [a for a in self.agents if not a.alive]
@@ -1704,6 +1744,7 @@ class Simulation:
         self.handle_personality_drift(logs)
         self.update_life_goals(logs)
         self.check_goal_progress(logs)
+        self.update_era(logs)
         self.check_milestones(logs)
 
         self.hour += 1
