@@ -125,7 +125,8 @@ for log in recent_logs[-30:]:
 # Tabs
 # -----------------------------
 
-tab1, tab2, tab3, tab4, tab5 = st.tabs([
+tab0, tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    "Overview",
     "Agents",
     "Settlements",
     "History",
@@ -136,6 +137,51 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs([
 # -----------------------------
 # Agents Tab
 # -----------------------------
+
+with tab0:
+    st.subheader("World Overview")
+
+    alive = [a for a in sim.agents if a.alive]
+    dead = [a for a in sim.agents if not a.alive]
+    children = [a for a in alive if a.age < 18]
+    adults = [a for a in alive if a.age >= 18]
+
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Alive", len(alive))
+    c2.metric("Dead", len(dead))
+    c3.metric("Adults", len(adults))
+    c4.metric("Children", len(children))
+
+    c5, c6, c7, c8 = st.columns(4)
+    c5.metric("Food", sim.resources["food"])
+    c6.metric("Wood", sim.resources["wood"])
+    c7.metric("Stone", sim.resources["stone"])
+    c8.metric("Tension", sim.village_tension)
+
+    st.subheader("World Identity")
+
+    st.write(f"**World:** {getattr(sim, 'world_name', 'Unknown')}")
+    st.write(f"**Main Settlement:** {sim.settlement['name'] or 'None'}")
+    st.write(f"**Stage:** {getattr(sim, 'settlement_stage', 'Camp')}")
+    st.write(f"**Era:** {getattr(sim, 'current_era', 'Age of Survival')}")
+    st.write(f"**Culture:** {sim.get_culture_identity()}")
+    st.write(f"**Belief:** {sim.get_belief_identity()}")
+
+    st.subheader("Recent Important Events")
+
+    important_words = [
+        "died", "born", "leader", "war", "rebellion", "murder",
+        "technology", "milestone", "trial", "exiled", "treaty",
+        "founded", "completed", "new era"
+    ]
+
+    important_logs = [
+        log for log in st.session_state.logs[-300:]
+        if any(word in log.lower() for word in important_words)
+    ]
+
+    for log in important_logs[-15:]:
+        st.write(log)
 
 with tab1:
     st.subheader("Agents")
