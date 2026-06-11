@@ -4,7 +4,7 @@ from world import LOCATIONS
 from dialogue import get_line
 from config import CONFIG, get_setting, get_scenario, ACTIVE_SCENARIO
 from utils import find_agent, clamp
-
+from error_handler import safe_execute
 
 class Simulation:
     def __init__(self, agents):
@@ -1816,38 +1816,43 @@ class Simulation:
             else:
                 logs.append(f"{agent.name} stayed at {agent.location} and chose to {action}.")
 
-        self.handle_family_growth(logs)
-        self.handle_aging(logs)
-        self.choose_village_project(logs)
-        self.check_leadership(logs)
-        self.update_settlement_stage(logs)
-        self.update_culture(logs)
-        self.create_tradition(logs)
-        self.run_traditions(logs)
-        self.update_beliefs(logs)
-        self.update_factions(logs)
-        self.update_faction_influence(logs)
-        self.handle_faction_conflict(logs)
-        self.handle_rebellion(logs)
-        self.handle_exile_settlements(logs)
-        self.handle_settlement_relations(logs)
-        self.handle_migration(logs)
-        self.handle_extra_settlement_growth(logs)
-        self.update_extra_settlement_leaders(logs)
-        self.update_extra_settlement_culture(logs)
-        self.update_extra_settlement_laws(logs)
-        self.handle_diplomacy(logs)
-        self.handle_settlement_war(logs)
-        self.generate_research(logs)
-        self.unlock_technology(logs)
-        self.generate_extra_settlement_research(logs)
-        self.unlock_extra_settlement_technology(logs)
-        self.handle_journals(logs)
-        self.handle_personality_drift(logs)
-        self.update_life_goals(logs)
-        self.check_goal_progress(logs)
-        self.update_era(logs)
-        self.check_milestones(logs)
+        systems = [
+        ("handle_family_growth", self.handle_family_growth),
+        ("handle_aging", self.handle_aging),
+        ("choose_village_project", self.choose_village_project),
+        ("check_leadership", self.check_leadership),
+        ("update_settlement_stage", self.update_settlement_stage),
+        ("update_culture", self.update_culture),
+        ("create_tradition", self.create_tradition),
+        ("run_traditions", self.run_traditions),
+        ("update_beliefs", self.update_beliefs),
+        ("update_factions", self.update_factions),
+        ("update_faction_influence", self.update_faction_influence),
+        ("handle_faction_conflict", self.handle_faction_conflict),
+        ("handle_rebellion", self.handle_rebellion),
+        ("handle_exile_settlements", self.handle_exile_settlements),
+        ("handle_settlement_relations", self.handle_settlement_relations),
+        ("handle_migration", self.handle_migration),
+        ("handle_extra_settlement_growth", self.handle_extra_settlement_growth),
+        ("update_extra_settlement_leaders", self.update_extra_settlement_leaders),
+        ("update_extra_settlement_culture", self.update_extra_settlement_culture),
+        ("update_extra_settlement_laws", self.update_extra_settlement_laws),
+        ("handle_diplomacy", self.handle_diplomacy),
+        ("handle_settlement_war", self.handle_settlement_war),
+        ("generate_research", self.generate_research),
+        ("unlock_technology", self.unlock_technology),
+        ("generate_extra_settlement_research", self.generate_extra_settlement_research),
+        ("unlock_extra_settlement_technology", self.unlock_extra_settlement_technology),
+        ("handle_journals", self.handle_journals),
+        ("handle_personality_drift", self.handle_personality_drift),
+        ("update_life_goals", self.update_life_goals),
+        ("check_goal_progress", self.check_goal_progress),
+        ("update_era", self.update_era),
+        ("check_milestones", self.check_milestones),
+    ]
+
+        for name, system in systems:
+            safe_execute(self, logs, name, system)
 
         self.hour += 1
 

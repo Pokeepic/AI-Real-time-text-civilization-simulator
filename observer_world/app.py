@@ -129,14 +129,16 @@ for log in recent_logs[-30:]:
 # Tabs
 # -----------------------------
 
-tab0, tab1, tab2, tab3, tab4, tab5 = st.tabs([
+tab0, tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "Overview",
     "Agents",
     "Settlements",
     "History",
     "Chronicles",
-    "Controls"
+    "Controls",
+    "Errors"
 ])
+
 
 # -----------------------------
 # Agents Tab
@@ -416,3 +418,14 @@ with tab5:
 
     True real-time mode can be built later using a FastAPI backend + web dashboard.
     """)
+
+with tab6:
+    st.subheader("Simulation Errors")
+
+    error_log = getattr(sim, "error_log", [])
+
+    if error_log:
+        for error in error_log[-50:]:
+            st.error(error)
+    else:
+        st.success("No errors detected.")

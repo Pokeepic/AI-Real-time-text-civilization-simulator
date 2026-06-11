@@ -62,6 +62,7 @@ def stabilize_sim(sim):
         "death_records": [],
         "memorials": [],
         "laws": [],
+        "error_log": [],
         "crime_records": {},
         "village_tension": 0,
     }
