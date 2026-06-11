@@ -4,6 +4,7 @@ from agent import Agent
 from simulation import Simulation
 from save_system import load_world, save_world, delete_save
 from config import CONFIG
+from export_data import export_agents_csv, export_relationships_csv
 
 st.set_page_config(page_title="Observer World", layout="wide")
 
@@ -36,7 +37,7 @@ sim = st.session_state.sim
 
 st.title("Observer World")
 
-col_a, col_b, col_c, col_d, col_e = st.columns(5)
+col_a, col_b, col_c, col_d, col_e, col_f = st.columns(6)
 
 with col_a:
     if st.button("Advance 1 Hour"):
@@ -62,11 +63,19 @@ with col_c:
         st.rerun()
 
 with col_d:
+    if st.button("Run 7 Days"):
+        for _ in range(24 * 7):
+            logs = sim.tick()
+            st.session_state.logs.extend(logs)
+        save_world(sim)
+        st.rerun()
+
+with col_e:
     if st.button("Save"):
         save_world(sim)
         st.success("World saved.")
 
-with col_e:
+with col_f:
     if st.button("Reset World"):
         delete_save()
         st.session_state.sim = create_new_world()
@@ -92,7 +101,23 @@ col4.metric("World State", getattr(sim, "world_state", "Ongoing"))
 
 st.subheader("Recent Events")
 
-for log in st.session_state.logs[-30:]:
+important_words = [
+    "died", "born", "leader", "war", "rebellion", "murder",
+    "technology", "milestone", "trial", "exiled", "treaty",
+    "founded", "completed"
+]
+
+show_important_only = st.checkbox("Show important events only")
+
+recent_logs = st.session_state.logs[-100:]
+
+if show_important_only:
+    recent_logs = [
+        log for log in recent_logs
+        if any(word in log.lower() for word in important_words)
+    ]
+
+for log in recent_logs[-30:]:
     st.write(log)
 
 # -----------------------------
@@ -186,6 +211,19 @@ with tab1:
 # Settlements Tab
 # -----------------------------
 
+st.subheader("Population by Location")
+
+location_counts = {}
+
+for agent in sim.agents:
+    if agent.alive:
+        location_counts[agent.location] = location_counts.get(agent.location, 0) + 1
+
+st.dataframe([
+    {"Location": location, "Population": count}
+    for location, count in location_counts.items()
+], use_container_width=True)
+
 with tab2:
     st.subheader("Main Settlement")
 
@@ -252,6 +290,16 @@ with tab4:
 # -----------------------------
 # Controls Tab
 # -----------------------------
+
+st.subheader("Export Data")
+
+if st.button("Export Agents CSV"):
+    path = export_agents_csv(sim)
+    st.success(f"Exported to {path}")
+
+if st.button("Export Relationships CSV"):
+    path = export_relationships_csv(sim)
+    st.success(f"Exported to {path}")
 
 with tab5:
     st.subheader("Temporary Controls")
