@@ -1,4 +1,5 @@
 import streamlit as st
+import os
 
 from agent import Agent
 from simulation import Simulation
@@ -300,6 +301,27 @@ if st.button("Export Agents CSV"):
 if st.button("Export Relationships CSV"):
     path = export_relationships_csv(sim)
     st.success(f"Exported to {path}")
+
+agents_path = "exports/agents.csv"
+relationships_path = "exports/relationships.csv"
+
+if os.path.exists(agents_path):
+    with open(agents_path, "rb") as file:
+        st.download_button(
+            label="Download Agents CSV",
+            data=file,
+            file_name="agents.csv",
+            mime="text/csv"
+        )
+
+if os.path.exists(relationships_path):
+    with open(relationships_path, "rb") as file:
+        st.download_button(
+            label="Download Relationships CSV",
+            data=file,
+            file_name="relationships.csv",
+            mime="text/csv"
+        )
 
 with tab5:
     st.subheader("Temporary Controls")
