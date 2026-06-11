@@ -186,6 +186,26 @@ with tab0:
 with tab1:
     st.subheader("Agents")
 
+    st.subheader("Agent Filters")
+
+    only_alive = st.checkbox("Show only alive agents", value=True)
+
+    role_options = sorted(list(set(a.role for a in sim.agents)))
+    selected_roles = st.multiselect("Filter by role", role_options, default=role_options)
+
+    location_options = sorted(list(set(a.location for a in sim.agents)))
+    selected_locations = st.multiselect("Filter by location", location_options, default=location_options)
+
+    filtered_agents = sim.agents
+
+    if only_alive:
+        filtered_agents = [a for a in filtered_agents if a.alive]
+
+    filtered_agents = [
+        a for a in filtered_agents
+        if a.role in selected_roles and a.location in selected_locations
+    ]
+
     st.dataframe([
         {
             "Name": a.name,
@@ -203,13 +223,21 @@ with tab1:
             "Goal": a.life_goal,
             "Faction": a.faction,
         }
-        for a in sim.agents
+        for a in filtered_agents
     ], use_container_width=True)
 
-    selected_name = st.selectbox(
-        "Inspect Agent",
-        [a.name for a in sim.agents]
-    )
+    if filtered_agents:
+        selected_name = st.selectbox(
+            "Inspect Agent",
+            [a.name for a in filtered_agents]
+        )
+
+        agent = next(a for a in sim.agents if a.name == selected_name)
+
+        # keep your profile/personality/skills/memory code here
+
+    else:
+        st.warning("No agents match the current filters.")
 
     agent = next(a for a in sim.agents if a.name == selected_name)
 
