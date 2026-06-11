@@ -6,6 +6,7 @@ from simulation import Simulation
 from save_system import load_world, save_world, delete_save
 from config import CONFIG
 from export_data import export_agents_csv, export_relationships_csv
+from stability import stabilize_sim
 
 st.set_page_config(page_title="Observer World", layout="wide")
 
@@ -32,6 +33,7 @@ if "logs" not in st.session_state:
 
 sim = st.session_state.sim
 
+stabilize_sim(sim)
 # -----------------------------
 # Header
 # -----------------------------
@@ -79,7 +81,9 @@ with col_e:
 with col_f:
     if st.button("Reset World"):
         delete_save()
-        st.session_state.sim = create_new_world()
+        new_sim = create_new_world()
+        stabilize_sim(new_sim)
+        st.session_state.sim = new_sim
         st.session_state.logs = []
         st.rerun()
 

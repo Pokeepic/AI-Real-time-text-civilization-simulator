@@ -19,3 +19,7 @@ def safe_random_choice(items):
         return None
     import random
     return random.choice(items)
+
+def ensure_attr(obj, attr, default):
+    if not hasattr(obj, attr):
+        setattr(obj, attr, default)

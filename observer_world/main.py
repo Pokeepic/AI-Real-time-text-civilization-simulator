@@ -23,6 +23,8 @@ from display import (
 from save_system import save_world, load_world, delete_save
 from archive import archive_logs, export_chronicles
 from export_data import export_agents_csv
+from stability import stabilize_sim
+
 
 console = Console()
 
@@ -57,6 +59,8 @@ if sim is None:
     sim = create_new_world()
 else:
     console.print("Loaded saved world.", style="bold yellow")
+
+stabilize_sim(sim)
 
 paused = False
 running = True
