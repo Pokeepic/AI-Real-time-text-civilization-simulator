@@ -22,6 +22,7 @@ from display import (
 )
 from save_system import save_world, load_world, delete_save
 from archive import archive_logs, export_chronicles
+from export_data import export_agents_csv
 
 console = Console()
 
@@ -98,6 +99,24 @@ def command_listener():
             export_chronicles(sim)
             running = False
 
+        elif command == "help":
+            console.print("""
+        [bold cyan]Observer World Commands[/bold cyan]
+
+        pause              Pause the simulation
+        resume             Resume the simulation
+        speed 1            Set speed delay to 1 second
+        speed 0.5          Faster simulation
+        inspect Mira       Inspect a specific agent
+        clear inspect      Return to rotating agent view
+        reset              Delete save and start a new world
+        quit               Save and quit
+
+        Example:
+        inspect Kai
+        speed 0.8
+        """)
+
 
 threading.Thread(target=command_listener, daemon=True).start()
 
@@ -107,7 +126,7 @@ while running:
 
     console.print(f"\nDAY {sim.day} | HOUR {sim.hour}:00", style="bold green")
     console.print(
-        "Commands: pause | resume | speed 1 | inspect Mira | clear inspect | reset | quit",
+        "Commands: help | pause | resume | speed 1 | inspect Mira | clear inspect | export | reset | quit",
         style="dim"
     )
 

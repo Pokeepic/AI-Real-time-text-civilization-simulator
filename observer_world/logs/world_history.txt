@@ -1,0 +1,644 @@
+Day 1 Hour 9:00 — Mira explored and moved to Exiled Lands.
+Day 1 Hour 9:00 — Kai gathered food at Camp.
+Day 1 Hour 9:00 — 9 food was added to shared storage.
+Day 1 Hour 9:00 — Kai's hunting improved to 6.
+Day 1 Hour 9:00 — Lena traded with Daren at Camp.
+Day 1 Hour 9:00 — Lena gave 1 food and received 1 food.
+Day 1 Hour 9:00 — Daren gave 1 food and received 1 food.
+Day 1 Hour 9:00 — Trust between them +2.
+Day 1 Hour 9:00 — Rook worked on the first shelter.
+Day 1 Hour 9:00 — Shelter progress +24. Total: 24/100.
+Day 1 Hour 9:00 — Niko gathered materials at Camp.
+Day 1 Hour 9:00 — Shared resources gained: wood +10, stone +2.
+Day 1 Hour 9:00 — Niko's building improved to 6.
+Day 1 Hour 9:00 — Aria explored and moved to Plains.
+Day 1 Hour 9:00 — Daren practiced teaching. Teaching is now 6.
+Day 1 Hour 9:00 — Nova stayed at Camp and chose to walk.
+Day 1 Hour 9:00 — Eli worked on the first shelter.
+Day 1 Hour 9:00 — Shelter progress +19. Total: 43/100.
+Day 1 Hour 9:00 — Zane traded with Lena at Camp.
+Day 1 Hour 9:00 — Zane gave 1 food and received 1 food.
+Day 1 Hour 9:00 — Lena gave 1 food and received 1 food.
+Day 1 Hour 9:00 — Trust between them +2.
+Day 1 Hour 10:00 — Mira wanted to gamble, but no one was nearby.
+Day 1 Hour 10:00 — Kai gathered food at Camp.
+Day 1 Hour 10:00 — 6 food was added to shared storage.
+Day 1 Hour 10:00 — Kai's hunting improved to 7.
+Day 1 Hour 10:00 — Lena stayed at Camp and chose to observe.
+Day 1 Hour 10:00 — Rook worked on the first shelter.
+Day 1 Hour 10:00 — Shelter progress +16. Total: 59/100.
+Day 1 Hour 10:00 — Niko gathered materials at Camp.
+Day 1 Hour 10:00 — Shared resources gained: wood +5, stone +2.
+Day 1 Hour 10:00 — Niko's building improved to 7.
+Day 1 Hour 10:00 — Aria explored and moved to Plains.
+Day 1 Hour 10:00 — Daren stayed at Camp and chose to rest.
+Day 1 Hour 10:00 — Nova helped Zane at Camp.
+Day 1 Hour 10:00 — Zane: "I will remember this."
+Day 1 Hour 10:00 — Zane's hunger reduced by 10.
+Day 1 Hour 10:00 — Zane's trust toward Nova +6.
+Day 1 Hour 10:00 — Eli gathered materials at Camp.
+Day 1 Hour 10:00 — Shared resources gained: wood +4, stone +2.
+Day 1 Hour 10:00 — Eli's building improved to 6.
+Day 1 Hour 10:00 — Zane taught Eli about social at Camp.
+Day 1 Hour 10:00 — Zane: "Let me show you slowly."
+Day 1 Hour 10:00 — Eli learned successfully.
+Day 1 Hour 10:00 — Eli's social improved to 2.
+Day 1 Hour 10:00 — Eli's respect toward Zane +5.
+Day 1 Hour 11:00 — Mira gathered materials at Exiled Lands.
+Day 1 Hour 11:00 — Shared resources gained: wood +7, stone +4.
+Day 1 Hour 11:00 — Mira's building improved to 5.
+Day 1 Hour 11:00 — Kai explored and moved to Camp.
+Day 1 Hour 11:00 — Lena helped Niko at Camp.
+Day 1 Hour 11:00 — Niko: "I will remember this."
+Day 1 Hour 11:00 — Niko's hunger reduced by 6.
+Day 1 Hour 11:00 — Niko's trust toward Lena +6.
+Day 1 Hour 11:00 — Rook worked on the first shelter.
+Day 1 Hour 11:00 — Shelter progress +23. Total: 82/100.
+Day 1 Hour 11:00 — Niko worked on the first shelter.
+Day 1 Hour 11:00 — Shelter progress +23. Total: 105/100.
+Day 1 Hour 11:00 — A permanent shelter has been completed.
+Day 1 Hour 11:00 — Settlement founded: Old Hearth.
+Day 1 Hour 11:00 — Aria gathered food at Plains.
+Day 1 Hour 11:00 — 6 food was added to shared storage.
+Day 1 Hour 11:00 — Aria's hunting improved to 6.
+Day 1 Hour 11:00 — Daren stayed at Camp and chose to observe.
+Day 1 Hour 11:00 — Nova talked with Lena at Camp.
+Day 1 Hour 11:00 — Nova: "If we share what we find, we all survive."
+Day 1 Hour 11:00 — Lena: "We should make sure no one is left hungry."
+Day 1 Hour 11:00 — Trust +3, Friendship +2.
+Day 1 Hour 11:00 — Eli maintained the shelter.
+Day 1 Hour 11:00 — Zane gathered materials at Camp.
+Day 1 Hour 11:00 — Shared resources gained: wood +5, stone +1.
+Day 1 Hour 11:00 — Zane's building improved to 2.
+Day 1 Hour 11:00 — Zane has naturally become the leader of Old Hearth.
+Day 1 Hour 11:00 — Old Hearth has grown into a Settlement.
+Day 1 Hour 11:00 — MILESTONE UNLOCKED: First permanent shelter built.
+Day 1 Hour 11:00 — MILESTONE UNLOCKED: Zane became the first leader.
+Day 1 Hour 12:00 — Mira maintained the shelter.
+Day 1 Hour 12:00 — Kai explored and moved to Exiled Lands.
+Day 1 Hour 12:00 — Lena stayed at Camp and chose to observe.
+Day 1 Hour 12:00 — Rook gathered materials at Camp.
+Day 1 Hour 12:00 — Shared resources gained: wood +4, stone +6.
+Day 1 Hour 12:00 — Rook's building improved to 8.
+Day 1 Hour 12:00 — Niko gathered materials at Camp.
+Day 1 Hour 12:00 — Shared resources gained: wood +6, stone +6.
+Day 1 Hour 12:00 — Niko's building improved to 9.
+Day 1 Hour 12:00 — Aria explored and moved to Forest.
+Day 1 Hour 12:00 — Daren taught Eli about teaching at Camp.
+Day 1 Hour 12:00 — Daren: "Pay attention to the method."
+Day 1 Hour 12:00 — Eli failed to understand the lesson.
+Day 1 Hour 12:00 — Nova stayed at Camp and chose to walk.
+Day 1 Hour 12:00 — Eli gathered materials at Camp.
+Day 1 Hour 12:00 — Shared resources gained: wood +8, stone +2.
+Day 1 Hour 12:00 — Eli's building improved to 8.
+Day 1 Hour 12:00 — Zane talked with Niko at Camp.
+Day 1 Hour 12:00 — Zane: "If we share what we find, we all survive."
+Day 1 Hour 12:00 — Niko: "If we share what we find, we all survive."
+Day 1 Hour 12:00 — Trust +3, Friendship +2.
+Day 1 Hour 12:00 — Leader Zane proposed a new village project: Guard Post.
+Day 1 Hour 13:00 — Mira spent quiet time with Kai at Exiled Lands.
+Day 1 Hour 13:00 — Their bond grew slowly. Friendship +4.
+Day 1 Hour 13:00 — Kai stayed at Exiled Lands and chose to observe.
+Day 1 Hour 13:00 — Lena patrolled Camp.
+Day 1 Hour 13:00 — Lena's combat improved to 6.
+Day 1 Hour 13:00 — Rook explored and moved to Hill.
+Day 1 Hour 13:00 — Niko stayed at Camp and chose to observe.
+Day 1 Hour 13:00 — Aria wanted to talk, but no one was nearby.
+Day 1 Hour 13:00 — Daren taught Eli about teaching at Camp.
+Day 1 Hour 13:00 — Daren: "Here is how it works."
+Day 1 Hour 13:00 — Eli learned successfully.
+Day 1 Hour 13:00 — Eli's teaching improved to 4.
+Day 1 Hour 13:00 — Eli's respect toward Daren +5.
+Day 1 Hour 13:00 — Nova taught Lena about social at Camp.
+Day 1 Hour 13:00 — Nova: "Let me show you slowly."
+Day 1 Hour 13:00 — Lena failed to understand the lesson.
+Day 1 Hour 13:00 — Eli gathered materials at Camp.
+Day 1 Hour 13:00 — Shared resources gained: wood +7, stone +3.
+Day 1 Hour 13:00 — Eli's building improved to 9.
+Day 1 Hour 13:00 — Zane stayed at Camp and chose to observe.
+Day 1 Hour 14:00 — Mira and Kai wanted to gamble, but neither had enough wealth.
+Day 1 Hour 14:00 — Kai stayed at Exiled Lands and chose to walk.
+Day 1 Hour 14:00 — Lena stayed at Camp and chose to observe.
+Day 1 Hour 14:00 — Rook explored and moved to Camp.
+Day 1 Hour 14:00 — Niko talked with Rook at Camp.
+Day 1 Hour 14:00 — Niko: "We should make sure no one is left hungry."
+Day 1 Hour 14:00 — Rook: "We need food, shelter, and a plan."
+Day 1 Hour 14:00 — Trust +4, Friendship +2.
+Day 1 Hour 14:00 — Aria wanted to talk, but no one was nearby.
+Day 1 Hour 14:00 — Daren talked with Eli at Camp.
+Day 1 Hour 14:00 — Daren: "Survival comes first."
+Day 1 Hour 14:00 — Eli: "We should make sure no one is left hungry."
+Day 1 Hour 14:00 — Trust +2, Friendship +2.
+Day 1 Hour 14:00 — Nova talked with Niko at Camp.
+Day 1 Hour 14:00 — Nova: "If we share what we find, we all survive."
+Day 1 Hour 14:00 — Niko: "If we share what we find, we all survive."
+Day 1 Hour 14:00 — Trust +2, Friendship +1.
+Day 1 Hour 14:00 — Eli traded with Niko at Camp.
+Day 1 Hour 14:00 — Eli gave 1 stone and received 1 food.
+Day 1 Hour 14:00 — Niko gave 1 food and received 1 stone.
+Day 1 Hour 14:00 — Trust between them +2.
+Day 1 Hour 14:00 — Zane tried to teach Eli farming, but they had little to offer.
+Day 1 Hour 15:00 — Mira and Kai wanted to gamble, but neither had enough wealth.
+Day 1 Hour 15:00 — Kai gathered materials at Exiled Lands.
+Day 1 Hour 15:00 — Shared resources gained: wood +10, stone +1.
+Day 1 Hour 15:00 — Kai's building improved to 3.
+Day 1 Hour 15:00 — Lena helped Daren at Camp.
+Day 1 Hour 15:00 — Daren: "I will remember this."
+Day 1 Hour 15:00 — Daren's hunger reduced by 14.
+Day 1 Hour 15:00 — Daren's trust toward Lena +6.
+Day 1 Hour 15:00 — Rook talked with Daren at Camp.
+Day 1 Hour 15:00 — Rook: "We need food, shelter, and a plan."
+Day 1 Hour 15:00 — Daren: "Survival comes first."
+Day 1 Hour 15:00 — Trust +2, Friendship +3.
+Day 1 Hour 15:00 — Niko stayed at Camp and chose to rest.
+Day 1 Hour 15:00 — Aria wanted to talk, but no one was nearby.
+Day 1 Hour 15:00 — Daren talked with Eli at Camp.
+Day 1 Hour 15:00 — Daren: "We need food, shelter, and a plan."
+Day 1 Hour 15:00 — Eli: "If we share what we find, we all survive."
+Day 1 Hour 15:00 — Trust +4, Friendship +2.
+Day 1 Hour 15:00 — Nova tried to teach Lena farming, but they had little to offer.
+Day 1 Hour 15:00 — Eli gathered food at Camp.
+Day 1 Hour 15:00 — 6 food was added to shared storage.
+Day 1 Hour 15:00 — Eli's hunting improved to 3.
+Day 1 Hour 15:00 — Zane talked with Rook at Camp.
+Day 1 Hour 15:00 — Zane: "If we share what we find, we all survive."
+Day 1 Hour 15:00 — Rook: "We need food, shelter, and a plan."
+Day 1 Hour 15:00 — Trust +3, Friendship +2.
+Day 1 Hour 16:00 — Mira explored and moved to River.
+Day 1 Hour 16:00 — Kai wanted to gamble, but no one was nearby.
+Day 1 Hour 16:00 — Lena helped Daren at Camp.
+Day 1 Hour 16:00 — Daren: "I will remember this."
+Day 1 Hour 16:00 — Daren's hunger reduced by 13.
+Day 1 Hour 16:00 — Daren's trust toward Lena +6.
+Day 1 Hour 16:00 — Rook worked on Guard Post.
+Day 1 Hour 16:00 — Guard Post progress +23. Total: 23/100.
+Day 1 Hour 16:00 — Niko gathered materials at Camp.
+Day 1 Hour 16:00 — Shared resources gained: wood +6, stone +4.
+Day 1 Hour 16:00 — Niko's building improved to 10.
+Day 1 Hour 16:00 — Aria wanted to talk, but no one was nearby.
+Day 1 Hour 16:00 — Daren tried to teach Niko social, but they had little to offer.
+Day 1 Hour 16:00 — Nova talked with Niko at Camp.
+Day 1 Hour 16:00 — Nova: "If we share what we find, we all survive."
+Day 1 Hour 16:00 — Niko: "We should make sure no one is left hungry."
+Day 1 Hour 16:00 — Trust +3, Friendship +2.
+Day 1 Hour 16:00 — Eli gathered food at Camp.
+Day 1 Hour 16:00 — 9 food was added to shared storage.
+Day 1 Hour 16:00 — Eli's hunting improved to 4.
+Day 1 Hour 16:00 — Zane taught Lena about social at Camp.
+Day 1 Hour 16:00 — Zane: "You are improving. Do not rush."
+Day 1 Hour 16:00 — Lena failed to understand the lesson.
+Day 1 Hour 17:00 — Mira worked on Guard Post.
+Day 1 Hour 17:00 — Guard Post progress +20. Total: 43/100.
+Day 1 Hour 17:00 — Kai wanted to trade, but no one was nearby.
+Day 1 Hour 17:00 — Lena patrolled Camp.
+Day 1 Hour 17:00 — Lena's combat improved to 7.
+Day 1 Hour 17:00 — The quiet patrol made people feel safer. Village tension -2.
+Day 1 Hour 17:00 — Rook gathered food at Camp.
+Day 1 Hour 17:00 — 10 food was added to shared storage.
+Day 1 Hour 17:00 — Rook's hunting improved to 2.
+Day 1 Hour 17:00 — Niko talked with Nova at Camp.
+Day 1 Hour 17:00 — Niko: "If we share what we find, we all survive."
+Day 1 Hour 17:00 — Nova: "If we share what we find, we all survive."
+Day 1 Hour 17:00 — Trust +3, Friendship +3.
+Day 1 Hour 17:00 — Aria wanted to talk, but no one was nearby.
+Day 1 Hour 17:00 — Daren talked with Zane at Camp.
+Day 1 Hour 17:00 — Daren: "We need food, shelter, and a plan."
+Day 1 Hour 17:00 — Zane: "If we share what we find, we all survive."
+Day 1 Hour 17:00 — Trust +4, Friendship +2.
+Day 1 Hour 17:00 — Nova talked with Niko at Camp.
+Day 1 Hour 17:00 — Nova: "If we share what we find, we all survive."
+Day 1 Hour 17:00 — Niko: "If we share what we find, we all survive."
+Day 1 Hour 17:00 — Trust +3, Friendship +1.
+Day 1 Hour 17:00 — Eli gathered materials at Camp.
+Day 1 Hour 17:00 — Shared resources gained: wood +10, stone +6.
+Day 1 Hour 17:00 — Eli's building improved to 10.
+Day 1 Hour 17:00 — Zane talked with Lena at Camp.
+Day 1 Hour 17:00 — Zane: "If we share what we find, we all survive."
+Day 1 Hour 17:00 — Lena: "We should make sure no one is left hungry."
+Day 1 Hour 17:00 — Trust +2, Friendship +3.
+Day 1 Hour 18:00 — Mira wanted to gamble, but no one was nearby.
+Day 1 Hour 18:00 — Kai gathered food at Exiled Lands.
+Day 1 Hour 18:00 — 8 food was added to shared storage.
+Day 1 Hour 18:00 — Kai's hunting improved to 8.
+Day 1 Hour 18:00 — Lena gathered food at Camp.
+Day 1 Hour 18:00 — 10 food was added to shared storage.
+Day 1 Hour 18:00 — Lena's hunting improved to 4.
+Day 1 Hour 18:00 — Rook stayed at Camp and chose to observe.
+Day 1 Hour 18:00 — Niko gathered food at Camp.
+Day 1 Hour 18:00 — 10 food was added to shared storage.
+Day 1 Hour 18:00 — Niko's hunting improved to 2.
+Day 1 Hour 18:00 — Aria gathered food at Forest.
+Day 1 Hour 18:00 — 7 food was added to shared storage.
+Day 1 Hour 18:00 — Aria's hunting improved to 7.
+Day 1 Hour 18:00 — Daren talked with Nova at Camp.
+Day 1 Hour 18:00 — Daren: "We need food, shelter, and a plan."
+Day 1 Hour 18:00 — Nova: "We should make sure no one is left hungry."
+Day 1 Hour 18:00 — Trust +1, Friendship +3.
+Day 1 Hour 18:00 — Nova gathered food at Camp.
+Day 1 Hour 18:00 — 5 food was added to shared storage.
+Day 1 Hour 18:00 — Nova's hunting improved to 5.
+Day 1 Hour 18:00 — Eli gathered food at Camp.
+Day 1 Hour 18:00 — 10 food was added to shared storage.
+Day 1 Hour 18:00 — Eli's hunting improved to 5.
+Day 1 Hour 18:00 — Zane talked with Eli at Camp.
+Day 1 Hour 18:00 — Zane: "We should make sure no one is left hungry."
+Day 1 Hour 18:00 — Eli: "We should make sure no one is left hungry."
+Day 1 Hour 18:00 — Trust +3, Friendship +1.
+Day 1 Hour 18:00 — The settlement generated 11 research points.
+Day 1 Hour 19:00 — Mira gathered food at River.
+Day 1 Hour 19:00 — 5 food was added to shared storage.
+Day 1 Hour 19:00 — Mira's hunting improved to 5.
+Day 1 Hour 19:00 — Kai wanted to talk, but no one was nearby.
+Day 1 Hour 19:00 — Lena stayed at Camp and chose to observe.
+Day 1 Hour 19:00 — Rook gathered food at Camp.
+Day 1 Hour 19:00 — 9 food was added to shared storage.
+Day 1 Hour 19:00 — Rook's hunting improved to 3.
+Day 1 Hour 19:00 — Niko talked with Daren at Camp.
+Day 1 Hour 19:00 — Niko: "We should make sure no one is left hungry."
+Day 1 Hour 19:00 — Daren: "We need food, shelter, and a plan."
+Day 1 Hour 19:00 — Trust +2, Friendship +3.
+Day 1 Hour 19:00 — Aria wanted to talk, but no one was nearby.
+Day 1 Hour 19:00 — Daren tried to teach Nova social, but they had little to offer.
+Day 1 Hour 19:00 — Nova gathered food at Camp.
+Day 1 Hour 19:00 — 5 food was added to shared storage.
+Day 1 Hour 19:00 — Nova's hunting improved to 6.
+Day 1 Hour 19:00 — Eli stayed at Camp and chose to observe.
+Day 1 Hour 19:00 — Zane stayed at Camp and chose to observe.
+Day 1 Hour 20:00 — Mira gathered food at River.
+Day 1 Hour 20:00 — 11 food was added to shared storage.
+Day 1 Hour 20:00 — Mira's hunting improved to 6.
+Day 1 Hour 20:00 — Kai gathered food at Exiled Lands.
+Day 1 Hour 20:00 — 9 food was added to shared storage.
+Day 1 Hour 20:00 — Kai's hunting improved to 9.
+Day 1 Hour 20:00 — Lena gathered food at Camp.
+Day 1 Hour 20:00 — 7 food was added to shared storage.
+Day 1 Hour 20:00 — Lena's hunting improved to 5.
+Day 1 Hour 20:00 — Rook stayed at Camp and chose to rest.
+Day 1 Hour 20:00 — Niko gathered food at Camp.
+Day 1 Hour 20:00 — 11 food was added to shared storage.
+Day 1 Hour 20:00 — Niko's hunting improved to 3.
+Day 1 Hour 20:00 — Aria gathered food at Forest.
+Day 1 Hour 20:00 — 9 food was added to shared storage.
+Day 1 Hour 20:00 — Aria's hunting improved to 8.
+Day 1 Hour 20:00 — Daren talked with Zane at Camp.
+Day 1 Hour 20:00 — Daren: "We need food, shelter, and a plan."
+Day 1 Hour 20:00 — Zane: "If we share what we find, we all survive."
+Day 1 Hour 20:00 — Trust +2, Friendship +3.
+Day 1 Hour 20:00 — Nova gathered food at Camp.
+Day 1 Hour 20:00 — 11 food was added to shared storage.
+Day 1 Hour 20:00 — Nova's hunting improved to 7.
+Day 1 Hour 20:00 — Eli gathered food at Camp.
+Day 1 Hour 20:00 — 5 food was added to shared storage.
+Day 1 Hour 20:00 — Eli's hunting improved to 6.
+Day 1 Hour 20:00 — Zane gathered food at Camp.
+Day 1 Hour 20:00 — 9 food was added to shared storage.
+Day 1 Hour 20:00 — Zane's hunting improved to 3.
+Day 1 Hour 20:00 — New faction formed: Leader Loyalists.
+Day 1 Hour 20:00 — New faction formed: Watch Order.
+Day 1 Hour 21:00 — Mira slept at River. Energy restored.
+Day 1 Hour 21:00 — Kai wanted to talk, but no one was nearby.
+Day 1 Hour 21:00 — Lena stayed at Camp and chose to rest.
+Day 1 Hour 21:00 — Rook gathered food at Camp.
+Day 1 Hour 21:00 — 10 food was added to shared storage.
+Day 1 Hour 21:00 — Rook's hunting improved to 4.
+Day 1 Hour 21:00 — Niko talked with Zane at Camp.
+Day 1 Hour 21:00 — Niko: "If we share what we find, we all survive."
+Day 1 Hour 21:00 — Zane: "If we share what we find, we all survive."
+Day 1 Hour 21:00 — Trust +4, Friendship +2.
+Day 1 Hour 21:00 — Aria slept at Forest. Energy restored.
+Day 1 Hour 21:00 — Daren tried to teach Rook hunting, but they had little to offer.
+Day 1 Hour 21:00 — Nova stayed at Camp and chose to rest.
+Day 1 Hour 21:00 — Eli gathered food at Camp.
+Day 1 Hour 21:00 — 8 food was added to shared storage.
+Day 1 Hour 21:00 — Eli's hunting improved to 7.
+Day 1 Hour 21:00 — Zane stayed at Camp and chose to observe.
+Day 1 Hour 21:00 — The culture of Old Hearth is slowly leaning toward cooperation.
+Day 1 Hour 22:00 — Mira gathered food at River.
+Day 1 Hour 22:00 — 8 food was added to shared storage.
+Day 1 Hour 22:00 — Mira's hunting improved to 7.
+Day 1 Hour 22:00 — Kai gathered food at Exiled Lands.
+Day 1 Hour 22:00 — 10 food was added to shared storage.
+Day 1 Hour 22:00 — Kai's hunting improved to 10.
+Day 1 Hour 22:00 — Lena gathered food at Camp.
+Day 1 Hour 22:00 — 12 food was added to shared storage.
+Day 1 Hour 22:00 — Lena's hunting improved to 6.
+Day 1 Hour 22:00 — Rook stayed at Camp and chose to rest.
+Day 1 Hour 22:00 — Niko stayed at Camp and chose to observe.
+Day 1 Hour 22:00 — Aria gathered food at Forest.
+Day 1 Hour 22:00 — 8 food was added to shared storage.
+Day 1 Hour 22:00 — Aria's hunting improved to 9.
+Day 1 Hour 22:00 — Daren talked with Rook at Camp.
+Day 1 Hour 22:00 — Daren: "We need food, shelter, and a plan."
+Day 1 Hour 22:00 — Rook: "We need food, shelter, and a plan."
+Day 1 Hour 22:00 — Trust +1, Friendship +3.
+Day 1 Hour 22:00 — Nova gathered food at Camp.
+Day 1 Hour 22:00 — 7 food was added to shared storage.
+Day 1 Hour 22:00 — Nova's hunting improved to 8.
+Day 1 Hour 22:00 — Eli gathered food at Camp.
+Day 1 Hour 22:00 — 8 food was added to shared storage.
+Day 1 Hour 22:00 — Eli's hunting improved to 8.
+Day 1 Hour 22:00 — Zane gathered food at Camp.
+Day 1 Hour 22:00 — 6 food was added to shared storage.
+Day 1 Hour 22:00 — Zane's hunting improved to 4.
+Day 1 Hour 23:00 — Mira gathered food at River.
+Day 1 Hour 23:00 — 13 food was added to shared storage.
+Day 1 Hour 23:00 — Mira's hunting improved to 8.
+Day 1 Hour 23:00 — Kai slept at Exiled Lands. Energy restored.
+Day 1 Hour 23:00 — Lena slept at Camp. Energy restored.
+Day 1 Hour 23:00 — Rook gathered food at Camp.
+Day 1 Hour 23:00 — 5 food was added to shared storage.
+Day 1 Hour 23:00 — Rook's hunting improved to 5.
+Day 1 Hour 23:00 — Niko gathered food at Camp.
+Day 1 Hour 23:00 — 9 food was added to shared storage.
+Day 1 Hour 23:00 — Niko's hunting improved to 4.
+Day 1 Hour 23:00 — Aria gathered food at Forest.
+Day 1 Hour 23:00 — 7 food was added to shared storage.
+Day 1 Hour 23:00 — Aria's hunting improved to 10.
+Day 1 Hour 23:00 — Daren slept at Camp. Energy restored.
+Day 1 Hour 23:00 — Nova gathered food at Camp.
+Day 1 Hour 23:00 — 9 food was added to shared storage.
+Day 1 Hour 23:00 — Nova's hunting improved to 9.
+Day 1 Hour 23:00 — Eli slept at Camp. Energy restored.
+Day 1 Hour 23:00 — Zane gathered food at Camp.
+Day 1 Hour 23:00 — 4 food was added to shared storage.
+Day 1 Hour 23:00 — Zane's hunting improved to 5.
+Day 2 Hour 0:00 — Mira wanted to talk, but no one was nearby.
+Day 2 Hour 0:00 — Kai gathered food at Exiled Lands.
+Day 2 Hour 0:00 — 7 food was added to shared storage.
+Day 2 Hour 0:00 — Kai's hunting improved to 11.
+Day 2 Hour 0:00 — Lena gathered food at Camp.
+Day 2 Hour 0:00 — 10 food was added to shared storage.
+Day 2 Hour 0:00 — Lena's hunting improved to 7.
+Day 2 Hour 0:00 — Rook gathered food at Camp.
+Day 2 Hour 0:00 — 6 food was added to shared storage.
+Day 2 Hour 0:00 — Rook's hunting improved to 6.
+Day 2 Hour 0:00 — Niko gathered food at Camp.
+Day 2 Hour 0:00 — 5 food was added to shared storage.
+Day 2 Hour 0:00 — Niko's hunting improved to 5.
+Day 2 Hour 0:00 — Aria wanted to talk, but no one was nearby.
+Day 2 Hour 0:00 — Daren gathered food at Camp.
+Day 2 Hour 0:00 — 5 food was added to shared storage.
+Day 2 Hour 0:00 — Daren's hunting improved to 3.
+Day 2 Hour 0:00 — Nova slept at Camp. Energy restored.
+Day 2 Hour 0:00 — Eli gathered food at Camp.
+Day 2 Hour 0:00 — 7 food was added to shared storage.
+Day 2 Hour 0:00 — Eli's hunting improved to 9.
+Day 2 Hour 0:00 — Zane gathered food at Camp.
+Day 2 Hour 0:00 — 9 food was added to shared storage.
+Day 2 Hour 0:00 — Zane's hunting improved to 6.
+Day 2 Hour 0:00 — Lena wrote a journal entry.
+Day 2 Hour 0:00 — Rook wrote a journal entry.
+Day 2 Hour 0:00 — Niko wrote a journal entry.
+Day 2 Hour 0:00 — Daren wrote a journal entry.
+Day 2 Hour 0:00 — Nova wrote a journal entry.
+Day 2 Hour 0:00 — Eli wrote a journal entry.
+Day 2 Hour 0:00 — Zane wrote a journal entry.
+Day 2 Hour 0:00 — --- A new day begins. Day 2. ---
+Day 2 Hour 0:00 — Day 1 Chronicle: Mira explored and moved to Exiled Lands. Zane's trust toward Nova +6. Eli's respect toward Zane +5. Mira gathered materials at Exiled Lands. Niko's trust toward Lena +6.
+
+--- NEW DAY ---
+
+Day 2 Hour 1:00 — Mira wanted to talk, but no one was nearby.
+Day 2 Hour 1:00 — Kai gathered food at Exiled Lands.
+Day 2 Hour 1:00 — 12 food was added to shared storage.
+Day 2 Hour 1:00 — Kai's hunting improved to 12.
+Day 2 Hour 1:00 — Lena slept at Camp. Energy restored.
+Day 2 Hour 1:00 — Rook gathered food at Camp.
+Day 2 Hour 1:00 — 8 food was added to shared storage.
+Day 2 Hour 1:00 — Rook's hunting improved to 7.
+Day 2 Hour 1:00 — Niko gathered food at Camp.
+Day 2 Hour 1:00 — 9 food was added to shared storage.
+Day 2 Hour 1:00 — Niko's hunting improved to 6.
+Day 2 Hour 1:00 — Aria gathered food at Forest.
+Day 2 Hour 1:00 — 7 food was added to shared storage.
+Day 2 Hour 1:00 — Aria's hunting improved to 11.
+Day 2 Hour 1:00 — Daren gathered food at Camp.
+Day 2 Hour 1:00 — 9 food was added to shared storage.
+Day 2 Hour 1:00 — Daren's hunting improved to 4.
+Day 2 Hour 1:00 — Nova gathered food at Camp.
+Day 2 Hour 1:00 — 10 food was added to shared storage.
+Day 2 Hour 1:00 — Nova's hunting improved to 10.
+Day 2 Hour 1:00 — Eli gathered food at Camp.
+Day 2 Hour 1:00 — 11 food was added to shared storage.
+Day 2 Hour 1:00 — Eli's hunting improved to 10.
+Day 2 Hour 1:00 — Zane slept at Camp. Energy restored.
+Day 2 Hour 1:00 — Eli's personality shifted: discipline 10->11.
+Day 2 Hour 1:00 — Zane's personality shifted: pride 54->55.
+Day 2 Hour 2:00 — Mira gathered food at River.
+Day 2 Hour 2:00 — 8 food was added to shared storage.
+Day 2 Hour 2:00 — Mira's hunting improved to 9.
+Day 2 Hour 2:00 — Kai wanted to talk, but no one was nearby.
+Day 2 Hour 2:00 — Lena gathered food at Camp.
+Day 2 Hour 2:00 — 9 food was added to shared storage.
+Day 2 Hour 2:00 — Lena's hunting improved to 8.
+Day 2 Hour 2:00 — Rook slept at Camp. Energy restored.
+Day 2 Hour 2:00 — Niko slept at Camp. Energy restored.
+Day 2 Hour 2:00 — Aria gathered food at Forest.
+Day 2 Hour 2:00 — 14 food was added to shared storage.
+Day 2 Hour 2:00 — Aria's hunting improved to 12.
+Day 2 Hour 2:00 — Daren gathered food at Camp.
+Day 2 Hour 2:00 — 11 food was added to shared storage.
+Day 2 Hour 2:00 — Daren's hunting improved to 5.
+Day 2 Hour 2:00 — Nova slept at Camp. Energy restored.
+Day 2 Hour 2:00 — Eli slept at Camp. Energy restored.
+Day 2 Hour 2:00 — Zane gathered food at Camp.
+Day 2 Hour 2:00 — 12 food was added to shared storage.
+Day 2 Hour 2:00 — Zane's hunting improved to 7.
+Day 2 Hour 3:00 — Mira wanted to talk, but no one was nearby.
+Day 2 Hour 3:00 — Kai wanted to talk, but no one was nearby.
+Day 2 Hour 3:00 — Lena talked with Daren at Camp.
+Day 2 Hour 3:00 — Lena: "We should make sure no one is left hungry."
+Day 2 Hour 3:00 — Daren: "Survival comes first."
+Day 2 Hour 3:00 — Trust +4, Friendship +1.
+Day 2 Hour 3:00 — Rook gathered food at Camp.
+Day 2 Hour 3:00 — 7 food was added to shared storage.
+Day 2 Hour 3:00 — Rook's hunting improved to 8.
+Day 2 Hour 3:00 — Niko gathered food at Camp.
+Day 2 Hour 3:00 — 6 food was added to shared storage.
+Day 2 Hour 3:00 — Niko's hunting improved to 7.
+Day 2 Hour 3:00 — Aria wanted to talk, but no one was nearby.
+Day 2 Hour 3:00 — Daren slept at Camp. Energy restored.
+Day 2 Hour 3:00 — Nova gathered food at Camp.
+Day 2 Hour 3:00 — 7 food was added to shared storage.
+Day 2 Hour 3:00 — Nova's hunting improved to 11.
+Day 2 Hour 3:00 — Eli gathered food at Camp.
+Day 2 Hour 3:00 — 12 food was added to shared storage.
+Day 2 Hour 3:00 — Eli's hunting improved to 11.
+Day 2 Hour 3:00 — Zane slept at Camp. Energy restored.
+Day 2 Hour 4:00 — Mira gathered food at River.
+Day 2 Hour 4:00 — 7 food was added to shared storage.
+Day 2 Hour 4:00 — Mira's hunting improved to 10.
+Day 2 Hour 4:00 — Kai gathered food at Exiled Lands.
+Day 2 Hour 4:00 — 16 food was added to shared storage.
+Day 2 Hour 4:00 — Kai's hunting improved to 13.
+Day 2 Hour 4:00 — Lena gathered food at Camp.
+Day 2 Hour 4:00 — 11 food was added to shared storage.
+Day 2 Hour 4:00 — Lena's hunting improved to 9.
+Day 2 Hour 4:00 — Rook gathered food at Camp.
+Day 2 Hour 4:00 — 14 food was added to shared storage.
+Day 2 Hour 4:00 — Rook's hunting improved to 9.
+Day 2 Hour 4:00 — Niko gathered food at Camp.
+Day 2 Hour 4:00 — 12 food was added to shared storage.
+Day 2 Hour 4:00 — Niko's hunting improved to 8.
+Day 2 Hour 4:00 — Aria wanted to talk, but no one was nearby.
+Day 2 Hour 4:00 — Daren stayed at Camp and chose to rest.
+Day 2 Hour 4:00 — Nova gathered food at Camp.
+Day 2 Hour 4:00 — 11 food was added to shared storage.
+Day 2 Hour 4:00 — Nova's hunting improved to 12.
+Day 2 Hour 4:00 — Eli stayed at Camp and chose to observe.
+Day 2 Hour 4:00 — Zane gathered food at Camp.
+Day 2 Hour 4:00 — 13 food was added to shared storage.
+Day 2 Hour 4:00 — Zane's hunting improved to 8.
+Day 2 Hour 5:00 — Mira gathered food at River.
+Day 2 Hour 5:00 — 9 food was added to shared storage.
+Day 2 Hour 5:00 — Mira's hunting improved to 11.
+Day 2 Hour 5:00 — Kai wanted to talk, but no one was nearby.
+Day 2 Hour 5:00 — Lena slept at Camp. Energy restored.
+Day 2 Hour 5:00 — Rook slept at Camp. Energy restored.
+Day 2 Hour 5:00 — Niko slept at Camp. Energy restored.
+Day 2 Hour 5:00 — Aria gathered food at Forest.
+Day 2 Hour 5:00 — 16 food was added to shared storage.
+Day 2 Hour 5:00 — Aria's hunting improved to 13.
+Day 2 Hour 5:00 — Daren gathered food at Camp.
+Day 2 Hour 5:00 — 11 food was added to shared storage.
+Day 2 Hour 5:00 — Daren's hunting improved to 6.
+Day 2 Hour 5:00 — Nova stayed at Camp and chose to observe.
+Day 2 Hour 5:00 — Eli stayed at Camp and chose to rest.
+Day 2 Hour 5:00 — Zane stayed at Camp and chose to rest.
+Day 2 Hour 6:00 — Mira slept at River. Energy restored.
+Day 2 Hour 6:00 — Kai wanted to talk, but no one was nearby.
+Day 2 Hour 6:00 — Lena gathered food at Camp.
+Day 2 Hour 6:00 — 13 food was added to shared storage.
+Day 2 Hour 6:00 — Lena's hunting improved to 10.
+Day 2 Hour 6:00 — Rook stayed at Camp and chose to observe.
+Day 2 Hour 6:00 — Niko slept at Camp. Energy restored.
+Day 2 Hour 6:00 — Aria slept at Forest. Energy restored.
+Day 2 Hour 6:00 — Daren stayed at Camp and chose to rest.
+Day 2 Hour 6:00 — Nova stayed at Camp and chose to rest.
+Day 2 Hour 6:00 — Eli gathered food at Camp.
+Day 2 Hour 6:00 — 14 food was added to shared storage.
+Day 2 Hour 6:00 — Eli's hunting improved to 12.
+Day 2 Hour 6:00 — Zane stayed at Camp and chose to rest.
+Day 2 Hour 7:00 — Weather changed: Rain. Season: Spring.
+Day 2 Hour 7:00 — Mira gathered food at River.
+Day 2 Hour 7:00 — 10 food was added to shared storage.
+Day 2 Hour 7:00 — Mira's hunting improved to 12.
+Day 2 Hour 7:00 — Kai gathered food at Exiled Lands.
+Day 2 Hour 7:00 — 15 food was added to shared storage.
+Day 2 Hour 7:00 — Kai's hunting improved to 14.
+Day 2 Hour 7:00 — Lena explored and moved to River.
+Day 2 Hour 7:00 — Rook gathered food at Camp.
+Day 2 Hour 7:00 — 14 food was added to shared storage.
+Day 2 Hour 7:00 — Rook's hunting improved to 10.
+Day 2 Hour 7:00 — Niko gathered food at Camp.
+Day 2 Hour 7:00 — 9 food was added to shared storage.
+Day 2 Hour 7:00 — Niko's hunting improved to 9.
+Day 2 Hour 7:00 — Aria wanted to talk, but no one was nearby.
+Day 2 Hour 7:00 — Daren gathered food at Camp.
+Day 2 Hour 7:00 — 10 food was added to shared storage.
+Day 2 Hour 7:00 — Daren's hunting improved to 7.
+Day 2 Hour 7:00 — Nova gathered food at Camp.
+Day 2 Hour 7:00 — 17 food was added to shared storage.
+Day 2 Hour 7:00 — Nova's hunting improved to 13.
+Day 2 Hour 7:00 — Eli talked with Rook at Camp.
+Day 2 Hour 7:00 — Eli: "We should make sure no one is left hungry."
+Day 2 Hour 7:00 — Rook: "We need food, shelter, and a plan."
+Day 2 Hour 7:00 — Trust +2, Friendship +3.
+Day 2 Hour 7:00 — Zane gathered food at Camp.
+Day 2 Hour 7:00 — 14 food was added to shared storage.
+Day 2 Hour 7:00 — Zane's hunting improved to 9.
+Day 2 Hour 8:00 — Mira talked with Lena at River.
+Day 2 Hour 8:00 — Mira: "If we observe carefully, we can learn how to survive here."
+Day 2 Hour 8:00 — Lena: "If we share what we find, we all survive."
+Day 2 Hour 8:00 — Trust +3, Friendship +1.
+Day 2 Hour 8:00 — Kai slept at Exiled Lands. Energy restored.
+Day 2 Hour 8:00 — Lena gathered food at River.
+Day 2 Hour 8:00 — 16 food was added to shared storage.
+Day 2 Hour 8:00 — Lena's hunting improved to 11.
+Day 2 Hour 8:00 — Rook gathered food at Camp.
+Day 2 Hour 8:00 — 13 food was added to shared storage.
+Day 2 Hour 8:00 — Rook's hunting improved to 11.
+Day 2 Hour 8:00 — Niko worked on Guard Post.
+Day 2 Hour 8:00 — Guard Post progress +23. Total: 66/100.
+Day 2 Hour 8:00 — Aria gathered food at Forest.
+Day 2 Hour 8:00 — 14 food was added to shared storage.
+Day 2 Hour 8:00 — Aria's hunting improved to 14.
+Day 2 Hour 8:00 — Daren explored and moved to Hill.
+Day 2 Hour 8:00 — Nova explored and moved to Forest.
+Day 2 Hour 8:00 — Eli explored and moved to Camp.
+Day 2 Hour 8:00 — Zane talked with Rook at Camp.
+Day 2 Hour 8:00 — Zane: "We should make sure no one is left hungry."
+Day 2 Hour 8:00 — Rook: "Survival comes first."
+Day 2 Hour 8:00 — Trust +1, Friendship +3.
+Day 2 Hour 9:00 — Mira gathered food at River.
+Day 2 Hour 9:00 — 14 food was added to shared storage.
+Day 2 Hour 9:00 — Mira's hunting improved to 13.
+Day 2 Hour 9:00 — Kai wanted to talk, but no one was nearby.
+Day 2 Hour 9:00 — Lena explored and moved to Forest.
+Day 2 Hour 9:00 — Rook gathered food at Camp.
+Day 2 Hour 9:00 — 14 food was added to shared storage.
+Day 2 Hour 9:00 — Rook's hunting improved to 12.
+Day 2 Hour 9:00 — Niko gathered food at Camp.
+Day 2 Hour 9:00 — 8 food was added to shared storage.
+Day 2 Hour 9:00 — Niko's hunting improved to 10.
+Day 2 Hour 9:00 — Aria taught Lena about teaching at Forest.
+Day 2 Hour 9:00 — Aria: "Here is how it works."
+Day 2 Hour 9:00 — Lena learned successfully.
+Day 2 Hour 9:00 — Lena's teaching improved to 2.
+Day 2 Hour 9:00 — Lena's respect toward Aria +5.
+Day 2 Hour 9:00 — Daren gathered food at Hill.
+Day 2 Hour 9:00 — 7 food was added to shared storage.
+Day 2 Hour 9:00 — Daren's hunting improved to 8.
+Day 2 Hour 9:00 — Nova explored and moved to Camp.
+Day 2 Hour 9:00 — Eli gathered food at Camp.
+Day 2 Hour 9:00 — 13 food was added to shared storage.
+Day 2 Hour 9:00 — Eli's hunting improved to 13.
+Day 2 Hour 9:00 — Zane stayed at Camp and chose to observe.
+Day 2 Hour 10:00 — Mira wanted to talk, but no one was nearby.
+Day 2 Hour 10:00 — Kai gathered food at Exiled Lands.
+Day 2 Hour 10:00 — 15 food was added to shared storage.
+Day 2 Hour 10:00 — Kai's hunting improved to 15.
+Day 2 Hour 10:00 — Lena gathered food at Forest.
+Day 2 Hour 10:00 — 15 food was added to shared storage.
+Day 2 Hour 10:00 — Lena's hunting improved to 12.
+Day 2 Hour 10:00 — Rook explored and moved to Exiled Lands.
+Day 2 Hour 10:00 — Niko gathered food at Camp.
+Day 2 Hour 10:00 — 11 food was added to shared storage.
+Day 2 Hour 10:00 — Niko's hunting improved to 11.
+Day 2 Hour 10:00 — Aria tried to teach Lena social, but they had little to offer.
+Day 2 Hour 10:00 — Daren gathered food at Hill.
+Day 2 Hour 10:00 — 10 food was added to shared storage.
+Day 2 Hour 10:00 — Daren's hunting improved to 9.
+Day 2 Hour 10:00 — Nova gathered food at Camp.
+Day 2 Hour 10:00 — 17 food was added to shared storage.
+Day 2 Hour 10:00 — Nova's hunting improved to 14.
+Day 2 Hour 10:00 — Eli gathered food at Camp.
+Day 2 Hour 10:00 — 15 food was added to shared storage.
+Day 2 Hour 10:00 — Eli's hunting improved to 14.
+Day 2 Hour 10:00 — Zane gathered food at Camp.
+Day 2 Hour 10:00 — 8 food was added to shared storage.
+Day 2 Hour 10:00 — Zane's hunting improved to 10.
+Day 2 Hour 11:00 — Mira wanted to talk, but no one was nearby.
+Day 2 Hour 11:00 — Kai talked with Rook at Exiled Lands.
+Day 2 Hour 11:00 — Kai: "Survival comes first."
+Day 2 Hour 11:00 — Rook: "Survival comes first."
+Day 2 Hour 11:00 — Trust +2, Friendship +2.
+Day 2 Hour 11:00 — Lena gathered food at Forest.
+Day 2 Hour 11:00 — 10 food was added to shared storage.
+Day 2 Hour 11:00 — Lena's hunting improved to 13.
+Day 2 Hour 11:00 — Rook worked on Guard Post.
+Day 2 Hour 11:00 — Guard Post progress +23. Total: 89/100.
+Day 2 Hour 11:00 — Niko gathered food at Camp.
+Day 2 Hour 11:00 — 12 food was added to shared storage.
+Day 2 Hour 11:00 — Niko's hunting improved to 12.
+Day 2 Hour 11:00 — Aria gathered food at Forest.
+Day 2 Hour 11:00 — 16 food was added to shared storage.
+Day 2 Hour 11:00 — Aria's hunting improved to 15.
+Day 2 Hour 11:00 — Daren explored and moved to Camp.
+Day 2 Hour 11:00 — Nova explored and moved to Forest.
+Day 2 Hour 11:00 — Eli gathered food at Camp.
+Day 2 Hour 11:00 — 15 food was added to shared storage.
+Day 2 Hour 11:00 — Eli's hunting improved to 15.
+Day 2 Hour 11:00 — Zane gathered food at Camp.
+Day 2 Hour 11:00 — 11 food was added to shared storage.
+Day 2 Hour 11:00 — Zane's hunting improved to 11.

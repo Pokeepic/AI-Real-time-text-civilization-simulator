@@ -114,6 +114,34 @@ class Simulation:
         logs.append(f"MILESTONE UNLOCKED: {text}")
         self.add_history(f"Milestone unlocked: {text}")
 
+    def update_settlement_stage(self, logs):
+        alive = [
+            a for a in self.agents
+            if a.alive
+            and a.location != "Exiled Lands"
+            and not self.is_extra_settlement_location(a.location)
+        ]
+
+        building_count = len(self.settlement["buildings"])
+        law_count = len(self.laws)
+
+        old_stage = self.settlement_stage
+
+        if self.settlement["name"] is None:
+            self.settlement_stage = "Camp"
+        elif len(alive) >= 50 and building_count >= 8 and law_count >= 4:
+            self.settlement_stage = "City"
+        elif len(alive) >= 30 and building_count >= 6 and law_count >= 3:
+            self.settlement_stage = "Town"
+        elif len(alive) >= 10 and building_count >= 2:
+            self.settlement_stage = "Village"
+        else:
+            self.settlement_stage = "Settlement"
+
+        if self.settlement_stage != old_stage:
+            logs.append(f"{self.settlement['name'] or 'The camp'} has grown into a {self.settlement_stage}.")
+            self.add_history(f"{self.settlement['name'] or 'The camp'} became a {self.settlement_stage}.")
+
     def update_culture(self, logs):
         if self.hour != 20:
             return
