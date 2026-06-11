@@ -38,18 +38,18 @@ stabilize_sim(sim)
 # Header
 # -----------------------------
 
-st.title("Observer World")
+st.subheader("World Controls")
 
-col_a, col_b, col_c, col_d, col_e, col_f = st.columns(6)
+control_col1, control_col2, control_col3, control_col4, control_col5, control_col6 = st.columns(6)
 
-with col_a:
+with control_col1:
     if st.button("Advance 1 Hour"):
         logs = sim.tick()
         st.session_state.logs.extend(logs)
         save_world(sim)
         st.rerun()
 
-with col_b:
+with control_col2:
     if st.button("Run 6 Hours"):
         for _ in range(6):
             logs = sim.tick()
@@ -57,7 +57,7 @@ with col_b:
         save_world(sim)
         st.rerun()
 
-with col_c:
+with control_col3:
     if st.button("Run 1 Day"):
         for _ in range(24):
             logs = sim.tick()
@@ -65,7 +65,7 @@ with col_c:
         save_world(sim)
         st.rerun()
 
-with col_d:
+with control_col4:
     if st.button("Run 7 Days"):
         for _ in range(24 * 7):
             logs = sim.tick()
@@ -73,17 +73,15 @@ with col_d:
         save_world(sim)
         st.rerun()
 
-with col_e:
+with control_col5:
     if st.button("Save"):
         save_world(sim)
         st.success("World saved.")
 
-with col_f:
+with control_col6:
     if st.button("Reset World"):
         delete_save()
-        new_sim = create_new_world()
-        stabilize_sim(new_sim)
-        st.session_state.sim = new_sim
+        st.session_state.sim = create_new_world()
         st.session_state.logs = []
         st.rerun()
 
@@ -106,25 +104,68 @@ col4.metric("World State", getattr(sim, "world_state", "Ongoing"))
 
 st.subheader("Recent Events")
 
-important_words = [
-    "died", "born", "leader", "war", "rebellion", "murder",
-    "technology", "milestone", "trial", "exiled", "treaty",
-    "founded", "completed"
-]
+event_filter = st.selectbox(
+    "Event Filter",
+    [
+        "All",
+        "Important",
+        "Social",
+        "Crime",
+        "Family",
+        "War/Diplomacy",
+        "Technology",
+        "Errors",
+    ]
+)
 
-show_important_only = st.checkbox("Show important events only")
+event_keywords = {
+    "Important": [
+        "died", "born", "leader", "war", "rebellion", "murder",
+        "technology", "milestone", "trial", "exiled", "treaty",
+        "founded", "completed", "new era", "settlement"
+    ],
+    "Social": [
+        "talked", "friendship", "trust", "bond", "partner",
+        "taught", "learned", "helped"
+    ],
+    "Crime": [
+        "stole", "crime", "trial", "fight", "murder",
+        "severe violence", "exiled"
+    ],
+    "Family": [
+        "born", "family", "partner", "pregnant", "child"
+    ],
+    "War/Diplomacy": [
+        "war", "raid", "treaty", "peace", "alliance",
+        "diplomacy", "threat"
+    ],
+    "Technology": [
+        "technology", "research", "unlocked", "tools",
+        "medicine", "crop rotation"
+    ],
+    "Errors": [
+        "error"
+    ],
+}
 
-recent_logs = st.session_state.logs[-100:]
+recent_logs = st.session_state.logs[-300:]
 
-if show_important_only:
+if event_filter != "All":
+    keywords = event_keywords[event_filter]
     recent_logs = [
         log for log in recent_logs
-        if any(word in log.lower() for word in important_words)
+        if any(keyword in log.lower() for keyword in keywords)
     ]
 
-for log in recent_logs[-30:]:
-    st.write(log)
-
+for log in recent_logs[-40:]:
+    if "ERROR" in log:
+        st.error(log)
+    elif any(word in log.lower() for word in ["died", "murder", "war", "rebellion"]):
+        st.warning(log)
+    elif any(word in log.lower() for word in ["born", "technology", "milestone", "treaty"]):
+        st.success(log)
+    else:
+        st.write(log)
 # -----------------------------
 # Tabs
 # -----------------------------
@@ -149,8 +190,8 @@ with tab0:
 
     alive = [a for a in sim.agents if a.alive]
     dead = [a for a in sim.agents if not a.alive]
-    children = [a for a in alive if a.age < 18]
     adults = [a for a in alive if a.age >= 18]
+    children = [a for a in alive if a.age < 18]
 
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Alive", len(alive))
@@ -159,35 +200,250 @@ with tab0:
     c4.metric("Children", len(children))
 
     c5, c6, c7, c8 = st.columns(4)
-    c5.metric("Food", sim.resources["food"])
-    c6.metric("Wood", sim.resources["wood"])
-    c7.metric("Stone", sim.resources["stone"])
+    c5.metric("Food", sim.resources.get("food", 0))
+    c6.metric("Wood", sim.resources.get("wood", 0))
+    c7.metric("Stone", sim.resources.get("stone", 0))
     c8.metric("Tension", sim.village_tension)
+
+    c9, c10, c11, c12 = st.columns(4)
+    c9.metric("Wars", len(sim.wars))
+    c10.metric("Treaties", len(sim.treaties))
+    c11.metric("Technologies", len(sim.technologies))
+    c12.metric("Laws", len(sim.laws))
+
+    st.divider()
 
     st.subheader("World Identity")
 
-    st.write(f"**World:** {getattr(sim, 'world_name', 'Unknown')}")
-    st.write(f"**Main Settlement:** {sim.settlement['name'] or 'None'}")
-    st.write(f"**Stage:** {getattr(sim, 'settlement_stage', 'Camp')}")
-    st.write(f"**Era:** {getattr(sim, 'current_era', 'Age of Survival')}")
-    st.write(f"**Culture:** {sim.get_culture_identity()}")
-    st.write(f"**Belief:** {sim.get_belief_identity()}")
+    world_col1, world_col2 = st.columns(2)
+
+    with world_col1:
+        st.write(f"**World Name:** {getattr(sim, 'world_name', 'Unknown')}")
+        st.write(f"**World State:** {getattr(sim, 'world_state', 'Ongoing')}")
+        st.write(f"**Era:** {getattr(sim, 'current_era', 'Age of Survival')}")
+        st.write(f"**Scenario:** {getattr(sim, 'scenario', 'Unknown')}")
+
+    with world_col2:
+        st.write(f"**Main Settlement:** {sim.settlement.get('name') or 'None'}")
+        st.write(f"**Settlement Stage:** {getattr(sim, 'settlement_stage', 'Camp')}")
+        st.write(f"**Leader:** {getattr(sim, 'leader', None) or 'None'}")
+        st.write(f"**Current Project:** {sim.current_project['name'] if sim.current_project else 'None'}")
+        st.write(f"**Culture:** {sim.get_culture_identity()}")
+        st.write(f"**Belief:** {sim.get_belief_identity()}")
+
+    st.divider()
+
+    st.subheader("Top Agents")
+
+    top_col1, top_col2, top_col3 = st.columns(3)
+
+    with top_col1:
+        st.write("**Top Wealth**")
+        top_wealth = sorted(alive, key=lambda a: a.wealth, reverse=True)[:5]
+        st.dataframe([
+            {"Name": a.name, "Wealth": a.wealth, "Role": a.role}
+            for a in top_wealth
+        ], use_container_width=True)
+
+    with top_col2:
+        st.write("**Top Combat**")
+        top_combat = sorted(alive, key=lambda a: a.skills.get("combat", 0), reverse=True)[:5]
+        st.dataframe([
+            {"Name": a.name, "Combat": a.skills.get("combat", 0), "Role": a.role}
+            for a in top_combat
+        ], use_container_width=True)
+
+    with top_col3:
+        st.write("**Top Medicine**")
+        top_medicine = sorted(alive, key=lambda a: a.skills.get("medicine", 0), reverse=True)[:5]
+        st.dataframe([
+            {"Name": a.name, "Medicine": a.skills.get("medicine", 0), "Role": a.role}
+            for a in top_medicine
+        ], use_container_width=True)
+
+    st.divider()
+
+    st.subheader("Population by Location")
+
+    location_counts = {}
+
+    for agent in sim.agents:
+        if agent.alive:
+            location_counts[agent.location] = location_counts.get(agent.location, 0) + 1
+
+    location_data = [
+        {"Location": location, "Population": count}
+        for location, count in sorted(location_counts.items())
+    ]
+
+    st.dataframe(location_data, use_container_width=True)
+
+    st.divider()
 
     st.subheader("Recent Important Events")
 
     important_words = [
         "died", "born", "leader", "war", "rebellion", "murder",
         "technology", "milestone", "trial", "exiled", "treaty",
-        "founded", "completed", "new era"
+        "founded", "completed", "new era", "settlement", "crime"
     ]
 
     important_logs = [
-        log for log in st.session_state.logs[-300:]
+        log for log in st.session_state.logs[-500:]
         if any(word in log.lower() for word in important_words)
     ]
 
-    for log in important_logs[-15:]:
-        st.write(log)
+    if important_logs:
+        for log in important_logs[-20:]:
+            st.info(log)
+    else:
+        st.write("No major events yet.")
+
+    st.divider()
+
+    st.subheader("Current Risks")
+
+    risks = []
+
+    if sim.resources.get("food", 0) < 20:
+        risks.append("Low food storage")
+
+    if sim.village_tension >= 70:
+        risks.append("High village tension")
+
+    if any(a.health < 40 and a.alive for a in sim.agents):
+        risks.append("Some agents are critically injured or sick")
+
+    if any(a.hunger > 85 and a.alive for a in sim.agents):
+        risks.append("Some agents are near starvation")
+
+    if sim.wars:
+        risks.append("Settlement has experienced war")
+
+    if sim.rebellions:
+        risks.append("Rebellion history exists")
+
+    if risks:
+        for risk in risks:
+            st.warning(risk)
+    else:
+        st.success("No major risks detected.")
+    
+    st.divider()
+
+    st.subheader("Quick Charts")
+
+    resource_chart_data = {
+        "Food": sim.resources.get("food", 0),
+        "Wood": sim.resources.get("wood", 0),
+        "Stone": sim.resources.get("stone", 0),
+    }
+
+    st.write("**Main Resources**")
+    st.bar_chart(resource_chart_data)
+
+    role_counts = {}
+
+    for agent in sim.agents:
+        if agent.alive:
+            role_counts[agent.role] = role_counts.get(agent.role, 0) + 1
+
+    st.write("**Roles Distribution**")
+    st.bar_chart(role_counts)
+
+    status_counts = {}
+
+    for agent in sim.agents:
+        status_counts[agent.status] = status_counts.get(agent.status, 0) + 1
+
+    st.write("**Health Status Distribution**")
+    st.bar_chart(status_counts)
+
+    st.divider()
+
+    st.subheader("Simulation Summary")
+
+    summary_col1, summary_col2 = st.columns(2)
+
+    with summary_col1:
+        st.info(f"""
+        **World:** {getattr(sim, 'world_name', 'Unknown')}
+
+        **Era:** {getattr(sim, 'current_era', 'Age of Survival')}
+
+        **Main Settlement:** {sim.settlement.get('name') or 'None'}
+
+        **Culture:** {sim.get_culture_identity()}
+
+        **Belief:** {sim.get_belief_identity()}
+        """)
+
+    with summary_col2:
+        st.info(f"""
+        **Population:** {len(alive)}
+
+        **Deaths:** {len(dead)}
+
+        **Wars:** {len(sim.wars)}
+
+        **Treaties:** {len(sim.treaties)}
+
+        **Technologies:** {', '.join(sim.technologies) if sim.technologies else 'None'}
+        """)
+    
+    st.divider()
+
+    st.subheader("Dashboard Health Check")
+
+    health_checks = []
+
+    if not sim.agents:
+        health_checks.append("No agents found")
+
+    if not hasattr(sim, "error_log"):
+        health_checks.append("Missing error_log attribute")
+
+    if getattr(sim, "error_log", []):
+        health_checks.append(f"{len(sim.error_log)} simulation errors recorded")
+
+    if sim.day < 1:
+        health_checks.append("Invalid day value")
+
+    if sim.hour < 0 or sim.hour > 23:
+        health_checks.append("Invalid hour value")
+
+    if not isinstance(sim.resources, dict):
+        health_checks.append("Resources data is broken")
+
+    if health_checks:
+        for check in health_checks:
+            st.error(check)
+    else:
+        st.success("Simulation data looks healthy.")
+    
+    st.divider()
+
+    st.subheader("Project Status")
+
+    status_items = {
+        "Autonomous Agents": bool(sim.agents),
+        "Families / Generations": any(a.generation > 1 for a in sim.agents),
+        "Settlement System": sim.settlement.get("name") is not None,
+        "Leadership": getattr(sim, "leader", None) is not None,
+        "Culture System": sim.get_culture_identity() != "Undefined",
+        "Belief System": sim.get_belief_identity() != "None",
+        "Technology System": len(sim.technologies) > 0,
+        "Multiple Settlements": len(sim.extra_settlements) > 0,
+        "War / Diplomacy": len(sim.wars) > 0 or len(sim.treaties) > 0,
+        "Chronicles": len(sim.chronicles) > 0,
+        "Error Logging": hasattr(sim, "error_log"),
+    }
+
+    for item, active in status_items.items():
+        if active:
+            st.success(f"✅ {item}")
+        else:
+            st.info(f"⏳ {item}")
 
 with tab1:
     st.subheader("Agents")
