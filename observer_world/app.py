@@ -192,6 +192,12 @@ with tab0:
 with tab1:
     st.subheader("Agents")
 
+    search_query = st.text_input("Search Agent")
+
+    st.subheader("Agent Filters")
+
+    only_alive = st.checkbox("Show only alive agents", value=True)
+
     st.subheader("Agent Filters")
 
     only_alive = st.checkbox("Show only alive agents", value=True)
@@ -202,15 +208,66 @@ with tab1:
     location_options = sorted(list(set(a.location for a in sim.agents)))
     selected_locations = st.multiselect("Filter by location", location_options, default=location_options)
 
+    generation_options = sorted(list(set(a.generation for a in sim.agents)))
+    selected_generations = st.multiselect(
+        "Filter by generation",
+        generation_options,
+        default=generation_options
+    )
+
+    show_critical_only = st.checkbox("Critical / Injured only")
+
+    sort_by = st.selectbox(
+        "Sort by",
+        [
+            "Name",
+            "Age",
+            "Health",
+            "Wealth",
+            "Generation",
+            "Combat",
+            "Medicine",
+        ]
+    )
+
     filtered_agents = sim.agents
+
+    if search_query:
+        filtered_agents = [
+            a for a in filtered_agents
+            if search_query.lower() in a.name.lower()
+        ]
 
     if only_alive:
         filtered_agents = [a for a in filtered_agents if a.alive]
 
     filtered_agents = [
         a for a in filtered_agents
-        if a.role in selected_roles and a.location in selected_locations
+        if a.role in selected_roles
+        and a.location in selected_locations
+        and a.generation in selected_generations
     ]
+
+    if show_critical_only:
+        filtered_agents = [
+            a for a in filtered_agents
+            if a.status in ["Critical", "Injured"]
+        ]
+
+    if sort_by == "Name":
+        filtered_agents.sort(key=lambda a: a.name)
+    elif sort_by == "Age":
+        filtered_agents.sort(key=lambda a: a.age)
+    elif sort_by == "Health":
+        filtered_agents.sort(key=lambda a: a.health)
+    elif sort_by == "Wealth":
+        filtered_agents.sort(key=lambda a: a.wealth)
+    elif sort_by == "Generation":
+        filtered_agents.sort(key=lambda a: a.generation)
+    elif sort_by == "Combat":
+        filtered_agents.sort(key=lambda a: a.skills["combat"])
+    elif sort_by == "Medicine":
+        filtered_agents.sort(key=lambda a: a.skills["medicine"])
 
     st.dataframe([
         {
@@ -233,19 +290,25 @@ with tab1:
     ], use_container_width=True)
 
     if filtered_agents:
-        selected_name = st.selectbox(
+        selected = st.selectbox(
             "Inspect Agent",
-            [a.name for a in filtered_agents]
+            [
+                f"{a.name} | Gen {a.generation} | {a.role}"
+                for a in filtered_agents
+            ]
         )
+
+        selected_name = selected.split(" | ")[0]
 
         agent = next(a for a in sim.agents if a.name == selected_name)
 
-        # keep your profile/personality/skills/memory code here
+        st.markdown("### Profile")
+        st.write(f"**Name:** {agent.name}")
+        st.write(f"**Age:** {agent.age}")
+        # keep the rest of your profile code here
 
     else:
         st.warning("No agents match the current filters.")
-
-    agent = next(a for a in sim.agents if a.name == selected_name)
 
     st.markdown("### Profile")
     st.write(f"**Name:** {agent.name}")
