@@ -72,6 +72,8 @@ class Simulation:
         self.family_rivalries = {}
         self.family_alliances = {}
         self.notifications = []
+        self.watchlist = []
+        self.family_watchlist = []
         self.current_era = "Age of Survival"
         self.eras = [
             {
@@ -1065,7 +1067,7 @@ class Simulation:
             other_power = self.calculate_settlement_power(settlement["name"])
 
             logs.append(f"War broke out between {self.settlement['name'] or 'the main settlement'} and {settlement['name']}.")
-            self.notify(f"War began between {self.settlement['name'] or 'the main settlement'} and {settlement['name']}.")
+            self.notify(f"War began between {self.settlement['name'] or 'the main settlement'} and {settlement['name']}.", "War")
             logs.append(f"Main power: {main_power}. {settlement['name']} power: {other_power}.")
 
             war_record = {
@@ -1214,6 +1216,7 @@ class Simulation:
                 self.technologies.append(tech["name"])
 
                 logs.append(f"TECHNOLOGY UNLOCKED: {tech['name']}.")
+                self.notify(f"Technology unlocked: {tech['name']}.", "Technology")
                 self.add_history(f"Technology unlocked: {tech['name']}.")
 
                 return
@@ -1995,7 +1998,16 @@ class Simulation:
         self.memorials.append(memorial)
 
         self.add_history(f"{agent.name} died. Cause: {cause}.")
-        self.notify(f"{agent.name} died ({cause}).")
+        self.notify(f"{agent.name} died. Cause: {cause}.", "Death")
+        self.notify(f"{agent.name} died ({cause}).", "Death")
+        self.notify_agent_event(
+            agent.name,
+            f"died ({cause})."
+        )
+        self.notify_family_event(
+            agent.surname,
+            f"{agent.get_full_name()} died."
+        )
 
         mourning_logs = []
         self.handle_mourning(agent, mourning_logs)
@@ -2526,6 +2538,20 @@ class Simulation:
 
                     logs.append(f"{agent.name} and {agent.partner}'s family may grow soon.")
                     self.add_history(f"{agent.name} and {agent.partner} are expecting a child.")
+                    self.notify_agent_event(
+                        agent.name,
+                        f"became a parent to {child.get_full_name()}."
+                    )
+
+                    if partner:
+                        self.notify_agent_event(
+                            partner.name,
+                            f"became a parent to {child.get_full_name()}."
+                        )
+                    self.notify_family_event(
+                        child.surname,
+                        f"{child.get_full_name()} was born."
+                    )
 
             elif agent.pregnant:
                 agent.pregnancy_timer -= 1
@@ -2677,13 +2703,28 @@ class Simulation:
 
             if old_leader is None:
                 logs.append(f"{best_candidate.name} has naturally become the leader of {self.settlement['name']}.")
+                self.notify(f"{best_candidate.name} became leader of {self.settlement['name']}.", "Leadership")
                 self.add_history(f"{best_candidate.name} became the first leader of {self.settlement['name']}.")
-                self.notify(f"{best_candidate.name} became leader.")
+                self.notify_agent_event(
+                    best_candidate.name,
+                    "became leader."
+                )
+                self.notify_family_event(
+                    best_candidate.surname,
+                    f"{best_candidate.get_full_name()} became leader."
+                )
             else:
                 logs.append(f"Leadership changed from {old_leader} to {best_candidate.name}.")
+                self.notify(f"Leadership changed from {old_leader} to {best_candidate.name}.", "Leadership")
                 self.add_history(f"Leadership changed from {old_leader} to {best_candidate.name}.")
-                self.notify(f"{best_candidate.name} became leader.")
-
+                self.notify_agent_event(
+                    best_candidate.name,
+                    "became leader."
+                )
+                self.notify_family_event(
+                    best_candidate.surname,
+                    f"{best_candidate.get_full_name()} became leader."
+                )
     def nearby_agents(self, agent):
         return [
             other for other in self.agents
@@ -3733,7 +3774,25 @@ class Simulation:
 
                 logs.append(f"{crush.name} accepted. {agent.name} and {crush.name} became partners.")
                 self.add_history(f"{agent.name} and {crush.name} became partners after a confession.")
-                self.notify(f"{agent.name} and {crush.name} became partners.")
+                self.notify(f"{agent.name} and {crush.name} became partners.", "Relationship")
+                self.notify_agent_event(
+                    agent.name,
+                    f"became partners with {crush.name}."
+                )
+
+                self.notify_agent_event(
+                    crush.name,
+                    f"became partners with {agent.name}."
+                )
+                self.notify_family_event(
+                    agent.surname,
+                    f"{agent.get_full_name()} became partners with {crush.get_full_name()}."
+                )
+
+                self.notify_family_event(
+                    crush.surname,
+                    f"{crush.get_full_name()} became partners with {agent.get_full_name()}."
+                )
 
             else:
                 agent.change_relationship(crush.name, "trust", -5)
@@ -3744,6 +3803,7 @@ class Simulation:
                 agent.add_grudge(crush.name, "rejected confession")
 
                 logs.append(f"{crush.name} rejected {agent.name}'s confession.")
+                self.notify(f"{crush.name} rejected {agent.name}'s confession.", "Relationship")
     
     def handle_rejection_recovery(self, logs):
         if self.hour != 9:
@@ -4072,10 +4132,27 @@ class Simulation:
         if len(self.family_alliances[key]["reasons"]) > 10:
             self.family_alliances[key]["reasons"].pop(0)
 
-    def notify(self, message):
-        self.notifications.append(
-            f"Day {self.day}, Hour {self.hour}: {message}"
-        )
+    def notify(self, message, category="General"):
+        self.notifications.append({
+            "day": self.day,
+            "hour": self.hour,
+            "category": category,
+            "message": message,
+        })
 
         if len(self.notifications) > 100:
             self.notifications.pop(0)
+
+    def notify_agent_event(self, agent_name, message):
+        if agent_name in self.watchlist:
+            self.notify(
+                f"[WATCHLIST] {agent_name}: {message}",
+                "Watchlist"
+            )
+
+    def notify_family_event(self, surname, message):
+        if surname and surname in self.family_watchlist:
+            self.notify(
+                f"[{surname.upper()}] {message}",
+                "Family Watchlist"
+            )

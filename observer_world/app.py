@@ -1,5 +1,6 @@
 import streamlit as st
 import os
+import zipfile
 
 from agent import Agent
 from simulation import Simulation
@@ -7,6 +8,9 @@ from save_system import load_world, save_world, delete_save
 from config import CONFIG
 from export_data import export_agents_csv, export_relationships_csv
 from stability import stabilize_sim
+from archive import export_story_summary, export_chronicles
+
+APP_VERSION = "Observer World Dashboard v0.8"
 
 st.set_page_config(page_title="Observer World", layout="wide")
 
@@ -37,6 +41,9 @@ stabilize_sim(sim)
 # -----------------------------
 # Header
 # -----------------------------
+
+st.title("Observer World")
+st.caption(APP_VERSION)
 
 st.subheader("World Controls")
 
@@ -79,11 +86,17 @@ with control_col5:
         st.success("World saved.")
 
 with control_col6:
+    confirm_reset = st.checkbox("Confirm Reset World")
+
     if st.button("Reset World"):
-        delete_save()
-        st.session_state.sim = create_new_world()
-        st.session_state.logs = []
-        st.rerun()
+        if confirm_reset:
+            delete_save()
+            st.session_state.sim = create_new_world()
+            st.session_state.logs = []
+            st.success("World reset.")
+            st.rerun()
+        else:
+            st.warning("Please tick 'Confirm Reset World' before resetting.")
 
 # -----------------------------
 # Metrics
@@ -170,7 +183,7 @@ for log in recent_logs[-40:]:
 # Tabs
 # -----------------------------
 
-tab0, tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+tab0, tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10, tab11 = st.tabs([
     "Overview",
     "Agents",
     "Settlements",
@@ -178,7 +191,11 @@ tab0, tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
     "Chronicles",
     "Controls",
     "Errors",
-    "Notifications"
+    "Notifications",
+    "Watchlist",
+    "Families",
+    "Timeline",
+    "Newspaper"
 ])
 
 
@@ -220,10 +237,49 @@ with tab0:
 
     if notifications:
         for notification in reversed(notifications[-5:]):
-            st.info(notification)
+            if isinstance(notification, dict):
+                st.info(
+                    f"Day {notification.get('day')}, Hour {notification.get('hour')}:00 "
+                    f"[{notification.get('category')}] {notification.get('message')}"
+                )
+            else:
+                st.info(notification)
     else:
         st.info("No notifications yet.")
 
+    st.subheader("Watchlist Events")
+
+    watchlist_notifications = [
+        n for n in getattr(sim, "notifications", [])
+        if isinstance(n, dict)
+        and n.get("category") == "Watchlist"
+    ]
+
+    if watchlist_notifications:
+        for notification in reversed(watchlist_notifications[-5:]):
+            st.info(
+                f"Day {notification.get('day')}, Hour {notification.get('hour')}:00 "
+                f"{notification.get('message')}"
+            )
+    else:
+        st.info("No watchlist events yet.")
+
+    st.subheader("Family Watchlist Events")
+
+    family_notifications = [
+        n for n in getattr(sim, "notifications", [])
+        if isinstance(n, dict)
+        and n.get("category") == "Family Watchlist"
+    ]
+
+    if family_notifications:
+        for notification in reversed(family_notifications[-5:]):
+            st.info(
+                f"Day {notification['day']}, Hour {notification['hour']}:00 "
+                f"{notification['message']}"
+            )
+    else:
+        st.info("No family watchlist events yet.")
     st.divider()
 
     st.subheader("World Identity")
@@ -947,6 +1003,7 @@ if os.path.exists(relationships_path):
         )
 
 with tab5:
+    st.write(f"**App Version:** {APP_VERSION}")
     st.subheader("Temporary Controls")
 
     st.write("""
@@ -956,11 +1013,188 @@ with tab5:
     - **Advance 1 Hour** for careful observation.
     - **Run 6 Hours** for short progress.
     - **Run 1 Day** to quickly grow the world.
+    - **Run 7 Days** to quickly simulate a longer period.
     - **Save** to store the current world.
     - **Reset World** to start over.
 
     True real-time mode can be built later using a FastAPI backend + web dashboard.
     """)
+
+    st.divider()
+
+    st.subheader("Export Files")
+    if st.button("Export Everything"):
+        export_story_summary(sim)
+        export_chronicles(sim)
+        export_agents_csv(sim)
+        export_relationships_csv(sim)
+        save_world(sim)
+
+        st.success("Exported story summary, chronicles, agents CSV, relationships CSV, and saved world.")
+    
+    if st.button("Create Backup ZIP"):
+        export_story_summary(sim)
+        export_chronicles(sim)
+        export_agents_csv(sim)
+        export_relationships_csv(sim)
+        save_world(sim)
+
+        os.makedirs("exports", exist_ok=True)
+
+        safe_version = APP_VERSION.replace(" ", "_").replace(".", "_")
+        zip_path = f"exports/observer_world_backup_{safe_version}.zip"
+
+        files_to_zip = [
+            "logs/story_summary.txt",
+            "logs/chronicles.txt",
+            "logs/world_history.txt",
+            "exports/agents.csv",
+            "exports/relationships.csv",
+            "saves/world_save.pkl",
+        ]
+
+        with zipfile.ZipFile(zip_path, "w") as zipf:
+            for file_path in files_to_zip:
+                if os.path.exists(file_path):
+                    zipf.write(file_path)
+
+        st.success("Backup ZIP created.")
+    
+    st.divider()
+
+    st.subheader("Backup Info")
+
+    backup_path = "exports/observer_world_backup.zip"
+
+    if os.path.exists(backup_path):
+        backup_size = os.path.getsize(backup_path) / 1024
+
+        st.success("Backup ZIP exists.")
+        st.write(f"**File:** {backup_path}")
+        st.write(f"**Size:** {backup_size:.2f} KB")
+    else:
+        st.warning("No backup ZIP created yet.")
+
+    if st.button("Export Story Summary"):
+        path = export_story_summary(sim)
+        st.success(f"Story summary exported to {path}")
+
+    st.divider()
+
+    st.subheader("Download Files")
+
+    download_files = [
+        {
+            "label": "Download Story Summary",
+            "path": "logs/story_summary.txt",
+            "file_name": "story_summary.txt",
+            "mime": "text/plain",
+        },
+        {
+            "label": "Download Chronicles",
+            "path": "logs/chronicles.txt",
+            "file_name": "chronicles.txt",
+            "mime": "text/plain",
+        },
+        {
+            "label": "Download Full World History",
+            "path": "logs/world_history.txt",
+            "file_name": "world_history.txt",
+            "mime": "text/plain",
+        },
+        {
+            "label": "Download Agents CSV",
+            "path": "exports/agents.csv",
+            "file_name": "agents.csv",
+            "mime": "text/csv",
+        },
+        {
+            "label": "Download Relationships CSV",
+            "path": "exports/relationships.csv",
+            "file_name": "relationships.csv",
+            "mime": "text/csv",
+        },
+        {
+            "label": "Download Full Backup ZIP",
+            "path": f"exports/observer_world_backup_{safe_version}.zip",
+            "file_name": f"observer_world_backup_{safe_version}.zip",
+            "mime": "application/zip",
+        },
+    ]
+
+    for item in download_files:
+        if os.path.exists(item["path"]):
+            with open(item["path"], "rb") as file:
+                st.download_button(
+                    label=item["label"],
+                    data=file,
+                    file_name=item["file_name"],
+                    mime=item["mime"]
+                )
+        else:
+            st.caption(f"{item['file_name']} not created yet.")
+    
+    st.divider()
+
+    st.subheader("Clean Up")
+
+    cleanup_col1, cleanup_col2 = st.columns(2)
+
+    with cleanup_col1:
+        if st.button("Clear Dashboard Logs"):
+            st.session_state.logs = []
+            st.success("Dashboard logs cleared.")
+            st.rerun()
+
+    with cleanup_col2:
+        if st.button("Clear Notifications"):
+            sim.notifications = []
+            save_world(sim)
+            st.success("Notifications cleared.")
+            st.rerun()
+    
+    st.divider()
+
+    st.subheader("Delete Exported Files")
+    confirm_delete_files = st.checkbox("Confirm Delete Exported Files")
+
+    delete_col1, delete_col2 = st.columns(2)
+
+    with delete_col1:
+        if st.button("Delete Log Files"):
+            if confirm_delete_files:
+                log_files = [
+                    "logs/story_summary.txt",
+                    "logs/chronicles.txt",
+                    "logs/world_history.txt",
+                ]
+
+                for file_path in log_files:
+                    if os.path.exists(file_path):
+                        os.remove(file_path)
+
+                st.success("Log files deleted.")
+                st.rerun()
+            else:
+                st.warning("Please tick 'Confirm Delete Exported Files' first.")
+
+    with delete_col2:
+        if st.button("Delete Export Files"):
+            if confirm_delete_files:
+                export_files = [
+                    "exports/agents.csv",
+                    "exports/relationships.csv",
+                    "exports/observer_world_backup.zip",
+                ]
+
+                for file_path in export_files:
+                    if os.path.exists(file_path):
+                        os.remove(file_path)
+
+                st.success("Export files deleted.")
+                st.rerun()
+            else:
+                st.warning("Please tick 'Confirm Delete Exported Files' first.")
 
 with tab6:
     st.subheader("Simulation Errors")
@@ -976,8 +1210,314 @@ with tab6:
 with tab7:
     st.subheader("Notifications")
 
-    if sim.notifications:
-        for notification in reversed(sim.notifications[-50:]):
-            st.info(notification)
+    notifications = getattr(sim, "notifications", [])
+
+    category_filter = st.selectbox(
+        "Filter by category",
+        ["All"] + sorted(list(set(
+            n.get("category", "General") if isinstance(n, dict) else "General"
+            for n in notifications
+        )))
+    )
+
+    filtered_notifications = notifications
+
+    if category_filter != "All":
+        filtered_notifications = [
+            n for n in notifications
+            if isinstance(n, dict) and n.get("category", "General") == category_filter
+        ]
+
+    if filtered_notifications:
+        for notification in reversed(filtered_notifications[-50:]):
+            if isinstance(notification, dict):
+                st.info(
+                    f"Day {notification.get('day')}, Hour {notification.get('hour')}:00 "
+                    f"[{notification.get('category')}] {notification.get('message')}"
+                )
+            else:
+                st.info(notification)
     else:
         st.info("No notifications yet.")
+
+with tab8:
+    st.subheader("Agent Watchlist")
+
+    selected_watch = st.multiselect(
+        "Choose agents to follow",
+        sorted(a.name for a in sim.agents),
+        default=sim.watchlist
+    )
+
+    sim.watchlist = selected_watch
+    save_world(sim)
+
+    st.write("Currently watching:")
+
+    if sim.watchlist:
+        st.write(sim.watchlist)
+    else:
+        st.info("No agents selected.")
+
+with tab9:
+    st.subheader("Family Watchlist")
+
+    available_families = sorted(
+        set(
+            a.surname
+            for a in sim.agents
+            if getattr(a, "surname", None)
+        )
+    )
+
+    selected_families = st.multiselect(
+        "Choose families to follow",
+        available_families,
+        default=sim.family_watchlist
+    )
+
+    sim.family_watchlist = selected_families
+    save_world(sim)
+
+    if sim.family_watchlist:
+        st.write("Watching:")
+        st.write(sim.family_watchlist)
+    else:
+        st.info("No families selected.")
+
+    st.divider()
+
+    st.subheader("Family Tree Explorer")
+
+    available_families = sorted(
+        set(
+            a.surname
+            for a in sim.agents
+            if getattr(a, "surname", None)
+        )
+    )
+
+    if available_families:
+        selected_family = st.selectbox(
+            "Choose a family line",
+            available_families
+        )
+
+        family_members = [
+            a for a in sim.agents
+            if getattr(a, "surname", None) == selected_family
+        ]
+
+        family_members = sorted(
+            family_members,
+            key=lambda a: (a.generation, a.age)
+        )
+
+        st.write(f"### {selected_family} Family")
+
+        st.dataframe([
+            {
+                "Full Name": a.get_full_name(),
+                "Generation": a.generation,
+                "Age": a.age,
+                "Alive": a.alive,
+                "Role": a.role,
+                "Partner": a.partner,
+                "Parents": ", ".join(a.parents) if a.parents else "None",
+                "Children": ", ".join([
+                    child.name for child in sim.agents
+                    if a.name in getattr(child, "parents", [])
+                ]) or "None",
+            }
+            for a in family_members
+        ], use_container_width=True)
+
+    else:
+        st.info("No family lines have formed yet.")
+
+with tab10:
+    st.subheader("World Timeline")
+
+    timeline_sources = []
+
+    for event in getattr(sim, "world_history", []):
+        timeline_sources.append({
+            "Source": "History",
+            "Event": event
+        })
+
+    for chronicle in getattr(sim, "chronicles", []):
+        timeline_sources.append({
+            "Source": "Chronicle",
+            "Event": chronicle
+        })
+
+    for notification in getattr(sim, "notifications", []):
+        if isinstance(notification, dict):
+            timeline_sources.append({
+                "Source": notification.get("category", "Notification"),
+                "Event": f"Day {notification.get('day')}, Hour {notification.get('hour')}:00 — {notification.get('message')}"
+            })
+        else:
+            timeline_sources.append({
+                "Source": "Notification",
+                "Event": notification
+            })
+
+    source_options = sorted(set(item["Source"] for item in timeline_sources))
+
+    selected_sources = st.multiselect(
+        "Filter timeline sources",
+        source_options,
+        default=source_options
+    )
+
+    search_timeline = st.text_input("Search timeline")
+
+    filtered_timeline = [
+        item for item in timeline_sources
+        if item["Source"] in selected_sources
+    ]
+
+    if search_timeline:
+        filtered_timeline = [
+            item for item in filtered_timeline
+            if search_timeline.lower() in item["Event"].lower()
+        ]
+
+    if filtered_timeline:
+        for item in filtered_timeline[-100:]:
+            st.write(f"**[{item['Source']}]** {item['Event']}")
+    else:
+        st.info("No timeline events match your filters.")
+
+with tab11:
+    st.subheader("Observer World Newspaper")
+
+    notifications = [
+        n for n in getattr(sim, "notifications", [])
+        if isinstance(n, dict)
+    ]
+
+    st.markdown(f"## The {getattr(sim, 'world_name', 'World')} Chronicle")
+    st.caption(f"Day {sim.day}, Hour {sim.hour}:00")
+
+    sections = {
+        "Leadership": [],
+        "Deaths": [],
+        "Relationships": [],
+        "War & Diplomacy": [],
+        "Technology": [],
+        "Other News": [],
+    }
+
+    for n in notifications[-50:]:
+        category = n.get("category", "General")
+        line = f"Day {n.get('day')}, Hour {n.get('hour')}:00 — {n.get('message')}"
+
+        if category == "Leadership":
+            sections["Leadership"].append(line)
+        elif category == "Death":
+            sections["Deaths"].append(line)
+        elif category == "Relationship":
+            sections["Relationships"].append(line)
+        elif category in ["War", "Diplomacy"]:
+            sections["War & Diplomacy"].append(line)
+        elif category == "Technology":
+            sections["Technology"].append(line)
+        else:
+            sections["Other News"].append(line)
+
+    for section_name, events in sections.items():
+        st.markdown(f"### {section_name}")
+
+        if events:
+            for event in reversed(events[-5:]):
+                st.write(f"📰 {event}")
+        else:
+            st.caption("No news in this section.")
+    
+    st.divider()
+
+    st.markdown("### Greatest People of All Time")
+
+    great_people = []
+
+    for agent in sim.agents:
+        score = 0
+
+        score += agent.get_social_score()
+        score += agent.wealth
+        score += sum(agent.skills.values())
+
+        if agent.role == "Leader":
+            score += 50
+
+        if agent.get_best_friend():
+            score += 10
+
+        if agent.partner:
+            score += 10
+
+        if agent.completed_goals:
+            score += len(agent.completed_goals) * 15
+
+        if not agent.alive:
+            score += 10
+
+        great_people.append({
+            "Name": agent.get_full_name(),
+            "Role": agent.role,
+            "Alive": agent.alive,
+            "Generation": agent.generation,
+            "Score": score,
+        })
+
+    great_people = sorted(great_people, key=lambda x: x["Score"], reverse=True)[:10]
+
+    st.dataframe(great_people, use_container_width=True)
+
+    st.divider()
+
+    st.markdown("### Memorial Hall")
+
+    memorial_rows = []
+
+    for record in getattr(sim, "death_records", []):
+        memorial_rows.append({
+            "Name": record.get("name"),
+            "Day": record.get("day"),
+            "Hour": record.get("hour"),
+            "Role": record.get("role"),
+            "Cause": record.get("cause"),
+        })
+
+    if memorial_rows:
+        st.dataframe(memorial_rows, use_container_width=True)
+    else:
+        st.info("No deaths recorded yet.")
+    
+    st.divider()
+
+    st.markdown("### Current World Story Summary")
+
+    alive = [a for a in sim.agents if a.alive]
+    dead = [a for a in sim.agents if not a.alive]
+
+    leader_name = getattr(sim, "leader", None) or "no clear leader"
+    settlement_name = sim.settlement.get("name") or "the first camp"
+
+    story_summary = f"""
+    In the world of **{getattr(sim, 'world_name', 'Unknown')}**, the settlement of **{settlement_name}**
+    has reached the **{getattr(sim, 'settlement_stage', 'Camp')}** stage during the **{getattr(sim, 'current_era', 'Age of Survival')}**.
+
+    There are currently **{len(alive)} living people** and **{len(dead)} recorded dead**.
+    The current leader is **{leader_name}**.
+
+    The society is culturally known as **{sim.get_culture_identity()}**, with belief tendencies toward **{sim.get_belief_identity()}**.
+
+    So far, the world has recorded **{len(sim.wars)} wars**, **{len(sim.treaties)} treaties**, 
+    **{len(sim.technologies)} technologies**, and **{len(sim.laws)} laws**.
+    """
+
+    st.info(story_summary)
