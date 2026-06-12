@@ -1125,7 +1125,7 @@ class Simulation:
                 victim.alive = False
                 victim.status = "Dead"
                 logs.append(f"{victim.name} died from conflict injuries.")
-                self.record_death(victim, "settlement conflict")
+                self.record_death(victim, "settlement conflict", logs)
 
             candidates.remove(victim)
 
@@ -1298,14 +1298,32 @@ class Simulation:
 
             thought = None
 
-            if agent.health < 40:
+            best_friend = agent.get_best_friend()
+            rival = agent.get_rival()
+            favorite_place = agent.get_favorite_place()
+
+            recent_memories = " ".join(agent.memories[-5:]).lower()
+
+            if "mourned the death" in recent_memories:
+                thought = "Someone important is gone. The world feels quieter now."
+
+            elif agent.health < 40:
                 thought = "I do not feel well. I wonder if I will survive much longer."
 
             elif agent.hunger > 80:
                 thought = "Food has been on my mind all day."
 
             elif agent.partner:
-                thought = f"I thought about {agent.partner} today."
+                thought = f"I thought about {agent.partner} today. I hope we can keep our family safe."
+
+            elif best_friend:
+                thought = f"I am grateful for {best_friend}. Trust is rare here."
+
+            elif rival:
+                thought = f"I cannot stop thinking about {rival}. Some wounds do not close easily."
+
+            elif favorite_place:
+                thought = f"I feel drawn to {favorite_place}. Something about that place stays with me."
 
             elif agent.memories:
                 thought = f"I keep remembering: {agent.memories[-1]}"
@@ -1317,7 +1335,8 @@ class Simulation:
                 thought = "Everyone looks to me, but leadership is heavier than it seems."
 
             if thought:
-                agent.write_journal(self.day, self.hour, thought)
+                emotional_note = f" Emotion: {agent.emotional_state}."
+                agent.write_journal(self.day, self.hour, thought + emotional_note)
                 logs.append(f"{agent.name} wrote a journal entry.")
 
     def handle_personality_drift(self, logs):
@@ -1335,6 +1354,12 @@ class Simulation:
             old_greed = agent.greed
 
             recent_memories = " ".join(agent.memories[-5:]).lower()
+            if "mourned the death" in recent_memories:
+                agent.kindness = min(agent.kindness + 1, 100)
+                agent.social = max(agent.social - 2, 0)
+
+                if agent.aggression > 50:
+                    agent.aggression = max(agent.aggression - 1, 1)
 
             if "helped" in recent_memories or "healed" in recent_memories:
                 agent.kindness = min(agent.kindness + 1, 100)
@@ -1646,6 +1671,25 @@ class Simulation:
         if self.treaties:
             self.unlock_milestone("first_treaty", "The first diplomatic treaty was signed.", logs)
 
+        if any(a.get_best_friend() for a in self.agents):
+            self.unlock_milestone("first_friendship", "The first close friendship formed.", logs)
+
+        if any(a.get_rival() for a in self.agents):
+            self.unlock_milestone("first_rivalry", "The first rivalry formed.", logs)
+
+        if any("mourned the death" in " ".join(a.memories).lower() for a in self.agents):
+            self.unlock_milestone("first_mourning", "The first mourning was recorded.", logs)
+
+        connected_count = len([
+            a for a in self.agents
+            if getattr(a, "emotional_state", "Stable") == "Connected"
+        ])
+
+        alive_count = len([a for a in self.agents if a.alive])
+
+        if alive_count > 0 and connected_count >= alive_count // 2:
+            self.unlock_milestone("connected_society", "Half the living population feels socially connected.", logs)
+
     def add_history(self, event):
         record = f"Day {self.day}, {self.hour}:00 — {event}"
         self.world_history.append(record)
@@ -1677,13 +1721,13 @@ class Simulation:
             agent.update_needs()
 
             if not agent.alive:
-                self.record_death(agent, "hunger or exhaustion")
+                self.record_death(agent, "hunger or exhaustion", logs)
                 continue
 
             self.apply_weather_effects(agent, logs)
 
             if not agent.alive:
-                self.record_death(agent, "weather exposure")
+                self.record_death(agent, "weather exposure", logs)
                 continue
 
             action = agent.choose_action(self.hour)
@@ -1813,6 +1857,18 @@ class Simulation:
             elif action == "patrol":
                 logs.extend(self.handle_patrol(agent))
 
+            elif action == "visit favorite place":
+                favorite = agent.get_favorite_place()
+
+                if favorite:
+                    agent.location = favorite
+                    agent.social = min(agent.social + 5, 100)
+                    agent.energy = max(agent.energy - 2, 0)
+
+                    logs.append(f"{agent.name} visited their favorite place: {favorite}.")
+                else:
+                    logs.append(f"{agent.name} wanted to visit a favorite place, but had none.")
+
             else:
                 logs.append(f"{agent.name} stayed at {agent.location} and chose to {action}.")
 
@@ -1843,11 +1899,14 @@ class Simulation:
         ("unlock_technology", self.unlock_technology),
         ("generate_extra_settlement_research", self.generate_extra_settlement_research),
         ("unlock_extra_settlement_technology", self.unlock_extra_settlement_technology),
+        ("update_emotional_states", self.update_emotional_states),
         ("handle_journals", self.handle_journals),
         ("handle_personality_drift", self.handle_personality_drift),
         ("update_life_goals", self.update_life_goals),
         ("check_goal_progress", self.check_goal_progress),
         ("update_era", self.update_era),
+        ("check_social_changes", self.check_social_changes),
+        ("spread_gossip", self.spread_gossip),
         ("check_milestones", self.check_milestones),
     ]
 
@@ -1900,9 +1959,9 @@ class Simulation:
                     agent.alive = False
                     agent.status = "Dead"
                     logs.append(f"{agent.name} died from exposure.")
-                    self.record_death(agent, "exposure")
+                    self.record_death(agent, "exposure", logs)
 
-    def record_death(self, agent, cause):
+    def record_death(self, agent, cause, logs=None):
         for record in self.death_records:
             if record["name"] == agent.name:
                 return
@@ -1921,6 +1980,15 @@ class Simulation:
         self.memorials.append(memorial)
 
         self.add_history(f"{agent.name} died. Cause: {cause}.")
+
+        mourning_logs = []
+        self.handle_mourning(agent, mourning_logs)
+
+        for mourning_log in mourning_logs:
+            self.add_history(mourning_log)
+
+        if logs is not None:
+            logs.extend(mourning_logs)
 
     def apply_building_effects(self, logs):
         if self.hour != 6:
@@ -2035,7 +2103,15 @@ class Simulation:
             logs.append(f"{medic.name} looked for someone to heal, but no one nearby needed care.")
             return logs
 
-        patient = min(patients, key=lambda a: a.health)
+        bonded_patients = [
+            patient for patient in patients
+            if patient.name in medic.bonds
+        ]
+
+        if bonded_patients:
+            patient = min(bonded_patients, key=lambda a: a.health)
+        else:
+            patient = min(patients, key=lambda a: a.health)
 
         heal_amount = random.randint(5, 15) + medic.skills["medicine"]
 
@@ -2055,6 +2131,15 @@ class Simulation:
 
         patient.remember(f"{medic.name} treated my injuries.")
         medic.remember(f"Healed {patient.name}.")
+
+        patient.add_bond(medic.name, "healed me")
+        medic.add_bond(patient.name, "treated them")
+
+        medic.set_emotion("Connected")
+        patient.set_emotion("Connected")
+
+        medic.add_location_affinity(medic.location, 2)
+        patient.add_location_affinity(patient.location, 2)
 
         if patient.health >= 60:
             patient.status = "Healthy"
@@ -2517,7 +2602,7 @@ class Simulation:
                         agent.alive = False
                         agent.status = "Dead"
                         logs.append(f"{agent.name} died of old age.")
-                        self.record_death(agent, "old age")
+                        self.record_death(agent, "old age", logs)
 
     def check_leadership(self, logs):
         if self.settlement["name"] is None:
@@ -2754,6 +2839,11 @@ class Simulation:
             witness.remember(f"Saw {agent.name} stealing food.")
             agent.remember(f"{witness.name} saw me stealing food.")
 
+            witness.add_grudge(agent.name, "caught stealing food")
+
+            witness.set_emotion("Troubled")
+            agent.set_emotion("Desperate")
+
             logs.append(f"{witness.name} saw {agent.name} stealing.")
             logs.append(f'{witness.name}: "{get_line(witness, "crime")}"')
             logs.append(f"{witness.name}'s trust toward {agent.name} -15.")
@@ -2774,7 +2864,15 @@ class Simulation:
             logs.append(f"{agent.name} looked ready to fight, but no one was nearby.")
             return logs
 
-        other = random.choice(nearby)
+        grudge_targets = [
+            other for other in nearby
+            if other.name in agent.grudges
+        ]
+
+        if grudge_targets:
+            other = random.choice(grudge_targets)
+        else:
+            other = random.choice(nearby)
 
         trust_loss = random.randint(10, 25)
         fear_gain = random.randint(5, 15)
@@ -2796,12 +2894,21 @@ class Simulation:
             other.alive = False
             other.status = "Dead"
             logs.append(f"{other.name} died after the fight.")
-            self.record_death(other, f"fight with {agent.name}")
+            self.record_death(other, f"fight with {agent.name}", logs)
         else:
             logs.append(f"{other.name} was injured. Health -{damage}.")
 
         agent.remember(f"Fought with {other.name}.")
         other.remember(f"{agent.name} attacked me.")
+
+        agent.add_grudge(other.name, "fight")
+        other.add_grudge(agent.name, "fight")
+
+        agent.set_emotion("Troubled")
+        other.set_emotion("Suffering")
+
+        agent.add_location_affinity(agent.location, -1)
+        other.add_location_affinity(other.location, -1)
 
         logs.append(f"{agent.name} got into a fight with {other.name} at {agent.location}.")
         logs.append(f'{agent.name}: "I am tired of pretending this is fine."')
@@ -2971,12 +3078,15 @@ class Simulation:
         agent.remember(f"Committed severe violence against {target.name}.")
         target.remember(f"{agent.name} severely attacked me.")
 
+        agent.set_emotion("Troubled")
+        target.set_emotion("Suffering")
+
         if target.health <= 0:
             target.alive = False
             target.status = "Dead"
 
             logs.append(f"{target.name} died from the attack.")
-            self.record_death(target, f"severe attack by {agent.name}")
+            self.record_death(target, f"severe attack by {agent.name}", logs)
 
             self.record_crime(agent.name, "murder", witnesses[0].name if witnesses else "unknown")
             logs.extend(self.handle_trial(agent, "murder"))
@@ -3107,7 +3217,17 @@ class Simulation:
             logs.append(f"{agent.name} wanted to talk, but no one was nearby.")
             return logs
 
-        other = random.choice(nearby)
+        preferred_targets = [
+            other for other in nearby
+            if other.name in agent.bonds
+            or other.name in agent.family
+            or other.age < 18
+        ]
+
+        if preferred_targets:
+            other = random.choice(preferred_targets)
+        else:
+            other = random.choice(nearby)
 
         if random.random() < 0.35:
             logs.extend(self.handle_teaching(agent, other))
@@ -3128,10 +3248,29 @@ class Simulation:
         agent.remember(f"Had a calm conversation with {other.name}.")
         other.remember(f"Had a calm conversation with {agent.name}.")
 
+        agent.add_location_affinity(agent.location, 1)
+        other.add_location_affinity(other.location, 1)
+
         logs.append(f"{agent.name} talked with {other.name} at {agent.location}.")
-        logs.append(f'{agent.name}: "{get_line(agent, "survival")}"')
-        logs.append(f'{other.name}: "{get_line(other, "survival")}"')
-        logs.append(f"Trust +{trust_gain}, Friendship +{friendship_gain}.")
+        agent_relationship_line = self.get_relationship_line(agent, other)
+        other_relationship_line = self.get_relationship_line(other, agent)
+
+        agent_memory_line = self.get_memory_line(agent)
+        other_memory_line = self.get_memory_line(other)
+
+        if agent_relationship_line and random.random() < 0.5:
+            logs.append(f'{agent.name}: "{agent_relationship_line}"')
+        elif agent_memory_line and random.random() < 0.35:
+            logs.append(f'{agent.name}: "{agent_memory_line}"')
+        else:
+            logs.append(f'{agent.name}: "{get_line(agent, "survival")}"')
+
+        if other_relationship_line and random.random() < 0.5:
+            logs.append(f'{other.name}: "{other_relationship_line}"')
+        elif other_memory_line and random.random() < 0.35:
+            logs.append(f'{other.name}: "{other_memory_line}"')
+        else:
+            logs.append(f'{other.name}: "{get_line(other, "survival")}"')
 
         return logs
 
@@ -3144,7 +3283,15 @@ class Simulation:
             logs.append(f"{agent.name} looked irritated, but no one was nearby.")
             return logs
 
-        other = random.choice(nearby)
+        grudge_targets = [
+            other for other in nearby
+            if other.name in agent.grudges
+        ]
+
+        if grudge_targets:
+            other = random.choice(grudge_targets)
+        else:
+            other = random.choice(nearby)
 
         trust_loss = random.randint(2, 8)
         fear_gain = random.randint(1, 5)
@@ -3156,6 +3303,12 @@ class Simulation:
 
         agent.remember(f"Argued with {other.name}.")
         other.remember(f"{agent.name} argued with me.")
+
+        agent.add_grudge(other.name, "argument")
+        other.add_grudge(agent.name, "argument")
+
+        agent.set_emotion("Troubled")
+        other.set_emotion("Troubled")
 
         logs.append(f"{agent.name} argued with {other.name} at {agent.location}.")
         logs.append(f'{agent.name}: "{get_line(agent, "argument")}"')
@@ -3175,7 +3328,15 @@ class Simulation:
             logs.append(f"{agent.name} wanted to help someone, but no one was nearby.")
             return logs
 
-        other = random.choice(nearby)
+        bond_targets = [
+            other for other in nearby
+            if other.name in agent.bonds
+        ]
+
+        if bond_targets:
+            other = random.choice(bond_targets)
+        else:
+            other = random.choice(nearby)
 
         help_amount = random.randint(5, 15)
 
@@ -3188,6 +3349,15 @@ class Simulation:
 
         agent.remember(f"Helped {other.name}.")
         other.remember(f"{agent.name} helped me when I needed it.")
+
+        other.add_bond(agent.name, "helped me")
+        agent.add_bond(other.name, "helped them")
+
+        agent.set_emotion("Connected")
+        other.set_emotion("Connected")
+
+        agent.add_location_affinity(agent.location, 2)
+        other.add_location_affinity(other.location, 2)
 
         logs.append(f"{agent.name} helped {other.name} at {agent.location}.")
         logs.append(f'{other.name}: "I will remember this."')
@@ -3224,6 +3394,12 @@ class Simulation:
             student.remember(f"{teacher.name} taught me {skill}.")
             teacher.remember(f"Taught {student.name} {skill}.")
 
+            student.add_bond(teacher.name, "taught me")
+            teacher.add_bond(student.name, "learned from me")
+
+            teacher.set_emotion("Connected")
+            student.set_emotion("Connected")
+
             logs.append(f"{student.name} learned successfully.")
             logs.append(f"{student.name}'s {skill} improved to {student.skills[skill]}.")
             logs.append(f"{student.name}'s respect toward {teacher.name} +5.")
@@ -3234,3 +3410,164 @@ class Simulation:
             logs.append(f"{student.name} failed to understand the lesson.")
 
         return logs
+    
+    def check_social_changes(self, logs):
+        if self.hour != 20:
+            return
+
+        for agent in self.agents:
+            if not agent.alive:
+                continue
+
+            current_best_friend = agent.get_best_friend()
+            current_rival = agent.get_rival()
+
+            if current_best_friend and current_best_friend != agent.known_best_friend:
+                agent.known_best_friend = current_best_friend
+                logs.append(f"{agent.name} now considers {current_best_friend} a close friend.")
+                self.add_history(f"{agent.name} became close friends with {current_best_friend}.")
+
+            if current_rival and current_rival != agent.known_rival:
+                agent.known_rival = current_rival
+                logs.append(f"{agent.name} now sees {current_rival} as a rival.")
+                self.add_history(f"{agent.name} became rivals with {current_rival}.")
+
+    def handle_mourning(self, dead_agent, logs):
+        for agent in self.agents:
+            if not agent.alive:
+                continue
+
+            if agent.name == dead_agent.name:
+                continue
+
+            should_mourn = False
+            reason = None
+
+            if dead_agent.name == agent.partner:
+                should_mourn = True
+                reason = "partner"
+
+            elif dead_agent.name in agent.family:
+                should_mourn = True
+                reason = "family"
+
+            elif dead_agent.name in agent.bonds:
+                should_mourn = True
+                reason = "bond"
+
+            elif agent.get_best_friend() == dead_agent.name:
+                should_mourn = True
+                reason = "close friend"
+
+            if should_mourn:
+                agent.social = max(agent.social - 20, 0)
+                agent.energy = max(agent.energy - 10, 0)
+
+                agent.remember(f"Mourned the death of {dead_agent.name}.")
+                agent.write_journal(
+                    self.day,
+                    self.hour,
+                    f"I mourned {dead_agent.name}. They were my {reason}."
+                )
+                agent.set_emotion("Lonely")
+
+                logs.append(f"{agent.name} mourned the death of {dead_agent.name}.")
+
+    def spread_gossip(self, logs):
+        if self.hour != 19:
+            return
+
+        recent_history = self.world_history[-10:]
+
+        gossip_topics = [
+            event for event in recent_history
+            if any(word in event.lower() for word in [
+                "died", "crime", "trial", "leader", "war",
+                "rebellion", "murder", "exiled", "born"
+            ])
+        ]
+
+        if not gossip_topics:
+            return
+
+        for agent in self.agents:
+            if not agent.alive:
+                continue
+
+            nearby = self.nearby_agents(agent)
+
+            if not nearby:
+                continue
+
+            listener = random.choice(nearby)
+            topic = random.choice(gossip_topics)
+
+            agent.add_gossip(topic)
+            listener.add_gossip(topic)
+
+            agent.change_relationship(listener.name, "friendship", 1)
+            listener.change_relationship(agent.name, "trust", 1)
+
+            topic_lower = topic.lower()
+
+            if "murder" in topic_lower or "severe violence" in topic_lower:
+                listener.social = max(listener.social - 3, 0)
+
+            if "exiled" in topic_lower or "crime" in topic_lower or "trial" in topic_lower:
+                listener.discipline = min(listener.discipline + 1, 100)
+
+            if "leader" in topic_lower:
+                if self.leader:
+                    listener.change_relationship(self.leader, "respect", 1)
+
+            if "born" in topic_lower:
+                listener.kindness = min(listener.kindness + 1, 100)
+
+            if "died" in topic_lower:
+                listener.social = max(listener.social - 2, 0)
+
+            logs.append(f"{agent.name} shared gossip with {listener.name}.")
+            logs.append(f'Gossip: "{topic}"')
+
+    def get_memory_line(self, agent):
+        if not agent.memories:
+            return None
+
+        memory = random.choice(agent.memories[-5:])
+
+        return f"I still remember this: {memory}"
+    
+    def get_relationship_line(self, speaker, listener):
+        if listener.name == speaker.partner:
+            return random.choice([
+                "I feel safer when you are near.",
+                "We have survived so much together.",
+                "I was thinking about our family today."
+            ])
+
+        if listener.name in speaker.family:
+            return random.choice([
+                "Family should look after each other.",
+                "I worry about you more than I say.",
+                "Whatever happens, you are still family."
+            ])
+
+        if listener.name == speaker.get_best_friend():
+            return random.choice([
+                "I trust you more than most people here.",
+                "You have always been there when it mattered.",
+                "Talking with you makes this place feel less lonely."
+            ])
+
+        if listener.name == speaker.get_rival():
+            return random.choice([
+                "I have not forgotten what happened between us.",
+                "Do not pretend everything is fine.",
+                "I still do not trust you."
+            ])
+
+        return None
+    
+    def update_emotional_states(self, logs):
+        for agent in self.agents:
+            agent.update_emotional_state()

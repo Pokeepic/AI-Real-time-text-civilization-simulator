@@ -23,6 +23,14 @@ def stabilize_agent(agent):
         "journal": [],
         "life_goal": None,
         "completed_goals": [],
+        "known_best_friend": None,
+        "known_rival": None,
+        "grudges": {},
+        "bonds": {},
+        "gossip_memory": [],
+        "location_affinity": {},
+        "emotional_state": "Stable",
+        "emotion_history": [],
     }
 
     for key, value in defaults.items():

@@ -359,6 +359,15 @@ with tab0:
     st.write("**Health Status Distribution**")
     st.bar_chart(status_counts)
 
+    emotion_counts = {}
+
+    for agent in sim.agents:
+        emotion = getattr(agent, "emotional_state", "Stable")
+        emotion_counts[emotion] = emotion_counts.get(emotion, 0) + 1
+
+    st.write("**Emotional State Distribution**")
+    st.bar_chart(emotion_counts)
+
     st.divider()
 
     st.subheader("Simulation Summary")
@@ -444,15 +453,12 @@ with tab0:
             st.success(f"✅ {item}")
         else:
             st.info(f"⏳ {item}")
+    
 
 with tab1:
     st.subheader("Agents")
 
     search_query = st.text_input("Search Agent")
-
-    st.subheader("Agent Filters")
-
-    only_alive = st.checkbox("Show only alive agents", value=True)
 
     st.subheader("Agent Filters")
 
@@ -472,6 +478,7 @@ with tab1:
     )
 
     show_critical_only = st.checkbox("Critical / Injured only")
+    show_socially_isolated = st.checkbox("Socially isolated only")
 
     sort_by = st.selectbox(
         "Sort by",
@@ -483,6 +490,7 @@ with tab1:
             "Generation",
             "Combat",
             "Medicine",
+            "Social Score",
         ]
     )
 
@@ -509,6 +517,12 @@ with tab1:
             a for a in filtered_agents
             if a.status in ["Critical", "Injured"]
         ]
+    
+    if show_socially_isolated:
+        filtered_agents = [
+            a for a in filtered_agents
+            if a.get_social_score() <= 0
+        ]
 
     if sort_by == "Name":
         filtered_agents.sort(key=lambda a: a.name)
@@ -521,9 +535,11 @@ with tab1:
     elif sort_by == "Generation":
         filtered_agents.sort(key=lambda a: a.generation)
     elif sort_by == "Combat":
-        filtered_agents.sort(key=lambda a: a.skills["combat"])
+        filtered_agents.sort(key=lambda a: a.skills.get("combat", 0), reverse=True)
     elif sort_by == "Medicine":
-        filtered_agents.sort(key=lambda a: a.skills["medicine"])
+        filtered_agents.sort(key=lambda a: a.skills.get("medicine", 0), reverse=True)
+    elif sort_by == "Social Score":
+        filtered_agents.sort(key=lambda a: a.get_social_score(), reverse=True)
 
     st.dataframe([
         {
@@ -541,6 +557,10 @@ with tab1:
             "Wealth": a.wealth,
             "Goal": a.life_goal,
             "Faction": a.faction,
+            "Best Friend": a.get_best_friend(),
+            "Rival": a.get_rival(),
+            "Emotion": a.emotional_state,
+            "Social Score": a.get_social_score(),
         }
         for a in filtered_agents
     ], use_container_width=True)
@@ -561,51 +581,155 @@ with tab1:
         st.markdown("### Profile")
         st.write(f"**Name:** {agent.name}")
         st.write(f"**Age:** {agent.age}")
-        # keep the rest of your profile code here
+        st.write(f"**Generation:** {agent.generation}")
+        st.write(f"**Role:** {agent.role}")
+        st.write(f"**Location:** {agent.location}")
+        st.write(f"**Favorite Place:** {agent.get_favorite_place() or 'None'}")
+        st.write(f"**Health:** {agent.health}")
+        st.write(f"**Status:** {agent.status}")
+        st.write(f"**Emotion:** {agent.emotional_state}")
+        st.write(f"**Life Goal:** {agent.life_goal}")
+        st.write(f"**Completed Goals:** {agent.completed_goals}")
+        st.write(f"**Partner:** {agent.partner}")
+        st.write(f"**Family:** {agent.family}")
+        st.write(f"**Parents:** {agent.parents}")
+        st.write(f"**Faction:** {agent.faction}")
+        st.write(f"**Best Friend:** {agent.get_best_friend() or 'None'}")
+        st.write(f"**Rival:** {agent.get_rival() or 'None'}")
+        st.write(f"**Social Score:** {agent.get_social_score()}")
+        st.write(f"**Wealth:** {agent.wealth}")
+        st.write(f"**Debts:** {agent.debts}")
+        st.write(f"**Inventory:** {agent.inventory}")
+
+        st.markdown("### Personality")
+        st.json({
+            "curiosity": agent.curiosity,
+            "kindness": agent.kindness,
+            "aggression": agent.aggression,
+            "discipline": agent.discipline,
+            "pride": agent.pride,
+            "greed": agent.greed,
+            "risk_taking": agent.risk_taking,
+        })
+
+        st.markdown("### Skills")
+        st.json(agent.skills)
+
+        st.markdown("### Recent Memories")
+        st.write(agent.memories[-10:])
+
+        st.markdown("### Journal")
+        st.write(agent.journal[-10:])
+
+        st.markdown("### Emotion Timeline")
+
+        if agent.emotion_history:
+            emotion_rows = []
+
+            for index, emotion in enumerate(agent.emotion_history[-10:], start=1):
+                emotion_rows.append({
+                    "Step": index,
+                    "Emotion": emotion
+                })
+
+            st.dataframe(emotion_rows, use_container_width=True)
+        else:
+            st.info("No emotion history yet.")
+
+        st.markdown("### Social Summary")
+
+        best_friend = agent.get_best_friend()
+        rival = agent.get_rival()
+
+        if best_friend:
+            st.success(f"Best friend: {best_friend}")
+        else:
+            st.info("Best friend: None")
+
+        if rival:
+            st.warning(f"Rival: {rival}")
+        else:
+            st.info("Rival: None")
+
+        st.markdown("### Grudges")
+
+        if agent.grudges:
+            st.json(agent.grudges)
+        else:
+            st.info("No grudges.")
+
+        st.markdown("### Bonds")
+
+        if agent.bonds:
+            st.json(agent.bonds)
+        else:
+            st.info("No bonds.")
+        
+        st.markdown("### Gossip Memory")
+
+        if agent.gossip_memory:
+            st.write(agent.gossip_memory[-10:])
+        else:
+            st.info("No gossip memory.")
+
+        relationship_count = len(agent.relationships)
+
+        positive_relationships = 0
+        negative_relationships = 0
+
+        for rel in agent.relationships.values():
+            score = (
+                rel.get("trust", 0)
+                + rel.get("friendship", 0)
+                + rel.get("respect", 0)
+                - rel.get("fear", 0)
+            )
+
+            if score > 0:
+                positive_relationships += 1
+            elif score < 0:
+                negative_relationships += 1
+
+        st.write(f"**Known Relationships:** {relationship_count}")
+        st.write(f"**Positive Relationships:** {positive_relationships}")
+        st.write(f"**Negative Relationships:** {negative_relationships}")
+
+        st.markdown("### Relationships")
+
+        relationship_rows = []
+
+        for name, rel in agent.relationships.items():
+            score = (
+                rel.get("trust", 0)
+                + rel.get("friendship", 0)
+                + rel.get("respect", 0)
+                - rel.get("fear", 0)
+            )
+
+            if score > 20:
+                label = "Positive"
+            elif score < -20:
+                label = "Negative"
+            else:
+                label = "Neutral"
+
+            relationship_rows.append({
+                "Name": name,
+                "Trust": rel.get("trust", 0),
+                "Friendship": rel.get("friendship", 0),
+                "Respect": rel.get("respect", 0),
+                "Fear": rel.get("fear", 0),
+                "Score": score,
+                "Type": label,
+            })
+
+        if relationship_rows:
+            st.dataframe(relationship_rows, use_container_width=True)
+        else:
+            st.info("No relationships yet.")
 
     else:
         st.warning("No agents match the current filters.")
-
-    st.markdown("### Profile")
-    st.write(f"**Name:** {agent.name}")
-    st.write(f"**Age:** {agent.age}")
-    st.write(f"**Generation:** {agent.generation}")
-    st.write(f"**Role:** {agent.role}")
-    st.write(f"**Location:** {agent.location}")
-    st.write(f"**Health:** {agent.health}")
-    st.write(f"**Status:** {agent.status}")
-    st.write(f"**Life Goal:** {agent.life_goal}")
-    st.write(f"**Completed Goals:** {agent.completed_goals}")
-    st.write(f"**Partner:** {agent.partner}")
-    st.write(f"**Family:** {agent.family}")
-    st.write(f"**Parents:** {agent.parents}")
-    st.write(f"**Faction:** {agent.faction}")
-    st.write(f"**Wealth:** {agent.wealth}")
-    st.write(f"**Debts:** {agent.debts}")
-    st.write(f"**Inventory:** {agent.inventory}")
-
-    st.markdown("### Personality")
-    st.json({
-        "curiosity": agent.curiosity,
-        "kindness": agent.kindness,
-        "aggression": agent.aggression,
-        "discipline": agent.discipline,
-        "pride": agent.pride,
-        "greed": agent.greed,
-        "risk_taking": agent.risk_taking,
-    })
-
-    st.markdown("### Skills")
-    st.json(agent.skills)
-
-    st.markdown("### Recent Memories")
-    st.write(agent.memories[-10:])
-
-    st.markdown("### Journal")
-    st.write(agent.journal[-10:])
-
-    st.markdown("### Relationships")
-    st.json(agent.relationships)
 
 # -----------------------------
 # Settlements Tab
