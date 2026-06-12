@@ -71,6 +71,7 @@ class Simulation:
         self.family_reputation = {}
         self.family_rivalries = {}
         self.family_alliances = {}
+        self.notifications = []
         self.current_era = "Age of Survival"
         self.eras = [
             {
@@ -1064,6 +1065,7 @@ class Simulation:
             other_power = self.calculate_settlement_power(settlement["name"])
 
             logs.append(f"War broke out between {self.settlement['name'] or 'the main settlement'} and {settlement['name']}.")
+            self.notify(f"War began between {self.settlement['name'] or 'the main settlement'} and {settlement['name']}.")
             logs.append(f"Main power: {main_power}. {settlement['name']} power: {other_power}.")
 
             war_record = {
@@ -1993,6 +1995,7 @@ class Simulation:
         self.memorials.append(memorial)
 
         self.add_history(f"{agent.name} died. Cause: {cause}.")
+        self.notify(f"{agent.name} died ({cause}).")
 
         mourning_logs = []
         self.handle_mourning(agent, mourning_logs)
@@ -2675,9 +2678,11 @@ class Simulation:
             if old_leader is None:
                 logs.append(f"{best_candidate.name} has naturally become the leader of {self.settlement['name']}.")
                 self.add_history(f"{best_candidate.name} became the first leader of {self.settlement['name']}.")
+                self.notify(f"{best_candidate.name} became leader.")
             else:
                 logs.append(f"Leadership changed from {old_leader} to {best_candidate.name}.")
                 self.add_history(f"Leadership changed from {old_leader} to {best_candidate.name}.")
+                self.notify(f"{best_candidate.name} became leader.")
 
     def nearby_agents(self, agent):
         return [
@@ -3728,6 +3733,7 @@ class Simulation:
 
                 logs.append(f"{crush.name} accepted. {agent.name} and {crush.name} became partners.")
                 self.add_history(f"{agent.name} and {crush.name} became partners after a confession.")
+                self.notify(f"{agent.name} and {crush.name} became partners.")
 
             else:
                 agent.change_relationship(crush.name, "trust", -5)
@@ -4065,3 +4071,11 @@ class Simulation:
 
         if len(self.family_alliances[key]["reasons"]) > 10:
             self.family_alliances[key]["reasons"].pop(0)
+
+    def notify(self, message):
+        self.notifications.append(
+            f"Day {self.day}, Hour {self.hour}: {message}"
+        )
+
+        if len(self.notifications) > 100:
+            self.notifications.pop(0)

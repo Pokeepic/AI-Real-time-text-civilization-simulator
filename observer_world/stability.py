@@ -36,6 +36,7 @@ def stabilize_agent(agent):
         "family_reputation": {},
         "family_rivalries": {},
         "family_alliances": {},
+        "notifications": [],
     }
 
     for key, value in defaults.items():

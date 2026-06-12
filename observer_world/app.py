@@ -170,14 +170,15 @@ for log in recent_logs[-40:]:
 # Tabs
 # -----------------------------
 
-tab0, tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+tab0, tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
     "Overview",
     "Agents",
     "Settlements",
     "History",
     "Chronicles",
     "Controls",
-    "Errors"
+    "Errors",
+    "Notifications"
 ])
 
 
@@ -210,6 +211,18 @@ with tab0:
     c10.metric("Treaties", len(sim.treaties))
     c11.metric("Technologies", len(sim.technologies))
     c12.metric("Laws", len(sim.laws))
+
+    st.divider()
+
+    st.subheader("Latest Notifications")
+
+    notifications = getattr(sim, "notifications", [])
+
+    if notifications:
+        for notification in reversed(notifications[-5:]):
+            st.info(notification)
+    else:
+        st.info("No notifications yet.")
 
     st.divider()
 
@@ -959,3 +972,12 @@ with tab6:
             st.error(error)
     else:
         st.success("No errors detected.")
+
+with tab7:
+    st.subheader("Notifications")
+
+    if sim.notifications:
+        for notification in reversed(sim.notifications[-50:]):
+            st.info(notification)
+    else:
+        st.info("No notifications yet.")
