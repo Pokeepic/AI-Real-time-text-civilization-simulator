@@ -68,6 +68,9 @@ class Simulation:
         self.research_points = 0
         self.daily_events = []
         self.chronicles = []
+        self.family_reputation = {}
+        self.family_rivalries = {}
+        self.family_alliances = {}
         self.current_era = "Age of Survival"
         self.eras = [
             {
@@ -1900,6 +1903,14 @@ class Simulation:
         ("generate_extra_settlement_research", self.generate_extra_settlement_research),
         ("unlock_extra_settlement_technology", self.unlock_extra_settlement_technology),
         ("update_emotional_states", self.update_emotional_states),
+        ("update_crushes", self.update_crushes),
+        ("handle_confessions", self.handle_confessions),
+        ("handle_rejection_recovery", self.handle_rejection_recovery),
+        ("deepen_partner_bonds", self.deepen_partner_bonds),
+        ("handle_family_reunions", self.handle_family_reunions),
+        ("handle_sibling_interactions", self.handle_sibling_interactions),
+        ("handle_parent_child_bonds", self.handle_parent_child_bonds),
+        ("update_family_reputation", self.update_family_reputation),
         ("handle_journals", self.handle_journals),
         ("handle_personality_drift", self.handle_personality_drift),
         ("update_life_goals", self.update_life_goals),
@@ -1907,6 +1918,8 @@ class Simulation:
         ("update_era", self.update_era),
         ("check_social_changes", self.check_social_changes),
         ("spread_gossip", self.spread_gossip),
+        ("apply_family_reputation_effects", self.apply_family_reputation_effects),
+        ("apply_family_rivalry_effects", self.apply_family_rivalry_effects),
         ("check_milestones", self.check_milestones),
     ]
 
@@ -2105,7 +2118,8 @@ class Simulation:
 
         bonded_patients = [
             patient for patient in patients
-            if patient.name in medic.bonds
+            if patient.name in medic.family
+            or patient.name in medic.bonds
         ]
 
         if bonded_patients:
@@ -2134,6 +2148,8 @@ class Simulation:
 
         patient.add_bond(medic.name, "healed me")
         medic.add_bond(patient.name, "treated them")
+
+        self.record_family_alliance(medic, patient, "healing")
 
         medic.set_emotion("Connected")
         patient.set_emotion("Connected")
@@ -2522,6 +2538,16 @@ class Simulation:
                     child.age = 0
                     child.location = agent.location
                     child.parents = [agent.name, agent.partner]
+                    if agent.surname:
+                        child.surname = agent.surname
+                    elif partner and partner.surname:
+                        child.surname = partner.surname
+                    else:
+                        new_surname = self.generate_surname()
+                        agent.surname = new_surname
+                        if partner:
+                            partner.surname = new_surname
+                        child.surname = new_surname
                     child.family.append(agent.name)
                     child.family.append(agent.partner)
 
@@ -2841,6 +2867,8 @@ class Simulation:
 
             witness.add_grudge(agent.name, "caught stealing food")
 
+            self.record_family_rivalry(agent, witness, "stealing accusation")
+
             witness.set_emotion("Troubled")
             agent.set_emotion("Desperate")
 
@@ -2903,6 +2931,8 @@ class Simulation:
 
         agent.add_grudge(other.name, "fight")
         other.add_grudge(agent.name, "fight")
+
+        self.record_family_rivalry(agent, other, "fight")
 
         agent.set_emotion("Troubled")
         other.set_emotion("Suffering")
@@ -3078,6 +3108,8 @@ class Simulation:
         agent.remember(f"Committed severe violence against {target.name}.")
         target.remember(f"{agent.name} severely attacked me.")
 
+        self.record_family_rivalry(agent, target, "severe violence")
+
         agent.set_emotion("Troubled")
         target.set_emotion("Suffering")
 
@@ -3219,7 +3251,8 @@ class Simulation:
 
         preferred_targets = [
             other for other in nearby
-            if other.name in agent.bonds
+            if other.name == agent.crush
+            or other.name in agent.bonds
             or other.name in agent.family
             or other.age < 18
         ]
@@ -3307,6 +3340,8 @@ class Simulation:
         agent.add_grudge(other.name, "argument")
         other.add_grudge(agent.name, "argument")
 
+        self.record_family_rivalry(agent, other, "argument")
+
         agent.set_emotion("Troubled")
         other.set_emotion("Troubled")
 
@@ -3330,7 +3365,9 @@ class Simulation:
 
         bond_targets = [
             other for other in nearby
-            if other.name in agent.bonds
+            if other.name in agent.family
+            or other.name in agent.bonds
+            or other.name == agent.crush
         ]
 
         if bond_targets:
@@ -3352,6 +3389,8 @@ class Simulation:
 
         other.add_bond(agent.name, "helped me")
         agent.add_bond(other.name, "helped them")
+
+        self.record_family_alliance(agent, other, "help")
 
         agent.set_emotion("Connected")
         other.set_emotion("Connected")
@@ -3396,6 +3435,8 @@ class Simulation:
 
             student.add_bond(teacher.name, "taught me")
             teacher.add_bond(student.name, "learned from me")
+
+            self.record_family_alliance(teacher, student, "teaching")
 
             teacher.set_emotion("Connected")
             student.set_emotion("Connected")
@@ -3442,26 +3483,46 @@ class Simulation:
 
             should_mourn = False
             reason = None
+            grief_power = 0
 
             if dead_agent.name == agent.partner:
                 should_mourn = True
                 reason = "partner"
+                grief_power = 30
 
             elif dead_agent.name in agent.family:
                 should_mourn = True
                 reason = "family"
+                grief_power = 25
+
+            elif dead_agent.name in agent.parents:
+                should_mourn = True
+                reason = "parent"
+                grief_power = 28
+
+            elif agent.name in dead_agent.parents:
+                should_mourn = True
+                reason = "child"
+                grief_power = 35
 
             elif dead_agent.name in agent.bonds:
                 should_mourn = True
                 reason = "bond"
+                grief_power = 18
 
             elif agent.get_best_friend() == dead_agent.name:
                 should_mourn = True
                 reason = "close friend"
+                grief_power = 20
 
             if should_mourn:
-                agent.social = max(agent.social - 20, 0)
-                agent.energy = max(agent.energy - 10, 0)
+                agent.social = max(agent.social - grief_power, 0)
+                agent.energy = max(agent.energy - grief_power // 2, 0)
+
+                if grief_power >= 30:
+                    agent.set_emotion("Suffering")
+                else:
+                    agent.set_emotion("Lonely")
 
                 agent.remember(f"Mourned the death of {dead_agent.name}.")
                 agent.write_journal(
@@ -3469,9 +3530,8 @@ class Simulation:
                     self.hour,
                     f"I mourned {dead_agent.name}. They were my {reason}."
                 )
-                agent.set_emotion("Lonely")
 
-                logs.append(f"{agent.name} mourned the death of {dead_agent.name}.")
+                logs.append(f"{agent.name} deeply mourned the death of {dead_agent.name}. Reason: {reason}.")
 
     def spread_gossip(self, logs):
         if self.hour != 19:
@@ -3571,3 +3631,437 @@ class Simulation:
     def update_emotional_states(self, logs):
         for agent in self.agents:
             agent.update_emotional_state()
+
+    def update_crushes(self, logs):
+        for agent in self.agents:
+            if not agent.alive:
+                continue
+
+            previous = agent.crush
+
+            agent.update_crush()
+
+            if agent.crush and agent.crush != previous:
+                logs.append(
+                    f"{agent.name} seems to have developed feelings for {agent.crush}."
+                )
+
+                agent.remember(
+                    f"I think I may have feelings for {agent.crush}."
+                )
+    
+    def handle_confessions(self, logs):
+        if self.hour != 18:
+            return
+
+        for agent in self.agents:
+            if not agent.alive:
+                continue
+
+            if agent.age < 18:
+                continue
+
+            if agent.partner:
+                continue
+
+            if not agent.crush:
+                continue
+
+            crush = next((a for a in self.agents if a.name == agent.crush), None)
+
+            if not crush or not crush.alive:
+                continue
+
+            if crush.partner:
+                continue
+
+            if crush.location != agent.location:
+                continue
+
+            rel = agent.get_relationship(crush.name)
+            crush_rel = crush.get_relationship(agent.name)
+
+            confession_score = (
+                rel.get("trust", 0)
+                + rel.get("friendship", 0)
+                + crush_rel.get("trust", 0)
+                + crush_rel.get("friendship", 0)
+                + agent.kindness
+                - agent.pride // 2
+            )
+
+            if confession_score < 120:
+                continue
+
+            logs.append(f"{agent.name} confessed their feelings to {crush.name}.")
+
+            acceptance_score = (
+                crush_rel.get("trust", 0)
+                + crush_rel.get("friendship", 0)
+                + crush.kindness
+                - crush.pride // 2
+            )
+
+            if crush.crush == agent.name:
+                acceptance_score += 40
+
+            if acceptance_score >= 100:
+                agent.partner = crush.name
+                crush.partner = agent.name
+
+                agent.family.append(crush.name)
+                crush.family.append(agent.name)
+
+                agent.crush = None
+                crush.crush = None
+
+                agent.set_emotion("Connected")
+                crush.set_emotion("Connected")
+
+                agent.add_bond(crush.name, "accepted my confession")
+                crush.add_bond(agent.name, "became my partner")
+
+                self.record_family_alliance(agent, crush, "partnership")
+
+                agent.remember(f"Became partners with {crush.name}.")
+                crush.remember(f"Became partners with {agent.name}.")
+
+                logs.append(f"{crush.name} accepted. {agent.name} and {crush.name} became partners.")
+                self.add_history(f"{agent.name} and {crush.name} became partners after a confession.")
+
+            else:
+                agent.change_relationship(crush.name, "trust", -5)
+                agent.change_relationship(crush.name, "friendship", -3)
+
+                agent.set_emotion("Lonely")
+                agent.remember(f"{crush.name} rejected my confession.")
+                agent.add_grudge(crush.name, "rejected confession")
+
+                logs.append(f"{crush.name} rejected {agent.name}'s confession.")
+    
+    def handle_rejection_recovery(self, logs):
+        if self.hour != 9:
+            return
+
+        for agent in self.agents:
+            if not agent.alive:
+                continue
+
+            recent_memories = " ".join(agent.memories[-8:]).lower()
+
+            if "rejected my confession" not in recent_memories:
+                continue
+
+            if agent.emotional_state != "Lonely":
+                continue
+
+            recovery_chance = 0.15
+            recovery_chance += agent.discipline / 300
+            recovery_chance += agent.kindness / 400
+
+            if agent.get_best_friend():
+                recovery_chance += 0.15
+
+            if random.random() < recovery_chance:
+                agent.set_emotion("Stable")
+                agent.remember("I started to recover from rejection.")
+                agent.write_journal(
+                    self.day,
+                    self.hour,
+                    "Rejection still hurts, but I feel like I can move forward."
+                )
+
+                logs.append(f"{agent.name} began recovering from rejection.")
+    
+    def deepen_partner_bonds(self, logs):
+        if self.hour != 20:
+            return
+
+        for agent in self.agents:
+            if not agent.alive:
+                continue
+
+            if not agent.partner:
+                continue
+
+            partner = next((a for a in self.agents if a.name == agent.partner), None)
+
+            if not partner or not partner.alive:
+                continue
+
+            if partner.location != agent.location:
+                continue
+
+            agent.change_relationship(partner.name, "trust", 1)
+            agent.change_relationship(partner.name, "friendship", 1)
+            partner.change_relationship(agent.name, "trust", 1)
+            partner.change_relationship(agent.name, "friendship", 1)
+
+            agent.add_bond(partner.name, "spent time together")
+            partner.add_bond(agent.name, "spent time together")
+
+            if random.random() < 0.25:
+                logs.append(f"{agent.name} and {partner.name}'s bond deepened.")
+    
+    def handle_family_reunions(self, logs):
+        if self.hour != 19:
+            return
+
+        for agent in self.agents:
+            if not agent.alive:
+                continue
+
+            family_nearby = [
+                other for other in self.nearby_agents(agent)
+                if other.name in agent.family and other.alive
+            ]
+
+            if len(family_nearby) < 1:
+                continue
+
+            if random.random() > 0.15:
+                continue
+
+            relative = random.choice(family_nearby)
+
+            agent.change_relationship(relative.name, "friendship", 3)
+            agent.change_relationship(relative.name, "trust", 2)
+
+            relative.change_relationship(agent.name, "friendship", 3)
+            relative.change_relationship(agent.name, "trust", 2)
+
+            agent.add_bond(relative.name, "family reunion")
+            relative.add_bond(agent.name, "family reunion")
+
+            agent.set_emotion("Connected")
+            relative.set_emotion("Connected")
+
+            logs.append(f"{agent.name} shared a quiet family moment with {relative.name}.")
+
+    def handle_sibling_interactions(self, logs):
+        if self.hour != 16:
+            return
+
+        for agent in self.agents:
+            if not agent.alive:
+                continue
+
+            siblings_nearby = [
+                other for other in self.nearby_agents(agent)
+                if other.alive and agent.is_sibling_of(other)
+            ]
+
+            if not siblings_nearby:
+                continue
+
+            sibling = random.choice(siblings_nearby)
+
+            if random.random() < 0.6:
+                agent.change_relationship(sibling.name, "friendship", 2)
+                sibling.change_relationship(agent.name, "friendship", 2)
+
+                agent.add_bond(sibling.name, "sibling bond")
+                sibling.add_bond(agent.name, "sibling bond")
+
+                logs.append(f"{agent.name} spent time with their sibling {sibling.name}.")
+            else:
+                agent.change_relationship(sibling.name, "trust", -1)
+                sibling.change_relationship(agent.name, "trust", -1)
+
+                agent.add_grudge(sibling.name, "sibling argument")
+                sibling.add_grudge(agent.name, "sibling argument")
+
+                logs.append(f"{agent.name} had a small sibling argument with {sibling.name}.")
+
+    def handle_parent_child_bonds(self, logs):
+        if self.hour != 17:
+            return
+
+        for parent in self.agents:
+            if not parent.alive:
+                continue
+
+            children_nearby = [
+                child for child in self.nearby_agents(parent)
+                if child.alive and parent.name in child.parents
+            ]
+
+            if not children_nearby:
+                continue
+
+            child = random.choice(children_nearby)
+
+            parent.change_relationship(child.name, "friendship", 3)
+            parent.change_relationship(child.name, "trust", 3)
+            child.change_relationship(parent.name, "trust", 4)
+            child.change_relationship(parent.name, "respect", 2)
+
+            parent.add_bond(child.name, "parental bond")
+            child.add_bond(parent.name, "parental care")
+
+            parent.set_emotion("Connected")
+            child.set_emotion("Connected")
+
+            if random.random() < 0.25:
+                logs.append(f"{parent.name} spent time caring for {child.name}.")
+
+    def generate_surname(self):
+        roots = ["Hearth", "River", "Stone", "Ash", "Moon", "Sun", "Vale", "Wolf", "Oak", "Storm"]
+        endings = ["born", "field", "watch", "wood", "crest", "ward", "line", "keeper"]
+
+        return random.choice(roots) + random.choice(endings)
+    
+    def update_family_reputation(self, logs):
+        if self.hour != 21:
+            return
+
+        reputation = {}
+
+        for agent in self.agents:
+            surname = getattr(agent, "surname", None)
+
+            if not surname:
+                continue
+
+            reputation.setdefault(surname, 0)
+
+            reputation[surname] += agent.get_social_score()
+            reputation[surname] += agent.wealth
+            reputation[surname] += agent.skills.get("social", 0)
+
+            if agent.role == "Leader":
+                reputation[surname] += 20
+
+            if agent.role == "Guard":
+                reputation[surname] += 5
+
+            if agent.role == "Exile":
+                reputation[surname] -= 10
+
+            if agent.get_rival():
+                reputation[surname] -= 3
+
+        self.family_reputation = reputation
+
+    def apply_family_reputation_effects(self, logs):
+        if self.hour != 22:
+            return
+
+        if not self.family_reputation:
+            return
+
+        for agent in self.agents:
+            if not agent.alive:
+                continue
+
+            if not agent.surname:
+                continue
+
+            reputation = self.family_reputation.get(agent.surname, 0)
+
+            nearby = self.nearby_agents(agent)
+
+            if not nearby:
+                continue
+
+            for other in nearby:
+                if not other.alive:
+                    continue
+
+                if reputation >= 50:
+                    other.change_relationship(agent.name, "respect", 1)
+
+                    if random.random() < 0.05:
+                        logs.append(f"{other.name} showed respect toward {agent.name}'s family name.")
+
+                elif reputation <= -30:
+                    other.change_relationship(agent.name, "trust", -1)
+
+                    if random.random() < 0.05:
+                        logs.append(f"{other.name} distrusted {agent.name} because of their family reputation.")
+
+    def record_family_rivalry(self, agent_a, agent_b, reason):
+        surname_a = getattr(agent_a, "surname", None)
+        surname_b = getattr(agent_b, "surname", None)
+
+        if not surname_a or not surname_b:
+            return
+
+        if surname_a == surname_b:
+            return
+
+        key = tuple(sorted([surname_a, surname_b]))
+
+        if key not in self.family_rivalries:
+            self.family_rivalries[key] = {
+                "score": 0,
+                "reasons": []
+            }
+
+        self.family_rivalries[key]["score"] += 1
+        self.family_rivalries[key]["reasons"].append(reason)
+
+        if len(self.family_rivalries[key]["reasons"]) > 10:
+            self.family_rivalries[key]["reasons"].pop(0)
+
+    def apply_family_rivalry_effects(self, logs):
+        if self.hour != 18:
+            return
+
+        if not self.family_rivalries:
+            return
+
+        for families, data in self.family_rivalries.items():
+            score = data.get("score", 0)
+
+            if score < 3:
+                continue
+
+            family_a, family_b = families
+
+            members_a = [
+                a for a in self.agents
+                if a.alive and getattr(a, "surname", None) == family_a
+            ]
+
+            members_b = [
+                a for a in self.agents
+                if a.alive and getattr(a, "surname", None) == family_b
+            ]
+
+            for member_a in members_a:
+                for member_b in members_b:
+                    if member_a.location != member_b.location:
+                        continue
+
+                    member_a.change_relationship(member_b.name, "trust", -1)
+                    member_b.change_relationship(member_a.name, "trust", -1)
+
+                    if random.random() < 0.05:
+                        logs.append(
+                            f"Old family rivalry caused tension between {member_a.name} and {member_b.name}."
+                        )
+
+    def record_family_alliance(self, agent_a, agent_b, reason):
+        surname_a = getattr(agent_a, "surname", None)
+        surname_b = getattr(agent_b, "surname", None)
+
+        if not surname_a or not surname_b:
+            return
+
+        if surname_a == surname_b:
+            return
+
+        key = tuple(sorted([surname_a, surname_b]))
+
+        if key not in self.family_alliances:
+            self.family_alliances[key] = {
+                "score": 0,
+                "reasons": []
+            }
+
+        self.family_alliances[key]["score"] += 1
+        self.family_alliances[key]["reasons"].append(reason)
+
+        if len(self.family_alliances[key]["reasons"]) > 10:
+            self.family_alliances[key]["reasons"].pop(0)

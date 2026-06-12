@@ -31,6 +31,11 @@ def stabilize_agent(agent):
         "location_affinity": {},
         "emotional_state": "Stable",
         "emotion_history": [],
+        "crush": None,
+        "surname": None,
+        "family_reputation": {},
+        "family_rivalries": {},
+        "family_alliances": {},
     }
 
     for key, value in defaults.items():

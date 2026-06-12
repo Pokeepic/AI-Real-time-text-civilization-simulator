@@ -261,6 +261,70 @@ with tab0:
             for a in top_medicine
         ], use_container_width=True)
 
+    st.subheader("Family Lines")
+
+    family_counts = {}
+
+    for agent in sim.agents:
+        surname = getattr(agent, "surname", None)
+
+        if surname:
+            family_counts[surname] = family_counts.get(surname, 0) + 1
+
+    family_data = []
+
+    for surname, count in sorted(
+        family_counts.items(),
+        key=lambda item: item[1],
+        reverse=True
+    ):
+        family_data.append({
+            "Family Name": surname,
+            "Members": count,
+            "Reputation": sim.family_reputation.get(surname, 0)
+        })
+
+    if family_data:
+        st.dataframe(family_data, use_container_width=True)
+    else:
+        st.info("No family lines have formed yet.")
+
+    st.divider()
+
+    st.subheader("Family Rivalries")
+
+    rivalry_rows = []
+
+    for families, data in sim.family_rivalries.items():
+        rivalry_rows.append({
+            "Families": " vs ".join(families),
+            "Score": data.get("score", 0),
+            "Recent Reasons": ", ".join(data.get("reasons", [])[-3:])
+        })
+
+    if rivalry_rows:
+        st.dataframe(rivalry_rows, use_container_width=True)
+    else:
+        st.info("No family rivalries yet.")
+
+    st.divider()
+
+    st.subheader("Family Alliances")
+
+    alliance_rows = []
+
+    for families, data in sim.family_alliances.items():
+        alliance_rows.append({
+            "Families": " + ".join(families),
+            "Score": data.get("score", 0),
+            "Recent Reasons": ", ".join(data.get("reasons", [])[-3:])
+        })
+
+    if alliance_rows:
+        st.dataframe(alliance_rows, use_container_width=True)
+    else:
+        st.info("No family alliances yet.")
+
     st.divider()
 
     st.subheader("Population by Location")
@@ -543,7 +607,7 @@ with tab1:
 
     st.dataframe([
         {
-            "Name": a.name,
+            "Name": a.get_full_name(),
             "Age": a.age,
             "Generation": a.generation,
             "Alive": a.alive,
@@ -580,6 +644,14 @@ with tab1:
 
         st.markdown("### Profile")
         st.write(f"**Name:** {agent.name}")
+        st.write(f"**Full Name:** {agent.get_full_name()}")
+        st.write(f"**Surname:** {agent.surname or 'None'}")
+        family_rep = 0
+
+        if agent.surname:
+            family_rep = sim.family_reputation.get(agent.surname, 0)
+
+        st.write(f"**Family Reputation:** {family_rep}")
         st.write(f"**Age:** {agent.age}")
         st.write(f"**Generation:** {agent.generation}")
         st.write(f"**Role:** {agent.role}")
@@ -590,9 +662,24 @@ with tab1:
         st.write(f"**Emotion:** {agent.emotional_state}")
         st.write(f"**Life Goal:** {agent.life_goal}")
         st.write(f"**Completed Goals:** {agent.completed_goals}")
-        st.write(f"**Partner:** {agent.partner}")
-        st.write(f"**Family:** {agent.family}")
-        st.write(f"**Parents:** {agent.parents}")
+        st.write(f"**Crush:** {agent.crush or 'None'}")
+        children = [
+            a.name for a in sim.agents
+            if agent.name in getattr(a, "parents", [])
+        ]
+
+        siblings = [
+            a.name for a in sim.agents
+            if a.name != agent.name
+            and hasattr(agent, "is_sibling_of")
+            and agent.is_sibling_of(a)
+        ]
+
+        st.markdown("### Family Tree")
+        st.write(f"**Partner:** {agent.partner or 'None'}")
+        st.write(f"**Parents:** {agent.parents if agent.parents else 'None'}")
+        st.write(f"**Children:** {children if children else 'None'}")
+        st.write(f"**Siblings:** {siblings if siblings else 'None'}")
         st.write(f"**Faction:** {agent.faction}")
         st.write(f"**Best Friend:** {agent.get_best_friend() or 'None'}")
         st.write(f"**Rival:** {agent.get_rival() or 'None'}")

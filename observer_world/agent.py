@@ -64,6 +64,8 @@ class Agent:
         self.location_affinity = {}
         self.emotional_state = "Stable"
         self.emotion_history = []
+        self.crush = None
+        self.surname = None
 
     def update_needs(self):
         self.hunger = clamp(self.hunger + 5, 0, 100)
@@ -340,7 +342,19 @@ class Agent:
 
         elif self.emotional_state == "Suffering":
             choices += ["rest", "sleep"]
+        
+        if self.crush and self.age >= 13:
+            choices += ["talk", "bond"]
 
+            if self.kindness > 50:
+                choices += ["help"]
+
+        if self.family and self.age >= 13:
+            choices += ["talk", "help"]
+
+            if self.role == "Medic":
+                choices += ["heal"]
+                
         return random.choice(choices)
 
     def write_journal(self, day, hour, thought):
@@ -426,3 +440,32 @@ class Agent:
             )
 
         return total
+    
+    def update_crush(self):
+        candidates = []
+
+        for name, rel in self.relationships.items():
+            score = (
+                rel.get("friendship", 0)
+                + rel.get("trust", 0)
+                + rel.get("respect", 0)
+            )
+
+            if score >= 40:
+                candidates.append((name, score))
+
+        if candidates:
+            self.crush = max(candidates, key=lambda x: x[1])[0]
+        else:
+            self.crush = None
+    
+    def is_sibling_of(self, other):
+        if not self.parents or not other.parents:
+            return False
+
+        return bool(set(self.parents) & set(other.parents))
+    
+    def get_full_name(self):
+        if self.surname:
+            return f"{self.name} {self.surname}"
+        return self.name
