@@ -11,6 +11,7 @@ from stability import stabilize_sim
 from archive import export_story_summary, export_chronicles
 
 APP_VERSION = "Observer World Dashboard v0.8"
+safe_version = APP_VERSION.replace(" ", "_").replace(".", "_")
 
 st.set_page_config(page_title="Observer World", layout="wide")
 

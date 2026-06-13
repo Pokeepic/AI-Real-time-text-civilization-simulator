@@ -1,0 +1,20 @@
+
+OBSERVER WORLD STORY SUMMARY
+============================
+
+World: Noramere
+Settlement: First Gate
+Stage: Settlement
+Era: Age of Innovation
+
+Living Population: 10
+Recorded Dead: 38
+Leader: Daren
+
+Culture: Trade-Oriented Society
+Belief: Chosen Leader Myth
+
+Wars: 0
+Treaties: 0
+Technologies: 4
+Laws: 0

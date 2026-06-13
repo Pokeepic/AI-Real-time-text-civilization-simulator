@@ -1,0 +1,49 @@
+name,age,generation,alive,status,role,location,faction,life_goal,health,hunger,energy,social,wealth,partner,curiosity,kindness,aggression,discipline,pride,greed,risk_taking,hunting,building,farming,social_skill,teaching,medicine,combat
+Mira,48,1,True,Healthy,Merchant,Sun Rest,Faith Circle,become leader,74,39,97,78,22,Daren,100,100,39,51,83,52,81,100,2,8,28,36,6,2
+Kai,27,1,False,Dead,Exile,Exiled Lands,Reform Seekers,become wealthy,0,33,80,66,46,Nova,46,100,49,47,27,96,2,100,28,3,33,22,12,8
+Lena,45,1,True,Healthy,Merchant,Hill,Faith Circle,become leader,72,30,31,10,20,,100,98,11,81,48,14,30,100,34,11,21,29,4,15
+Rook,42,1,True,Injured,Leader,Sun Rest,Faith Circle,become great healer,52,34,100,94,78,,95,100,26,47,35,90,13,100,42,10,55,23,4,13
+Niko,34,1,True,Healthy,Hunter,Sun Rest,Trade Guild,become leader,64,51,100,92,12,Aria,94,50,98,90,7,41,63,100,45,4,14,27,9,17
+Aria,30,1,True,Critical,Exile,Exiled Lands,Faith Circle,become leader,1,47,95,96,26,Niko,50,74,58,34,65,29,99,100,45,9,20,27,7,6
+Daren,32,1,True,Healthy,Leader,River,Faith Circle,become great healer,74,49,59,10,13,Mira,96,100,1,83,77,2,31,100,33,11,23,34,7,3
+Nova,38,1,True,Critical,Exile,Exiled Lands,,become leader,1,55,100,94,19,Kai,36,100,30,66,35,23,42,100,52,3,22,49,4,15
+Eli,36,1,True,Healthy,Merchant,Camp,Faith Circle,become leader,86,45,94,65,34,Zane,100,100,62,100,91,24,35,100,28,10,31,27,3,13
+Zane,30,1,True,Healthy,Exile,Exiled Lands,Faith Circle,become protector,70,51,96,43,56,Eli,100,99,16,54,37,55,97,100,43,10,39,36,8,17
+Norako,1,2,False,Dead,Hunter,Sun Rest,,protect family,0,100,0,16,1,,7,100,54,41,20,24,100,15,3,1,5,3,1,2
+Norala,0,2,False,Dead,Exile,Exiled Lands,,seek knowledge,0,100,39,62,0,,23,100,51,30,31,53,37,23,5,1,5,5,1,3
+Mirala,1,2,False,Dead,Exile,Exiled Lands,,seek knowledge,0,100,5,48,0,,27,100,44,45,23,21,50,27,5,1,6,6,1,4
+Kaila,0,2,False,Dead,Exile,Exiled Lands,,become wealthy,0,100,0,48,0,,19,100,40,35,21,90,70,29,5,1,6,6,1,3
+Kaiel,0,2,False,Dead,Exile,Exiled Lands,,become wealthy,0,100,7,6,0,,34,100,39,37,22,75,59,29,5,1,6,6,1,3
+Arina,1,2,False,Dead,Hunter,Sun Rest,,become leader,0,100,0,45,0,,69,84,32,38,71,12,70,36,4,2,3,5,2,1
+Miraren,0,2,False,Dead,Exile,Exiled Lands,,protect family,0,100,0,87,0,,27,94,43,47,33,13,45,38,12,1,8,8,2,3
+Senaan,0,2,False,Dead,Exile,Exiled Lands,,become leader,0,100,0,22,0,,32,100,45,46,22,14,69,40,12,1,8,9,3,3
+Mirala,0,2,False,Dead,Exile,Exiled Lands,,seek knowledge,0,100,1,94,0,,91,88,31,54,79,29,85,41,4,2,3,8,2,1
+Senako,1,2,False,Dead,Hunter,River,,become leader,0,100,0,27,0,,92,83,30,40,82,65,14,44,5,2,4,9,2,1
+Liola,0,2,False,Dead,Hunter,Sun Rest,,become wealthy,0,100,46,96,0,,80,95,35,42,82,99,61,44,5,3,4,9,3,1
+Eliko,1,2,False,Dead,Hunter,Plains,,become leader,0,100,2,3,0,,96,94,25,57,79,86,3,50,6,3,4,10,2,1
+Arian,0,2,False,Dead,Exile,Exiled Lands,,become leader,0,100,7,12,0,,29,100,38,43,26,45,85,49,15,1,10,13,4,4
+Lioren,0,2,False,Dead,Hunter,Plains,,become leader,0,100,0,60,0,,85,92,17,61,74,23,5,50,6,3,4,10,2,1
+Senami,0,2,False,Dead,Exile,Exiled Lands,,become leader,0,100,0,36,0,,26,94,34,45,24,40,90,50,16,1,11,14,3,4
+Ramiren,0,2,False,Dead,Hunter,Camp,,become leader,0,100,0,92,0,,95,95,20,46,70,21,9,50,6,3,4,11,2,1
+Elian,0,2,False,Dead,Exile,Exiled Lands,,protect family,0,100,0,11,1,,34,93,30,48,32,62,86,50,16,1,12,14,3,4
+Kaira,0,2,False,Dead,Hunter,River,,seek knowledge,0,100,1,92,0,,90,93,26,52,64,38,89,50,7,3,4,12,2,1
+Arimi,0,2,False,Dead,Exile,Exiled Lands,,become leader,0,100,0,53,1,,31,96,33,52,29,3,40,50,16,1,14,14,3,4
+Senana,0,2,False,Dead,Hunter,Camp,,seek knowledge,0,100,0,77,0,,90,100,30,66,67,43,96,50,6,3,5,11,2,1
+Senaren,1,2,False,Dead,Exile,Exiled Lands,,become leader,0,100,17,46,0,,31,100,32,56,27,52,29,51,16,1,12,14,3,5
+Liomi,0,2,False,Dead,Hunter,River,,become wealthy,0,100,0,56,1,,88,97,17,69,65,87,9,50,7,3,7,12,2,1
+Liona,0,2,False,Dead,Hunter,Sun Rest,,become protector,0,100,0,0,0,,94,91,38,75,60,36,98,50,13,4,9,9,2,6
+Arina,0,2,False,Dead,Hunter,Forest,,become leader,0,100,0,20,1,,100,100,40,76,69,74,86,50,13,4,10,9,2,6
+Arila,0,2,False,Dead,Exile,Exiled Lands,,seek knowledge,0,100,21,37,0,,28,100,39,53,27,100,61,50,17,1,12,15,3,5
+Mirami,0,2,False,Dead,Hunter,Camp,,become leader,0,100,11,43,1,,100,88,30,55,72,87,98,50,7,4,7,12,2,1
+Kairen,0,2,False,Dead,Hunter,Camp,,protect family,0,100,10,41,0,,100,88,25,66,67,77,22,50,7,4,7,12,2,1
+Kaiko,1,2,False,Dead,Exile,Exiled Lands,,become protector,0,100,0,3,0,,43,97,49,57,31,68,73,50,17,1,12,16,3,5
+Senael,0,2,False,Dead,Exile,Exiled Lands,,become protector,0,100,0,40,0,,39,100,32,59,29,17,3,50,18,1,13,16,4,5
+Senako,0,2,False,Dead,Exile,Exiled Lands,,become great healer,0,100,8,47,0,,35,97,42,59,22,82,67,50,19,1,13,16,4,5
+Ramiel,0,2,False,Dead,Hunter,River,,seek knowledge,0,100,0,49,0,,92,100,26,68,76,13,70,51,8,4,9,13,2,1
+Lioko,0,2,False,Dead,Exile,Exiled Lands,,become leader,0,100,0,68,0,,42,89,49,57,31,27,75,50,19,1,13,17,4,5
+Kaina,0,2,False,Dead,Hunter,Sun Rest,,become wealthy,0,100,0,45,2,,98,90,14,60,75,79,34,50,8,4,12,15,3,2
+Ramila,1,2,False,Dead,Hunter,River,,become leader,0,100,0,48,1,,100,98,16,70,86,73,37,50,8,4,11,14,3,2
+Arimi,1,2,False,Dead,Exile,Exiled Lands,,seek knowledge,0,100,22,88,0,,37,100,29,47,34,31,48,50,19,1,13,17,5,5
+Senana,0,2,False,Dead,Hunter,Sun Rest,,protect family,0,100,0,65,2,,100,98,35,83,63,43,91,50,17,4,17,14,2,6
+Senala,0,2,False,Dead,Hunter,Sun Rest,,become leader,0,100,0,77,0,,100,91,30,83,56,85,8,50,17,4,16,16,3,7
+Norala,0,2,True,Injured,Exile,Exiled Lands,,become leader,45,100,19,53,0,,97,100,40,85,71,83,4,50,17,5,16,15,2,7

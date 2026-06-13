@@ -1,0 +1,7 @@
+OBSERVER WORLD MULTI-SEED TEST SUMMARY
+======================================
+
+Ticks per seed: 1000
+Seeds tested: [42, 99, 123, 7, 202, 999]
+Passed seeds: [42, 99, 123, 7, 202, 999]
+Failed seeds: []
