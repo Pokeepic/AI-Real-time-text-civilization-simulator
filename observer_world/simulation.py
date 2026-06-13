@@ -5,6 +5,70 @@ from dialogue import get_line
 from config import CONFIG, get_setting, get_scenario, ACTIVE_SCENARIO
 from utils import find_agent, clamp
 from error_handler import safe_execute
+# Modular family systems
+from systems.family_system import (
+    handle_family_reunions as family_reunions_system,
+    handle_sibling_interactions as sibling_interactions_system,
+    handle_parent_child_bonds as parent_child_bonds_system,
+    deepen_partner_bonds as deepen_partner_bonds_system,
+    handle_mourning as mourning_system,
+    handle_family_growth as family_growth_system,
+    handle_aging as aging_system,
+    update_family_reputation as family_reputation_system,
+    apply_family_reputation_effects as family_reputation_effects_system,
+    record_family_alliance as family_alliance_system,
+    record_family_rivalry as family_rivalry_system,
+    apply_family_rivalry_effects as family_rivalry_effects_system,
+)
+# Modular social systems
+from systems.social_system import (
+    check_social_changes as social_changes_system,
+    spread_gossip as gossip_system,
+    update_emotional_states as emotional_states_system,
+    update_crushes as crushes_system,
+    handle_confessions as confessions_system,
+    handle_rejection_recovery as rejection_recovery_system,
+    get_memory_line as memory_line_system,
+    get_relationship_line as relationship_line_system,
+)
+# Modular settlement systems
+from systems.settlement_system import (
+    update_settlement_stage as settlement_stage_system,
+    choose_village_project as village_project_system,
+    work_on_project as work_on_project_system,
+    apply_building_effects as building_effects_system,
+    apply_extra_settlement_effects as extra_settlement_effects_system,
+    handle_extra_settlement_growth as extra_settlement_growth_system,
+    update_extra_settlement_leaders as extra_settlement_leaders_system,
+    update_extra_settlement_culture as extra_settlement_culture_system,
+    update_extra_settlement_laws as extra_settlement_laws_system,
+    handle_exile_settlements as exile_settlements_system,
+    handle_settlement_relations as settlement_relations_system,
+    handle_migration as migration_system,
+    handle_diplomacy as diplomacy_system,
+    calculate_settlement_power as settlement_power_system,
+    handle_settlement_war as settlement_war_system,
+    apply_war_losses as war_losses_system,
+)
+# Modular technology systems
+from systems.technology_system import (
+    generate_research as generate_research_system,
+    unlock_technology as unlock_technology_system,
+    generate_extra_settlement_research as extra_research_system,
+    unlock_extra_settlement_technology as extra_technology_system,
+)
+# Modular culture systems
+from systems.culture_system import (
+    update_culture as culture_update_system,
+    get_culture_identity as culture_identity_system,
+    create_tradition as create_tradition_system,
+    run_traditions as run_traditions_system,
+    update_beliefs as update_beliefs_system,
+    get_belief_identity as belief_identity_system,
+    update_era as update_era_system,
+    unlock_milestone as unlock_milestone_system,
+    check_milestones as check_milestones_system,
+)
 
 class Simulation:
     def __init__(self, agents):
@@ -113,232 +177,28 @@ class Simulation:
         return self.extra_settlements[0]
 
     def unlock_milestone(self, key, text, logs):
-        if key in self.milestones:
-            return
-
-        self.milestones.add(key)
-        logs.append(f"MILESTONE UNLOCKED: {text}")
-        self.add_history(f"Milestone unlocked: {text}")
+        unlock_milestone_system(self, key, text, logs)
 
     def update_settlement_stage(self, logs):
-        alive = [
-            a for a in self.agents
-            if a.alive
-            and a.location != "Exiled Lands"
-            and not self.is_extra_settlement_location(a.location)
-        ]
-
-        building_count = len(self.settlement["buildings"])
-        law_count = len(self.laws)
-
-        old_stage = self.settlement_stage
-
-        if self.settlement["name"] is None:
-            self.settlement_stage = "Camp"
-        elif len(alive) >= 50 and building_count >= 8 and law_count >= 4:
-            self.settlement_stage = "City"
-        elif len(alive) >= 30 and building_count >= 6 and law_count >= 3:
-            self.settlement_stage = "Town"
-        elif len(alive) >= 10 and building_count >= 2:
-            self.settlement_stage = "Village"
-        else:
-            self.settlement_stage = "Settlement"
-
-        if self.settlement_stage != old_stage:
-            logs.append(f"{self.settlement['name'] or 'The camp'} has grown into a {self.settlement_stage}.")
-            self.add_history(f"{self.settlement['name'] or 'The camp'} became a {self.settlement_stage}.")
+        settlement_stage_system(self, logs)
 
     def update_culture(self, logs):
-        if self.hour != 20:
-            return
-
-        alive = [a for a in self.agents if a.alive and a.location != "Exiled Lands"]
-
-        if not alive:
-            return
-
-        avg_kindness = sum(a.kindness for a in alive) / len(alive)
-        avg_aggression = sum(a.aggression for a in alive) / len(alive)
-        avg_discipline = sum(a.discipline for a in alive) / len(alive)
-
-        teachers = len([a for a in alive if a.role == "Teacher"])
-        merchants = len([a for a in alive if a.role == "Merchant"])
-        guards = len([a for a in alive if a.role == "Guard"])
-
-        if avg_kindness > 55:
-            self.culture["cooperation"] += 1
-
-        if avg_aggression > 60 or self.village_tension > 60:
-            self.culture["violence"] += 1
-
-        if avg_discipline > 55:
-            self.culture["discipline"] += 1
-
-        if teachers > 0:
-            self.culture["knowledge"] += teachers
-
-        if merchants > 0:
-            self.culture["trade"] += merchants
-
-        if guards > 0 and self.village_tension > 30:
-            self.culture["fear"] += guards
-
-        dominant = max(self.culture, key=self.culture.get)
-
-        if self.culture[dominant] > 0:
-            logs.append(f"The culture of {self.settlement['name'] or 'the camp'} is slowly leaning toward {dominant}.")
+        culture_update_system(self, logs)
 
     def get_culture_identity(self):
-        dominant = max(self.culture, key=self.culture.get)
-
-        if self.culture[dominant] < 10:
-            return "Undefined"
-
-        identities = {
-            "cooperation": "Cooperative Society",
-            "fear": "Fear-Driven Society",
-            "discipline": "Disciplined Society",
-            "violence": "Violent Society",
-            "knowledge": "Knowledge-Seeking Society",
-            "trade": "Trade-Oriented Society"
-        }
-
-        return identities.get(dominant, "Undefined")
+        return culture_identity_system(self)
 
     def create_tradition(self, logs):
-        if self.hour != 21:
-            return
-
-        identity = self.get_culture_identity()
-
-        if identity == "Undefined":
-            return
-
-        if len(self.traditions) >= 3:
-            return
-
-        tradition_map = {
-            "Cooperative Society": "Sharing Feast",
-            "Fear-Driven Society": "Night Watch",
-            "Disciplined Society": "Training Day",
-            "Violent Society": "Trial of Strength",
-            "Knowledge-Seeking Society": "Story Circle",
-            "Trade-Oriented Society": "Market Day"
-        }
-
-        tradition = tradition_map.get(identity)
-
-        if tradition and tradition not in self.traditions:
-            self.traditions.append(tradition)
-            logs.append(f"New tradition created: {tradition}.")
-            self.add_history(f"A new tradition began: {tradition}.")
+        create_tradition_system(self, logs)
 
     def run_traditions(self, logs):
-        if self.day % 7 != 0 or self.hour != 18:
-            return
-
-        for tradition in self.traditions:
-            logs.append(f"Tradition held: {tradition}.")
-
-            if tradition == "Sharing Feast":
-                if self.resources["food"] >= 20:
-                    self.resources["food"] -= 20
-                    self.village_tension = clamp(self.village_tension - 15, 0, 100)
-
-                    for agent in self.agents:
-                        if agent.alive and agent.location != "Exiled Lands":
-                            agent.social = min(agent.social + 20, 100)
-
-                    logs.append("The Sharing Feast reduced tension and raised social bonds.")
-                else:
-                    logs.append("The Sharing Feast failed because there was not enough food.")
-                    self.village_tension = clamp(self.village_tension + 8, 0, 100)
-
-            elif tradition == "Night Watch":
-                self.village_tension = clamp(self.village_tension - 8, 0, 100)
-
-                for agent in self.agents:
-                    if agent.alive and agent.role == "Guard":
-                        agent.improve_skill("combat", 1)
-
-                logs.append("The Night Watch made the settlement feel safer.")
-
-            elif tradition == "Training Day":
-                for agent in self.agents:
-                    if agent.alive and agent.age >= 13 and agent.location != "Exiled Lands":
-                        agent.discipline = min(agent.discipline + 1, 100)
-                        agent.improve_skill("combat", 1)
-
-                logs.append("Training Day improved discipline and combat readiness.")
-
-            elif tradition == "Trial of Strength":
-                fighters = [
-                    a for a in self.agents
-                    if a.alive and a.age >= 18 and a.location != "Exiled Lands"
-                ]
-
-                if len(fighters) >= 2:
-                    winner = random.choice(fighters)
-                    winner.improve_skill("combat", 2)
-                    winner.wealth += 2
-                    self.village_tension = clamp(self.village_tension + 5, 0, 100)
-                    logs.append(f"{winner.name} won the Trial of Strength.")
-
-            elif tradition == "Story Circle":
-                for agent in self.agents:
-                    if agent.alive and agent.age < 18 and agent.location != "Exiled Lands":
-                        agent.improve_skill("teaching", 1)
-                        agent.improve_skill("social", 1)
-
-                logs.append("The Story Circle helped children learn from village stories.")
-
-            elif tradition == "Market Day":
-                for agent in self.agents:
-                    if agent.alive and agent.age >= 13 and agent.location != "Exiled Lands":
-                        agent.wealth += 1
-                        agent.improve_skill("social", 1)
-
-                logs.append("Market Day increased wealth and social skill.")
+        run_traditions_system(self, logs)
 
     def update_beliefs(self, logs):
-        if self.hour != 22:
-            return
-
-        if self.weather in ["Storm", "Snow"]:
-            self.beliefs["nature_spirits"] += 1
-
-        if self.death_records:
-            self.beliefs["ancestor_memory"] += 1
-
-        if self.leader:
-            self.beliefs["leader_destiny"] += 1
-
-        if "Clinic" in self.settlement["buildings"]:
-            self.beliefs["healing_faith"] += 1
-
-        if "Trial of Strength" in self.traditions:
-            self.beliefs["strength_worship"] += 1
-
-        dominant = max(self.beliefs, key=self.beliefs.get)
-
-        if self.beliefs[dominant] > 5:
-            logs.append(f"A shared belief is forming around {dominant.replace('_', ' ')}.")
+        update_beliefs_system(self, logs)
 
     def get_belief_identity(self):
-        dominant = max(self.beliefs, key=self.beliefs.get)
-
-        if self.beliefs[dominant] < 8:
-            return "None"
-
-        names = {
-            "nature_spirits": "Belief in Nature Spirits",
-            "ancestor_memory": "Ancestor Reverence",
-            "leader_destiny": "Chosen Leader Myth",
-            "healing_faith": "Faith in Healers",
-            "strength_worship": "Cult of Strength"
-        }
-
-        return names.get(dominant, "None")
+        return belief_identity_system(self)
 
     def update_factions(self, logs):
         if self.hour != 19:
@@ -606,311 +466,25 @@ class Simulation:
             self.add_history(f"A rebellion by {faction_name} against {self.leader} failed.")
 
     def handle_exile_settlements(self, logs):
-        if self.hour != 12:
-            return
-
-        exiles = [
-            a for a in self.agents
-            if a.alive and a.location == "Exiled Lands"
-        ]
-
-        if len(exiles) < 3:
-            return
-
-        if len(self.extra_settlements) >= 1:
-            return
-
-        settlement_name = self.generate_settlement_name()
-
-        founder = max(
-            exiles,
-            key=lambda a: a.skills["social"] + a.discipline + a.aggression
-        )
-
-        new_settlement = {
-            "name": settlement_name,
-            "founder": founder.name,
-            "leader": founder.name,
-            "population": len(exiles),
-            "stage": "Camp",
-            "tension": 30,
-            "relationship_to_main": -20,
-            "resources": {
-                "food": 20,
-                "wood": 10,
-                "stone": 5
-            },
-            "buildings": [],
-            "laws": [],
-            "culture": {
-                "cooperation": 0,
-                "fear": 0,
-                "discipline": 0,
-                "violence": 0,
-                "knowledge": 0,
-                "trade": 0
-            },
-            "technologies": [],
-            "research_points": 0
-        }
-
-        self.extra_settlements.append(new_settlement)
-
-        for exile in exiles:
-            exile.location = settlement_name
-
-        logs.append(f"The exiles founded a new camp: {settlement_name}.")
-        logs.append(f"Founder: {founder.name}. Population: {len(exiles)}.")
-        self.add_history(f"Exiles founded {settlement_name} under {founder.name}.")
+        exile_settlements_system(self, logs)
 
     def get_agent_settlement(self, agent):
         return self.get_extra_settlement_by_name(agent.location)
 
     def handle_settlement_relations(self, logs):
-        if self.hour != 15:
-            return
-
-        if not self.extra_settlements:
-            return
-
-        for settlement in self.extra_settlements:
-            relation = settlement["relationship_to_main"]
-
-            if relation >= 40:
-                event = random.choice(["trade", "alliance"])
-            elif relation <= -40:
-                event = random.choice(["raid", "threat"])
-            else:
-                event = random.choice(["trade", "tension", "nothing"])
-
-            if event == "trade":
-                food_gain = random.randint(5, 15)
-                self.resources["food"] += food_gain
-                settlement["relationship_to_main"] += 5
-
-                logs.append(f"{settlement['name']} traded with {self.settlement['name'] or 'the main camp'}.")
-                logs.append(f"Main storage gained food +{food_gain}. Relations +5.")
-
-            elif event == "alliance":
-                settlement["relationship_to_main"] += 3
-                self.village_tension = max(self.village_tension - 5, 0)
-
-                logs.append(f"{settlement['name']} reaffirmed friendly ties with the main settlement.")
-                logs.append("Village tension -5.")
-
-            elif event == "raid":
-                stolen_food = min(self.resources["food"], random.randint(5, 20))
-                self.resources["food"] -= stolen_food
-                settlement["relationship_to_main"] -= 5
-                self.village_tension = min(self.village_tension + int(15 * get_setting("tension_multiplier")), 100)
-
-                logs.append(f"{settlement['name']} raided the main settlement.")
-                logs.append(f"Food stolen: {stolen_food}. Relations -5. Tension +15.")
-
-                self.add_history(f"{settlement['name']} raided the main settlement.")
-
-            elif event == "threat":
-                settlement["relationship_to_main"] -= 3
-                self.village_tension = min(self.village_tension + 8, 100)
-
-                logs.append(f"{settlement['name']} sent threats to the main settlement.")
-                logs.append("Relations -3. Village tension +8.")
-
-            elif event == "tension":
-                settlement["relationship_to_main"] -= 2
-
-                logs.append(f"Tension grew between {settlement['name']} and the main settlement.")
-                logs.append("Relations -2.")
+        settlement_relations_system(self, logs)
 
     def handle_migration(self, logs):
-        if self.hour != 10:
-            return
-
-        extra_settlement = self.get_first_extra_settlement()
-
-        if not extra_settlement:
-            return
-
-        for agent in self.agents:
-            if not agent.alive or agent.age < 18:
-                continue
-
-            if agent.location == "Exiled Lands":
-                continue
-
-            # Main settlement -> Extra settlement
-            if not self.is_extra_settlement_location(agent.location):
-                desire_to_leave = 0
-
-                if self.village_tension > 70:
-                    desire_to_leave += 30
-
-                if self.leader:
-                    rel = agent.get_relationship(self.leader)
-                    if rel["fear"] > 30 or rel["trust"] < -30:
-                        desire_to_leave += 20
-
-                if agent.faction == "Reform Seekers":
-                    desire_to_leave += 25
-
-                if agent.greed > 70 and extra_settlement["relationship_to_main"] < 0:
-                    desire_to_leave += 15
-
-                if agent.partner:
-                    desire_to_leave -= 10
-
-                if random.randint(1, 100) < desire_to_leave:
-                    agent.location = extra_settlement["name"]
-                    extra_settlement["population"] += 1
-
-                    logs.append(f"{agent.name} migrated to {extra_settlement['name']}.")
-                    self.add_history(f"{agent.name} left the main settlement for {extra_settlement['name']}.")
-
-            # Extra settlement -> Main settlement
-            else:
-                desire_to_return = 0
-
-                if extra_settlement["relationship_to_main"] > 20:
-                    desire_to_return += 20
-
-                if agent.kindness > 70:
-                    desire_to_return += 15
-
-                if agent.family:
-                    desire_to_return += 15
-
-                if random.randint(1, 100) < desire_to_return:
-                    agent.location = "Camp"
-                    extra_settlement["population"] = max(0, extra_settlement["population"] - 1)
-
-                    logs.append(f"{agent.name} returned from {extra_settlement['name']} to the main settlement.")
-                    self.add_history(f"{agent.name} returned from {extra_settlement['name']}.")
+        migration_system(self, logs)
 
     def handle_extra_settlement_growth(self, logs):
-        if self.hour != 14:
-            return
-
-        for settlement in self.extra_settlements:
-            resources = settlement.get("resources", {})
-            buildings = settlement.get("buildings", [])
-
-            population = len([
-                a for a in self.agents
-                if a.alive and a.location == settlement["name"]
-            ])
-
-            settlement["population"] = population
-
-            if population <= 0:
-                continue
-
-            if "Shelter" not in buildings:
-                project = "Shelter"
-                wood_cost = 10
-                stone_cost = 5
-
-            elif "Farm" not in buildings:
-                project = "Farm"
-                wood_cost = 15
-                stone_cost = 5
-
-            elif "Guard Post" not in buildings and settlement["tension"] > 40:
-                project = "Guard Post"
-                wood_cost = 20
-                stone_cost = 10
-
-            else:
-                continue
-
-            if resources.get("wood", 0) >= wood_cost and resources.get("stone", 0) >= stone_cost:
-                resources["wood"] -= wood_cost
-                resources["stone"] -= stone_cost
-                buildings.append(project)
-
-                logs.append(f"{settlement['name']} completed a new building: {project}.")
-
-                if project == "Shelter":
-                    settlement["stage"] = "Settlement"
-                    logs.append(f"{settlement['name']} is no longer just a camp.")
-
-                elif project == "Farm":
-                    resources["food"] += 20
-                    logs.append(f"{settlement['name']}'s Farm produced food +20.")
-
-                elif project == "Guard Post":
-                    settlement["tension"] = max(settlement["tension"] - 15, 0)
-                    logs.append(f"{settlement['name']}'s Guard Post reduced local tension.")
-
-                self.add_history(f"{settlement['name']} built {project}.")
+        extra_settlement_growth_system(self, logs)
 
     def update_extra_settlement_leaders(self, logs):
-        if self.hour != 18:
-            return
-
-        for settlement in self.extra_settlements:
-            residents = [
-                a for a in self.agents
-                if a.alive
-                and a.age >= 18
-                and a.location == settlement["name"]
-            ]
-
-            if not residents:
-                settlement["leader"] = None
-                continue
-
-            best_candidate = max(
-                residents,
-                key=lambda a: (
-                    a.skills["social"] * 3
-                    + a.skills["combat"] * 2
-                    + a.discipline
-                    + a.aggression // 2
-                    + a.wealth
-                )
-            )
-
-            old_leader = settlement.get("leader")
-
-            if old_leader != best_candidate.name:
-                settlement["leader"] = best_candidate.name
-                logs.append(f"{best_candidate.name} became the leader of {settlement['name']}.")
-                self.add_history(f"{best_candidate.name} became leader of {settlement['name']}.")
+        extra_settlement_leaders_system(self, logs)
 
     def update_extra_settlement_culture(self, logs):
-        if self.hour != 20:
-            return
-
-        for settlement in self.extra_settlements:
-            residents = [
-                a for a in self.agents
-                if a.alive and a.location == settlement["name"]
-            ]
-
-            if not residents:
-                continue
-
-            avg_kindness = sum(a.kindness for a in residents) / len(residents)
-            avg_aggression = sum(a.aggression for a in residents) / len(residents)
-            avg_discipline = sum(a.discipline for a in residents) / len(residents)
-
-            if avg_kindness > 55:
-                settlement["culture"]["cooperation"] += 1
-
-            if avg_aggression > 60 or settlement["tension"] > 60:
-                settlement["culture"]["violence"] += 1
-
-            if avg_discipline > 55:
-                settlement["culture"]["discipline"] += 1
-
-            if any(a.role == "Teacher" for a in residents):
-                settlement["culture"]["knowledge"] += 1
-
-            if any(a.role == "Merchant" for a in residents):
-                settlement["culture"]["trade"] += 1
-
-            if any(a.role == "Guard" for a in residents):
-                settlement["culture"]["fear"] += 1
+        extra_settlement_culture_system(self, logs)
 
     def get_extra_settlement_culture_identity(self, settlement):
         culture = settlement.get("culture", {})
@@ -935,366 +509,31 @@ class Simulation:
         return identities.get(dominant, "Undefined")
 
     def update_extra_settlement_laws(self, logs):
-        if self.hour != 21:
-            return
-
-        for settlement in self.extra_settlements:
-            laws = settlement.get("laws", [])
-
-            if settlement["tension"] > 60 and "No attacks inside the camp" not in laws:
-                laws.append("No attacks inside the camp")
-                logs.append(f'{settlement["name"]} created a law: "No attacks inside the camp".')
-                self.add_history(f'{settlement["name"]} created law: No attacks inside the camp.')
-
-            if settlement["resources"]["food"] < 10 and "Food must be rationed" not in laws:
-                laws.append("Food must be rationed")
-                logs.append(f'{settlement["name"]} created a law: "Food must be rationed".')
-                self.add_history(f'{settlement["name"]} created law: Food must be rationed.')
+        extra_settlement_laws_system(self, logs)
 
     def calculate_settlement_power(self, settlement_name):
-        residents = [
-            a for a in self.agents
-            if a.alive and a.location == settlement_name
-        ]
-
-        if settlement_name == "main":
-            residents = [
-                a for a in self.agents
-                if a.alive and not self.is_extra_settlement_location(a.location) and a.location != "Exiled Lands"
-            ]
-
-        power = 0
-
-        for agent in residents:
-            power += agent.skills["combat"] * 3
-            power += agent.discipline
-            power += agent.health // 5
-
-            if agent.role == "Guard":
-                power += 15
-
-            if agent.role == "Leader":
-                power += 10
-
-        return power
+        return settlement_power_system(self, settlement_name)
 
     def handle_diplomacy(self, logs):
-        if self.hour != 16:
-            return
-
-        if not self.extra_settlements:
-            return
-
-        for settlement in self.extra_settlements:
-            relation = settlement["relationship_to_main"]
-
-            if relation < -30:
-                diplomacy_chance = 0.08
-
-                if self.leader:
-                    leader = next((a for a in self.agents if a.name == self.leader), None)
-                    if leader:
-                        diplomacy_chance += leader.skills["social"] / 100
-
-                if settlement.get("leader"):
-                    other_leader = next((a for a in self.agents if a.name == settlement["leader"]), None)
-                    if other_leader:
-                        diplomacy_chance += other_leader.skills["social"] / 150
-
-                if random.random() < diplomacy_chance:
-                    treaty = {
-                        "day": self.day,
-                        "hour": self.hour,
-                        "settlement": settlement["name"],
-                        "type": "peace talks"
-                    }
-
-                    self.treaties.append(treaty)
-
-                    relation_gain = random.randint(10, 25)
-                    settlement["relationship_to_main"] += relation_gain
-                    self.village_tension = max(self.village_tension - 10, 0)
-                    settlement["tension"] = max(settlement["tension"] - 10, 0)
-
-                    logs.append(f"Peace talks were held with {settlement['name']}.")
-                    logs.append(f"Relations improved by {relation_gain}.")
-                    logs.append("Tension decreased in both settlements.")
-
-                    self.add_history(f"Peace talks improved relations with {settlement['name']}.")
-
-            elif relation > 30:
-                if random.random() < 0.05:
-                    treaty = {
-                        "day": self.day,
-                        "hour": self.hour,
-                        "settlement": settlement["name"],
-                        "type": "friendship pact"
-                    }
-
-                    self.treaties.append(treaty)
-                    settlement["relationship_to_main"] += 10
-
-                    logs.append(f"{self.settlement['name'] or 'The main settlement'} and {settlement['name']} signed a friendship pact.")
-                    self.add_history(f"Friendship pact signed with {settlement['name']}.")
+        diplomacy_system(self, logs)
 
     def handle_settlement_war(self, logs):
-        if self.hour != 23:
-            return
-
-        for settlement in self.extra_settlements:
-            relation = settlement["relationship_to_main"]
-
-            if relation > -70:
-                continue
-
-            war_chance = 0.08
-            war_chance += settlement["tension"] / 300
-            war_chance += self.village_tension / 400
-
-            recent_treaty = any(
-                treaty["settlement"] == settlement["name"]
-                and self.day - treaty["day"] <= 5
-                for treaty in self.treaties
-            )
-
-            if recent_treaty:
-                war_chance -= 0.05
-
-            if random.random() > war_chance:
-                continue
-
-            main_power = self.calculate_settlement_power("main")
-            other_power = self.calculate_settlement_power(settlement["name"])
-
-            logs.append(f"War broke out between {self.settlement['name'] or 'the main settlement'} and {settlement['name']}.")
-            self.notify(f"War began between {self.settlement['name'] or 'the main settlement'} and {settlement['name']}.", "War")
-            logs.append(f"Main power: {main_power}. {settlement['name']} power: {other_power}.")
-
-            war_record = {
-                "day": self.day,
-                "hour": self.hour,
-                "enemy": settlement["name"],
-                "main_power": main_power,
-                "enemy_power": other_power
-            }
-
-            self.wars.append(war_record)
-
-            if main_power >= other_power:
-                logs.append(f"The main settlement defended itself successfully.")
-                settlement["relationship_to_main"] += 20
-                settlement["tension"] += 10
-                self.village_tension = max(self.village_tension - 10, 0)
-
-                self.apply_war_losses(settlement["name"], logs)
-
-                self.add_history(f"The main settlement won a conflict against {settlement['name']}.")
-
-            else:
-                stolen_food = min(self.resources["food"], random.randint(20, 50))
-                self.resources["food"] -= stolen_food
-                self.village_tension = min(self.village_tension + int(20 * get_setting("tension_multiplier")), 100)
-                settlement["relationship_to_main"] -= 10
-
-                logs.append(f"{settlement['name']} overwhelmed the main settlement.")
-                logs.append(f"Food lost: {stolen_food}.")
-
-                self.apply_war_losses("main", logs)
-
-                self.add_history(f"{settlement['name']} defeated the main settlement in conflict.")
+        settlement_war_system(self, logs)
 
     def apply_war_losses(self, settlement_name, logs):
-        if settlement_name == "main":
-            candidates = [
-                a for a in self.agents
-                if a.alive and not self.is_extra_settlement_location(a.location) and a.location != "Exiled Lands"
-            ]
-        else:
-            candidates = [
-                a for a in self.agents
-                if a.alive and a.location == settlement_name
-            ]
-
-        if not candidates:
-            return
-
-        casualty_count = min(len(candidates), random.randint(0, 2))
-
-        for _ in range(casualty_count):
-            victim = random.choice(candidates)
-            damage = random.randint(20, 60)
-
-            victim.health = max(victim.health - damage, 0)
-
-            logs.append(f"{victim.name} was injured during the conflict. Health -{damage}.")
-
-            if victim.health <= 0:
-                victim.alive = False
-                victim.status = "Dead"
-                logs.append(f"{victim.name} died from conflict injuries.")
-                self.record_death(victim, "settlement conflict", logs)
-
-            candidates.remove(victim)
+        war_losses_system(self, settlement_name, logs)
 
     def generate_research(self, logs):
-        if self.hour != 17:
-            return
-
-        alive = [
-            a for a in self.agents
-            if a.alive and a.location != "Exiled Lands"
-        ]
-
-        if not alive:
-            return
-
-        points = 0
-
-        for agent in alive:
-            if agent.role == "Teacher":
-                points += 2
-
-            if agent.role == "Medic":
-                points += 1
-
-            if agent.role == "Builder":
-                points += 1
-
-            points += agent.skills["teaching"] // 5
-
-        if self.get_culture_identity() == "Knowledge-Seeking Society":
-            points += 5
-
-        if "Story Circle" in self.traditions:
-            points += 3
-
-        self.research_points += points
-
-        if points > 0:
-            logs.append(f"The settlement generated {points} research points.")
+        generate_research_system(self, logs)
 
     def unlock_technology(self, logs):
-        tech_tree = [
-            {
-                "name": "Basic Tools",
-                "cost": 30,
-                "requirement": lambda: True
-            },
-            {
-                "name": "Crop Rotation",
-                "cost": 60,
-                "requirement": lambda: "Farm" in self.settlement["buildings"]
-            },
-            {
-                "name": "Herbal Medicine",
-                "cost": 70,
-                "requirement": lambda: "Clinic" in self.settlement["buildings"]
-            },
-            {
-                "name": "Written Records",
-                "cost": 90,
-                "requirement": lambda: self.get_culture_identity() == "Knowledge-Seeking Society"
-            },
-            {
-                "name": "Stone Construction",
-                "cost": 120,
-                "requirement": lambda: "Basic Tools" in self.technologies
-            },
-            {
-                "name": "Council Governance",
-                "cost": 150,
-                "requirement": lambda: len(self.laws) >= 3
-            }
-        ]
-
-        for tech in tech_tree:
-            if tech["name"] in self.technologies:
-                continue
-
-            if self.research_points >= tech["cost"] and tech["requirement"]():
-                self.research_points -= tech["cost"]
-                self.technologies.append(tech["name"])
-
-                logs.append(f"TECHNOLOGY UNLOCKED: {tech['name']}.")
-                self.notify(f"Technology unlocked: {tech['name']}.", "Technology")
-                self.add_history(f"Technology unlocked: {tech['name']}.")
-
-                return
+        unlock_technology_system(self, logs)
 
     def generate_extra_settlement_research(self, logs):
-        if self.hour != 17:
-            return
-
-        for settlement in self.extra_settlements:
-            residents = [
-                a for a in self.agents
-                if a.alive and a.location == settlement["name"]
-            ]
-
-            if not residents:
-                continue
-
-            points = 0
-
-            for agent in residents:
-                if agent.role == "Teacher":
-                    points += 2
-                if agent.role == "Medic":
-                    points += 1
-                if agent.role == "Builder":
-                    points += 1
-
-                points += agent.skills["teaching"] // 5
-
-            if self.get_extra_settlement_culture_identity(settlement) == "Knowledge-Seeking Society":
-                points += 5
-
-            settlement["research_points"] += points
-
-            if points > 0:
-                logs.append(f"{settlement['name']} generated {points} research points.")
+        extra_research_system(self, logs)
 
     def unlock_extra_settlement_technology(self, logs):
-        for settlement in self.extra_settlements:
-            technologies = settlement.get("technologies", [])
-            research_points = settlement.get("research_points", 0)
-            buildings = settlement.get("buildings", [])
-
-            tech_tree = [
-                {
-                    "name": "Basic Tools",
-                    "cost": 30,
-                    "requirement": lambda: True
-                },
-                {
-                    "name": "Crop Rotation",
-                    "cost": 60,
-                    "requirement": lambda: "Farm" in buildings
-                },
-                {
-                    "name": "Herbal Medicine",
-                    "cost": 70,
-                    "requirement": lambda: "Clinic" in buildings
-                },
-                {
-                    "name": "Stone Construction",
-                    "cost": 120,
-                    "requirement": lambda: "Basic Tools" in technologies
-                },
-            ]
-
-            for tech in tech_tree:
-                if tech["name"] in technologies:
-                    continue
-
-                if research_points >= tech["cost"] and tech["requirement"]():
-                    settlement["research_points"] -= tech["cost"]
-                    settlement["technologies"].append(tech["name"])
-
-                    logs.append(f'{settlement["name"]} unlocked technology: {tech["name"]}.')
-                    self.add_history(f'{settlement["name"]} unlocked technology: {tech["name"]}.')
-
-                    break
+        extra_technology_system(self, logs)
 
     def handle_journals(self, logs):
         if self.hour != 23:
@@ -1551,37 +790,7 @@ class Simulation:
         self.daily_events = []
 
     def update_era(self, logs):
-        alive = [a for a in self.agents if a.alive]
-
-        new_era = self.current_era
-
-        if self.wars:
-            new_era = "Age of War"
-
-        elif self.technologies:
-            new_era = "Age of Innovation"
-
-        elif self.extra_settlements:
-            new_era = "Age of Expansion"
-
-        elif self.settlement_stage in ["Village", "Town", "City"]:
-            new_era = "Age of Settlement"
-
-        elif len(alive) >= 15:
-            new_era = "Age of Growth"
-
-        if new_era != self.current_era:
-            self.current_era = new_era
-
-            era_record = {
-                "name": new_era,
-                "start_day": self.day
-            }
-
-            self.eras.append(era_record)
-
-            logs.append(f"NEW ERA BEGINS: {new_era}.")
-            self.add_history(f"New era began: {new_era}.")
+        update_era_system(self, logs)
 
     def check_world_state(self, logs):
         alive = [a for a in self.agents if a.alive]
@@ -1612,91 +821,7 @@ class Simulation:
             self.add_history(f"World state changed to {self.world_state}: {reason}")
 
     def check_milestones(self, logs):
-        alive = [a for a in self.agents if a.alive]
-        dead = [a for a in self.agents if not a.alive]
-        children = [a for a in alive if a.age < 18]
-
-        if "Shelter" in self.settlement["buildings"]:
-            self.unlock_milestone("first_shelter", "First permanent shelter built.", logs)
-
-        if self.leader:
-            self.unlock_milestone("first_leader", f"{self.leader} became the first leader.", logs)
-
-        if self.laws:
-            self.unlock_milestone("first_law", "The first law was created.", logs)
-
-        if children:
-            self.unlock_milestone("first_child", "The first child was born.", logs)
-
-        if dead:
-            self.unlock_milestone("first_death", "The first death was recorded.", logs)
-
-        if len(alive) >= 20:
-            self.unlock_milestone("population_20", "Population reached 20.", logs)
-
-        if len(self.settlement["buildings"]) >= 4:
-            self.unlock_milestone("village_complete", "The village became a developed settlement.", logs)
-
-        if any(record["crime"] == "murder" for records in self.crime_records.values() for record in records):
-            self.unlock_milestone("first_murder", "The first murder was recorded.", logs)
-
-        if any(a.generation >= 2 and a.age >= 18 for a in self.agents):
-            self.unlock_milestone("generation_2_adult", "The second generation reached adulthood.", logs)
-
-        if self.settlement_stage == "Village":
-            self.unlock_milestone("became_village", "The settlement became a village.", logs)
-
-        if self.world_state == "Dark Age":
-            self.unlock_milestone("dark_age", "The world entered a dark age.", logs)
-
-        if self.world_state == "Civilization":
-            self.unlock_milestone("civilization_success", "The society became a civilization.", logs)
-
-        if self.world_state == "Extinct":
-            self.unlock_milestone("extinction", "All agents died.", logs)
-
-        if self.settlement_stage == "Town":
-            self.unlock_milestone("became_town", "The settlement became a town.", logs)
-
-        if self.settlement_stage == "City":
-            self.unlock_milestone("became_city", "The settlement became a city.", logs)
-
-        if self.extra_settlements:
-            self.unlock_milestone("second_settlement", "A second settlement was founded.", logs)
-
-        if any(s["relationship_to_main"] >= 50 for s in self.extra_settlements):
-            self.unlock_milestone("first_alliance", "The first alliance between settlements formed.", logs)
-
-        if any(s["relationship_to_main"] <= -50 for s in self.extra_settlements):
-            self.unlock_milestone("settlement_rivalry", "A serious rivalry between settlements began.", logs)
-
-        if any(self.is_extra_settlement_location(a.location) for a in self.agents if a.alive):
-            self.unlock_milestone("first_migration", "The first migration between settlements occurred.", logs)
-
-        if self.wars:
-            self.unlock_milestone("first_war", "The first war between settlements occurred.", logs)
-
-        if self.treaties:
-            self.unlock_milestone("first_treaty", "The first diplomatic treaty was signed.", logs)
-
-        if any(a.get_best_friend() for a in self.agents):
-            self.unlock_milestone("first_friendship", "The first close friendship formed.", logs)
-
-        if any(a.get_rival() for a in self.agents):
-            self.unlock_milestone("first_rivalry", "The first rivalry formed.", logs)
-
-        if any("mourned the death" in " ".join(a.memories).lower() for a in self.agents):
-            self.unlock_milestone("first_mourning", "The first mourning was recorded.", logs)
-
-        connected_count = len([
-            a for a in self.agents
-            if getattr(a, "emotional_state", "Stable") == "Connected"
-        ])
-
-        alive_count = len([a for a in self.agents if a.alive])
-
-        if alive_count > 0 and connected_count >= alive_count // 2:
-            self.unlock_milestone("connected_society", "Half the living population feels socially connected.", logs)
+        check_milestones_system(self, logs)
 
     def add_history(self, event):
         record = f"Day {self.day}, {self.hour}:00 — {event}"
@@ -2019,68 +1144,10 @@ class Simulation:
             logs.extend(mourning_logs)
 
     def apply_building_effects(self, logs):
-        if self.hour != 6:
-            return
-
-        buildings = self.settlement["buildings"]
-
-        if "Farm" in buildings:
-            food_gain = random.randint(15, 30)
-
-            if "Crop Rotation" in self.technologies:
-                food_gain += 15
-
-            self.resources["food"] += food_gain
-            logs.append(f"The Farm produced food. Food +{food_gain}.")
-
-        if "Storage Hut" in buildings:
-            if random.random() < 0.15:
-                saved_food = random.randint(5, 15)
-                self.resources["food"] += saved_food
-                logs.append(f"The Storage Hut preserved supplies. Food saved +{saved_food}.")
-
-        if "Clinic" in buildings:
-            for agent in self.agents:
-                if agent.alive and agent.health < 70 and agent.location != "Exiled Lands":
-                    heal_amount = random.randint(3, 8)
-                    agent.health = min(agent.health + heal_amount, 100)
-                    logs.append(f"The Clinic helped {agent.name} recover. Health +{heal_amount}.")
-
-        if "Guard Post" in buildings:
-            if self.village_tension > 0:
-                tension_drop = random.randint(3, 8)
-                self.village_tension = clamp(self.village_tension - tension_drop, 0, 100)
-                logs.append(f"The Guard Post reduced village tension by {tension_drop}.")
-
-        if "Written Records" in self.technologies and self.village_tension > 0:
-            self.village_tension = max(self.village_tension - 2, 0)
-            logs.append("Written records helped settle disputes. Village tension -2.")
-
-        if "Council Governance" in self.technologies and self.village_tension > 0:
-            self.village_tension = max(self.village_tension - 4, 0)
-            logs.append("Council governance reduced political tension. Village tension -4.")
+        building_effects_system(self, logs)
 
     def apply_extra_settlement_effects(self, logs):
-        if self.hour != 6:
-            return
-
-        for settlement in self.extra_settlements:
-            resources = settlement.get("resources", {})
-            buildings = settlement.get("buildings", [])
-
-            if "Farm" in buildings:
-                food_gain = random.randint(8, 18)
-
-                if "Crop Rotation" in settlement.get("technologies", []):
-                    food_gain += 10
-
-                resources["food"] += food_gain
-                logs.append(f"{settlement['name']}'s Farm produced food +{food_gain}.")
-
-            if "Guard Post" in buildings and settlement["tension"] > 0:
-                tension_drop = random.randint(2, 6)
-                settlement["tension"] = max(settlement["tension"] - tension_drop, 0)
-                logs.append(f"{settlement['name']}'s Guard Post reduced tension by {tension_drop}.")
+        extra_settlement_effects_system(self, logs)
 
     def assign_role(self, agent):
         if agent.location == "Exiled Lands":
@@ -2527,77 +1594,7 @@ class Simulation:
         return logs
 
     def handle_family_growth(self, logs):
-        for agent in self.agents:
-            if not agent.alive:
-                continue
-
-            if agent.partner and not agent.pregnant:
-                if random.random() < get_setting("birth_chance"):
-                    agent.pregnant = True
-                    agent.pregnancy_timer = CONFIG["pregnancy_timer"]
-
-                    logs.append(f"{agent.name} and {agent.partner}'s family may grow soon.")
-                    self.add_history(f"{agent.name} and {agent.partner} are expecting a child.")
-                    self.notify_agent_event(
-                        agent.name,
-                        f"became a parent to {child.get_full_name()}."
-                    )
-
-                    if partner:
-                        self.notify_agent_event(
-                            partner.name,
-                            f"became a parent to {child.get_full_name()}."
-                        )
-                    self.notify_family_event(
-                        child.surname,
-                        f"{child.get_full_name()} was born."
-                    )
-
-            elif agent.pregnant:
-                agent.pregnancy_timer -= 1
-
-                if agent.pregnancy_timer <= 0:
-                    child_name = self.generate_child_name()
-
-                    from agent import Agent
-                    child = Agent(child_name)
-
-                    partner = find_agent(self.agents, agent.partner)
-
-                    child.age = 0
-                    child.location = agent.location
-                    child.parents = [agent.name, agent.partner]
-                    if agent.surname:
-                        child.surname = agent.surname
-                    elif partner and partner.surname:
-                        child.surname = partner.surname
-                    else:
-                        new_surname = self.generate_surname()
-                        agent.surname = new_surname
-                        if partner:
-                            partner.surname = new_surname
-                        child.surname = new_surname
-                    child.family.append(agent.name)
-                    child.family.append(agent.partner)
-
-                    if partner:
-                        child.generation = max(agent.generation, partner.generation) + 1
-                    else:
-                        child.generation = agent.generation + 1
-
-                    self.inherit_traits(child, agent, partner)
-
-                    self.agents.append(child)
-
-                    agent.family.append(child_name)
-
-                    if partner:
-                        partner.family.append(child_name)
-
-                    agent.pregnant = False
-
-                    logs.append(f"A child was born: {child_name}.")
-                    self.add_history(f"{child_name} was born into the settlement.")
+        family_growth_system(self, logs)
 
     def generate_child_name(self):
         syllables = ["ra", "mi", "ka", "lo", "zen", "ari", "no", "el", "sha", "rin"]
@@ -2630,34 +1627,7 @@ class Simulation:
             child.skills[skill] = inherited_skill
 
     def handle_aging(self, logs):
-        if self.hour != 0:
-            return
-
-        for agent in self.agents:
-            if not agent.alive:
-                continue
-
-            if self.day % CONFIG["aging_every_days"] == 0:
-                agent.age += 1
-
-                if agent.age == 6:
-                    logs.append(f"{agent.name} is no longer a toddler.")
-                    self.add_history(f"{agent.name} reached childhood.")
-
-                elif agent.age == 13:
-                    logs.append(f"{agent.name} became a teenager.")
-                    self.add_history(f"{agent.name} became a teenager.")
-
-                elif agent.age == 18:
-                    logs.append(f"{agent.name} reached adulthood.")
-                    self.add_history(f"{agent.name} became an adult.")
-
-                elif agent.age > 80:
-                    if random.random() < get_setting("weather_sickness_chance"):
-                        agent.alive = False
-                        agent.status = "Dead"
-                        logs.append(f"{agent.name} died of old age.")
-                        self.record_death(agent, "old age", logs)
+        aging_system(self, logs)
 
     def check_leadership(self, logs):
         if self.settlement["name"] is None:
@@ -2732,107 +1702,10 @@ class Simulation:
         ]
 
     def choose_village_project(self, logs):
-        if self.settlement["name"] is None:
-            return
-
-        if self.current_project is not None:
-            return
-
-        if not self.leader:
-            return
-
-        possible_projects = []
-
-        if "Storage Hut" not in self.settlement["buildings"]:
-            possible_projects.append("Storage Hut")
-
-        if "Farm" not in self.settlement["buildings"]:
-            possible_projects.append("Farm")
-
-        if "Clinic" not in self.settlement["buildings"]:
-            possible_projects.append("Clinic")
-
-        if "Guard Post" not in self.settlement["buildings"]:
-            possible_projects.append("Guard Post")
-
-        if not possible_projects:
-            return
-
-        leader = find_agent(self.agents, self.leader)
-
-        if not leader:
-            return
-
-        if leader.role == "Leader":
-            if self.resources["food"] < 30:
-                project = "Farm"
-            elif self.village_tension > 50:
-                project = "Guard Post"
-            else:
-                project = random.choice(possible_projects)
-        else:
-            project = random.choice(possible_projects)
-
-        self.current_project = {
-            "name": project,
-            "progress": 0,
-            "required": 100
-        }
-
-        logs.append(f"Leader {self.leader} proposed a new village project: {project}.")
-        self.add_history(f"{self.leader} proposed building a {project}.")
+        village_project_system(self, logs)
 
     def work_on_project(self, agent):
-        logs = []
-
-        if self.current_project is None:
-            return logs
-
-        project_name = self.current_project["name"]
-
-        wood_cost = 5
-        stone_cost = 3
-
-        if self.resources["wood"] < wood_cost or self.resources["stone"] < stone_cost:
-            logs.append(f"{agent.name} wanted to work on {project_name}, but materials were too low.")
-            return logs
-
-        self.resources["wood"] -= wood_cost
-        self.resources["stone"] -= stone_cost
-
-        progress = random.randint(8, 18) + agent.skills["building"]
-        self.current_project["progress"] += progress
-
-        agent.improve_skill("building", 1)
-
-        logs.append(f"{agent.name} worked on {project_name}.")
-        logs.append(
-            f"{project_name} progress +{progress}. "
-            f"Total: {self.current_project['progress']}/{self.current_project['required']}."
-        )
-
-        if self.current_project["progress"] >= self.current_project["required"]:
-            self.settlement["buildings"].append(project_name)
-            logs.append(f"{project_name} has been completed.")
-            self.add_history(f"{project_name} was completed in {self.settlement['name']}.")
-
-            if project_name == "Farm":
-                self.resources["food"] += 30
-                logs.append("The Farm produced its first food. Food +30.")
-
-            elif project_name == "Storage Hut":
-                logs.append("The village can now store more supplies safely.")
-
-            elif project_name == "Clinic":
-                logs.append("The village now has a place for healing.")
-
-            elif project_name == "Guard Post":
-                self.village_tension = clamp(self.village_tension - 15, 0, 100)
-                logs.append("The Guard Post made the village feel safer. Village tension -15.")
-
-            self.current_project = None
-
-        return logs
+        return work_on_project_system(self, agent)
 
     def handle_build(self, agent):
         logs = []
@@ -3499,477 +2372,43 @@ class Simulation:
         return logs
     
     def check_social_changes(self, logs):
-        if self.hour != 20:
-            return
-
-        for agent in self.agents:
-            if not agent.alive:
-                continue
-
-            current_best_friend = agent.get_best_friend()
-            current_rival = agent.get_rival()
-
-            if current_best_friend and current_best_friend != agent.known_best_friend:
-                agent.known_best_friend = current_best_friend
-                logs.append(f"{agent.name} now considers {current_best_friend} a close friend.")
-                self.add_history(f"{agent.name} became close friends with {current_best_friend}.")
-
-            if current_rival and current_rival != agent.known_rival:
-                agent.known_rival = current_rival
-                logs.append(f"{agent.name} now sees {current_rival} as a rival.")
-                self.add_history(f"{agent.name} became rivals with {current_rival}.")
+        social_changes_system(self, logs)
 
     def handle_mourning(self, dead_agent, logs):
-        for agent in self.agents:
-            if not agent.alive:
-                continue
-
-            if agent.name == dead_agent.name:
-                continue
-
-            should_mourn = False
-            reason = None
-            grief_power = 0
-
-            if dead_agent.name == agent.partner:
-                should_mourn = True
-                reason = "partner"
-                grief_power = 30
-
-            elif dead_agent.name in agent.family:
-                should_mourn = True
-                reason = "family"
-                grief_power = 25
-
-            elif dead_agent.name in agent.parents:
-                should_mourn = True
-                reason = "parent"
-                grief_power = 28
-
-            elif agent.name in dead_agent.parents:
-                should_mourn = True
-                reason = "child"
-                grief_power = 35
-
-            elif dead_agent.name in agent.bonds:
-                should_mourn = True
-                reason = "bond"
-                grief_power = 18
-
-            elif agent.get_best_friend() == dead_agent.name:
-                should_mourn = True
-                reason = "close friend"
-                grief_power = 20
-
-            if should_mourn:
-                agent.social = max(agent.social - grief_power, 0)
-                agent.energy = max(agent.energy - grief_power // 2, 0)
-
-                if grief_power >= 30:
-                    agent.set_emotion("Suffering")
-                else:
-                    agent.set_emotion("Lonely")
-
-                agent.remember(f"Mourned the death of {dead_agent.name}.")
-                agent.write_journal(
-                    self.day,
-                    self.hour,
-                    f"I mourned {dead_agent.name}. They were my {reason}."
-                )
-
-                logs.append(f"{agent.name} deeply mourned the death of {dead_agent.name}. Reason: {reason}.")
+        mourning_system(self, dead_agent, logs)
 
     def spread_gossip(self, logs):
-        if self.hour != 19:
-            return
-
-        recent_history = self.world_history[-10:]
-
-        gossip_topics = [
-            event for event in recent_history
-            if any(word in event.lower() for word in [
-                "died", "crime", "trial", "leader", "war",
-                "rebellion", "murder", "exiled", "born"
-            ])
-        ]
-
-        if not gossip_topics:
-            return
-
-        for agent in self.agents:
-            if not agent.alive:
-                continue
-
-            nearby = self.nearby_agents(agent)
-
-            if not nearby:
-                continue
-
-            listener = random.choice(nearby)
-            topic = random.choice(gossip_topics)
-
-            agent.add_gossip(topic)
-            listener.add_gossip(topic)
-
-            agent.change_relationship(listener.name, "friendship", 1)
-            listener.change_relationship(agent.name, "trust", 1)
-
-            topic_lower = topic.lower()
-
-            if "murder" in topic_lower or "severe violence" in topic_lower:
-                listener.social = max(listener.social - 3, 0)
-
-            if "exiled" in topic_lower or "crime" in topic_lower or "trial" in topic_lower:
-                listener.discipline = min(listener.discipline + 1, 100)
-
-            if "leader" in topic_lower:
-                if self.leader:
-                    listener.change_relationship(self.leader, "respect", 1)
-
-            if "born" in topic_lower:
-                listener.kindness = min(listener.kindness + 1, 100)
-
-            if "died" in topic_lower:
-                listener.social = max(listener.social - 2, 0)
-
-            logs.append(f"{agent.name} shared gossip with {listener.name}.")
-            logs.append(f'Gossip: "{topic}"')
+        gossip_system(self, logs)
 
     def get_memory_line(self, agent):
-        if not agent.memories:
-            return None
-
-        memory = random.choice(agent.memories[-5:])
-
-        return f"I still remember this: {memory}"
+        return memory_line_system(self, agent)
     
     def get_relationship_line(self, speaker, listener):
-        if listener.name == speaker.partner:
-            return random.choice([
-                "I feel safer when you are near.",
-                "We have survived so much together.",
-                "I was thinking about our family today."
-            ])
-
-        if listener.name in speaker.family:
-            return random.choice([
-                "Family should look after each other.",
-                "I worry about you more than I say.",
-                "Whatever happens, you are still family."
-            ])
-
-        if listener.name == speaker.get_best_friend():
-            return random.choice([
-                "I trust you more than most people here.",
-                "You have always been there when it mattered.",
-                "Talking with you makes this place feel less lonely."
-            ])
-
-        if listener.name == speaker.get_rival():
-            return random.choice([
-                "I have not forgotten what happened between us.",
-                "Do not pretend everything is fine.",
-                "I still do not trust you."
-            ])
-
-        return None
+        return relationship_line_system(self, speaker, listener)
     
     def update_emotional_states(self, logs):
-        for agent in self.agents:
-            agent.update_emotional_state()
+        emotional_states_system(self, logs)
 
     def update_crushes(self, logs):
-        for agent in self.agents:
-            if not agent.alive:
-                continue
-
-            previous = agent.crush
-
-            agent.update_crush()
-
-            if agent.crush and agent.crush != previous:
-                logs.append(
-                    f"{agent.name} seems to have developed feelings for {agent.crush}."
-                )
-
-                agent.remember(
-                    f"I think I may have feelings for {agent.crush}."
-                )
+        crushes_system(self, logs)
     
     def handle_confessions(self, logs):
-        if self.hour != 18:
-            return
-
-        for agent in self.agents:
-            if not agent.alive:
-                continue
-
-            if agent.age < 18:
-                continue
-
-            if agent.partner:
-                continue
-
-            if not agent.crush:
-                continue
-
-            crush = next((a for a in self.agents if a.name == agent.crush), None)
-
-            if not crush or not crush.alive:
-                continue
-
-            if crush.partner:
-                continue
-
-            if crush.location != agent.location:
-                continue
-
-            rel = agent.get_relationship(crush.name)
-            crush_rel = crush.get_relationship(agent.name)
-
-            confession_score = (
-                rel.get("trust", 0)
-                + rel.get("friendship", 0)
-                + crush_rel.get("trust", 0)
-                + crush_rel.get("friendship", 0)
-                + agent.kindness
-                - agent.pride // 2
-            )
-
-            if confession_score < 120:
-                continue
-
-            logs.append(f"{agent.name} confessed their feelings to {crush.name}.")
-
-            acceptance_score = (
-                crush_rel.get("trust", 0)
-                + crush_rel.get("friendship", 0)
-                + crush.kindness
-                - crush.pride // 2
-            )
-
-            if crush.crush == agent.name:
-                acceptance_score += 40
-
-            if acceptance_score >= 100:
-                agent.partner = crush.name
-                crush.partner = agent.name
-
-                agent.family.append(crush.name)
-                crush.family.append(agent.name)
-
-                agent.crush = None
-                crush.crush = None
-
-                agent.set_emotion("Connected")
-                crush.set_emotion("Connected")
-
-                agent.add_bond(crush.name, "accepted my confession")
-                crush.add_bond(agent.name, "became my partner")
-
-                self.record_family_alliance(agent, crush, "partnership")
-
-                agent.remember(f"Became partners with {crush.name}.")
-                crush.remember(f"Became partners with {agent.name}.")
-
-                logs.append(f"{crush.name} accepted. {agent.name} and {crush.name} became partners.")
-                self.add_history(f"{agent.name} and {crush.name} became partners after a confession.")
-                self.notify(f"{agent.name} and {crush.name} became partners.", "Relationship")
-                self.notify_agent_event(
-                    agent.name,
-                    f"became partners with {crush.name}."
-                )
-
-                self.notify_agent_event(
-                    crush.name,
-                    f"became partners with {agent.name}."
-                )
-                self.notify_family_event(
-                    agent.surname,
-                    f"{agent.get_full_name()} became partners with {crush.get_full_name()}."
-                )
-
-                self.notify_family_event(
-                    crush.surname,
-                    f"{crush.get_full_name()} became partners with {agent.get_full_name()}."
-                )
-
-            else:
-                agent.change_relationship(crush.name, "trust", -5)
-                agent.change_relationship(crush.name, "friendship", -3)
-
-                agent.set_emotion("Lonely")
-                agent.remember(f"{crush.name} rejected my confession.")
-                agent.add_grudge(crush.name, "rejected confession")
-
-                logs.append(f"{crush.name} rejected {agent.name}'s confession.")
-                self.notify(f"{crush.name} rejected {agent.name}'s confession.", "Relationship")
+        confessions_system(self, logs)
     
     def handle_rejection_recovery(self, logs):
-        if self.hour != 9:
-            return
-
-        for agent in self.agents:
-            if not agent.alive:
-                continue
-
-            recent_memories = " ".join(agent.memories[-8:]).lower()
-
-            if "rejected my confession" not in recent_memories:
-                continue
-
-            if agent.emotional_state != "Lonely":
-                continue
-
-            recovery_chance = 0.15
-            recovery_chance += agent.discipline / 300
-            recovery_chance += agent.kindness / 400
-
-            if agent.get_best_friend():
-                recovery_chance += 0.15
-
-            if random.random() < recovery_chance:
-                agent.set_emotion("Stable")
-                agent.remember("I started to recover from rejection.")
-                agent.write_journal(
-                    self.day,
-                    self.hour,
-                    "Rejection still hurts, but I feel like I can move forward."
-                )
-
-                logs.append(f"{agent.name} began recovering from rejection.")
+        rejection_recovery_system(self, logs)
     
     def deepen_partner_bonds(self, logs):
-        if self.hour != 20:
-            return
-
-        for agent in self.agents:
-            if not agent.alive:
-                continue
-
-            if not agent.partner:
-                continue
-
-            partner = next((a for a in self.agents if a.name == agent.partner), None)
-
-            if not partner or not partner.alive:
-                continue
-
-            if partner.location != agent.location:
-                continue
-
-            agent.change_relationship(partner.name, "trust", 1)
-            agent.change_relationship(partner.name, "friendship", 1)
-            partner.change_relationship(agent.name, "trust", 1)
-            partner.change_relationship(agent.name, "friendship", 1)
-
-            agent.add_bond(partner.name, "spent time together")
-            partner.add_bond(agent.name, "spent time together")
-
-            if random.random() < 0.25:
-                logs.append(f"{agent.name} and {partner.name}'s bond deepened.")
+        deepen_partner_bonds_system(self, logs)
     
     def handle_family_reunions(self, logs):
-        if self.hour != 19:
-            return
-
-        for agent in self.agents:
-            if not agent.alive:
-                continue
-
-            family_nearby = [
-                other for other in self.nearby_agents(agent)
-                if other.name in agent.family and other.alive
-            ]
-
-            if len(family_nearby) < 1:
-                continue
-
-            if random.random() > 0.15:
-                continue
-
-            relative = random.choice(family_nearby)
-
-            agent.change_relationship(relative.name, "friendship", 3)
-            agent.change_relationship(relative.name, "trust", 2)
-
-            relative.change_relationship(agent.name, "friendship", 3)
-            relative.change_relationship(agent.name, "trust", 2)
-
-            agent.add_bond(relative.name, "family reunion")
-            relative.add_bond(agent.name, "family reunion")
-
-            agent.set_emotion("Connected")
-            relative.set_emotion("Connected")
-
-            logs.append(f"{agent.name} shared a quiet family moment with {relative.name}.")
+        family_reunions_system(self, logs)
 
     def handle_sibling_interactions(self, logs):
-        if self.hour != 16:
-            return
-
-        for agent in self.agents:
-            if not agent.alive:
-                continue
-
-            siblings_nearby = [
-                other for other in self.nearby_agents(agent)
-                if other.alive and agent.is_sibling_of(other)
-            ]
-
-            if not siblings_nearby:
-                continue
-
-            sibling = random.choice(siblings_nearby)
-
-            if random.random() < 0.6:
-                agent.change_relationship(sibling.name, "friendship", 2)
-                sibling.change_relationship(agent.name, "friendship", 2)
-
-                agent.add_bond(sibling.name, "sibling bond")
-                sibling.add_bond(agent.name, "sibling bond")
-
-                logs.append(f"{agent.name} spent time with their sibling {sibling.name}.")
-            else:
-                agent.change_relationship(sibling.name, "trust", -1)
-                sibling.change_relationship(agent.name, "trust", -1)
-
-                agent.add_grudge(sibling.name, "sibling argument")
-                sibling.add_grudge(agent.name, "sibling argument")
-
-                logs.append(f"{agent.name} had a small sibling argument with {sibling.name}.")
+        sibling_interactions_system(self, logs)
 
     def handle_parent_child_bonds(self, logs):
-        if self.hour != 17:
-            return
-
-        for parent in self.agents:
-            if not parent.alive:
-                continue
-
-            children_nearby = [
-                child for child in self.nearby_agents(parent)
-                if child.alive and parent.name in child.parents
-            ]
-
-            if not children_nearby:
-                continue
-
-            child = random.choice(children_nearby)
-
-            parent.change_relationship(child.name, "friendship", 3)
-            parent.change_relationship(child.name, "trust", 3)
-            child.change_relationship(parent.name, "trust", 4)
-            child.change_relationship(parent.name, "respect", 2)
-
-            parent.add_bond(child.name, "parental bond")
-            child.add_bond(parent.name, "parental care")
-
-            parent.set_emotion("Connected")
-            child.set_emotion("Connected")
-
-            if random.random() < 0.25:
-                logs.append(f"{parent.name} spent time caring for {child.name}.")
+        parent_child_bonds_system(self, logs)
 
     def generate_surname(self):
         roots = ["Hearth", "River", "Stone", "Ash", "Moon", "Sun", "Vale", "Wolf", "Oak", "Storm"]
@@ -3978,159 +2417,19 @@ class Simulation:
         return random.choice(roots) + random.choice(endings)
     
     def update_family_reputation(self, logs):
-        if self.hour != 21:
-            return
-
-        reputation = {}
-
-        for agent in self.agents:
-            surname = getattr(agent, "surname", None)
-
-            if not surname:
-                continue
-
-            reputation.setdefault(surname, 0)
-
-            reputation[surname] += agent.get_social_score()
-            reputation[surname] += agent.wealth
-            reputation[surname] += agent.skills.get("social", 0)
-
-            if agent.role == "Leader":
-                reputation[surname] += 20
-
-            if agent.role == "Guard":
-                reputation[surname] += 5
-
-            if agent.role == "Exile":
-                reputation[surname] -= 10
-
-            if agent.get_rival():
-                reputation[surname] -= 3
-
-        self.family_reputation = reputation
+        family_reputation_system(self, logs)
 
     def apply_family_reputation_effects(self, logs):
-        if self.hour != 22:
-            return
-
-        if not self.family_reputation:
-            return
-
-        for agent in self.agents:
-            if not agent.alive:
-                continue
-
-            if not agent.surname:
-                continue
-
-            reputation = self.family_reputation.get(agent.surname, 0)
-
-            nearby = self.nearby_agents(agent)
-
-            if not nearby:
-                continue
-
-            for other in nearby:
-                if not other.alive:
-                    continue
-
-                if reputation >= 50:
-                    other.change_relationship(agent.name, "respect", 1)
-
-                    if random.random() < 0.05:
-                        logs.append(f"{other.name} showed respect toward {agent.name}'s family name.")
-
-                elif reputation <= -30:
-                    other.change_relationship(agent.name, "trust", -1)
-
-                    if random.random() < 0.05:
-                        logs.append(f"{other.name} distrusted {agent.name} because of their family reputation.")
+        family_reputation_effects_system(self, logs)
 
     def record_family_rivalry(self, agent_a, agent_b, reason):
-        surname_a = getattr(agent_a, "surname", None)
-        surname_b = getattr(agent_b, "surname", None)
-
-        if not surname_a or not surname_b:
-            return
-
-        if surname_a == surname_b:
-            return
-
-        key = tuple(sorted([surname_a, surname_b]))
-
-        if key not in self.family_rivalries:
-            self.family_rivalries[key] = {
-                "score": 0,
-                "reasons": []
-            }
-
-        self.family_rivalries[key]["score"] += 1
-        self.family_rivalries[key]["reasons"].append(reason)
-
-        if len(self.family_rivalries[key]["reasons"]) > 10:
-            self.family_rivalries[key]["reasons"].pop(0)
+        family_rivalry_system(self, agent_a, agent_b, reason)
 
     def apply_family_rivalry_effects(self, logs):
-        if self.hour != 18:
-            return
-
-        if not self.family_rivalries:
-            return
-
-        for families, data in self.family_rivalries.items():
-            score = data.get("score", 0)
-
-            if score < 3:
-                continue
-
-            family_a, family_b = families
-
-            members_a = [
-                a for a in self.agents
-                if a.alive and getattr(a, "surname", None) == family_a
-            ]
-
-            members_b = [
-                a for a in self.agents
-                if a.alive and getattr(a, "surname", None) == family_b
-            ]
-
-            for member_a in members_a:
-                for member_b in members_b:
-                    if member_a.location != member_b.location:
-                        continue
-
-                    member_a.change_relationship(member_b.name, "trust", -1)
-                    member_b.change_relationship(member_a.name, "trust", -1)
-
-                    if random.random() < 0.05:
-                        logs.append(
-                            f"Old family rivalry caused tension between {member_a.name} and {member_b.name}."
-                        )
+        family_rivalry_effects_system(self, logs)
 
     def record_family_alliance(self, agent_a, agent_b, reason):
-        surname_a = getattr(agent_a, "surname", None)
-        surname_b = getattr(agent_b, "surname", None)
-
-        if not surname_a or not surname_b:
-            return
-
-        if surname_a == surname_b:
-            return
-
-        key = tuple(sorted([surname_a, surname_b]))
-
-        if key not in self.family_alliances:
-            self.family_alliances[key] = {
-                "score": 0,
-                "reasons": []
-            }
-
-        self.family_alliances[key]["score"] += 1
-        self.family_alliances[key]["reasons"].append(reason)
-
-        if len(self.family_alliances[key]["reasons"]) > 10:
-            self.family_alliances[key]["reasons"].pop(0)
+        family_alliance_system(self, agent_a, agent_b, reason)
 
     def notify(self, message, category="General"):
         self.notifications.append({

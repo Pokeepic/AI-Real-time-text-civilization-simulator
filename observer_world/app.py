@@ -45,6 +45,178 @@ stabilize_sim(sim)
 st.title("Observer World")
 st.caption(APP_VERSION)
 
+with st.sidebar:
+    st.header("Observer World")
+    st.write(f"**Version:** {APP_VERSION}")
+    st.write(f"**Day:** {sim.day}")
+    st.write(f"**Hour:** {sim.hour}:00")
+    st.write(f"**Population:** {len([a for a in sim.agents if a.alive])}")
+    st.write(f"**World State:** {getattr(sim, 'world_state', 'Ongoing')}")
+
+    st.divider()
+
+    st.write("### Quick Tips")
+    st.write("- Use **Overview** for the main dashboard.")
+    st.write("- Use **Agents** to inspect people.")
+    st.write("- Use **Notifications** for major events.")
+    st.write("- Use **Timeline** for history.")
+    st.write("- Use **Controls** for export/backup.")
+
+    st.divider()
+
+    st.write("### Quick Controls")
+
+    if st.button("Sidebar: Advance 1 Hour"):
+        logs = sim.tick()
+        st.session_state.logs.extend(logs)
+        save_world(sim)
+        st.rerun()
+
+    if st.button("Sidebar: Save World"):
+        save_world(sim)
+        st.success("World saved.")
+
+    if st.button("Sidebar: Export Everything"):
+        export_story_summary(sim)
+        export_chronicles(sim)
+        export_agents_csv(sim)
+        export_relationships_csv(sim)
+        save_world(sim)
+        st.success("Everything exported.")
+    
+    st.divider()
+
+    st.write("### Watchlist Summary")
+
+    watchlist = getattr(sim, "watchlist", [])
+    family_watchlist = getattr(sim, "family_watchlist", [])
+
+    if watchlist:
+        st.write("**Agents:**")
+        for name in watchlist:
+            st.write(f"- {name}")
+    else:
+        st.caption("No watched agents.")
+
+    if family_watchlist:
+        st.write("**Families:**")
+        for family in family_watchlist:
+            st.write(f"- {family}")
+    else:
+        st.caption("No watched families.")
+    
+    st.divider()
+
+    st.write("### Recent Notifications")
+
+    notifications = getattr(sim, "notifications", [])
+
+    if notifications:
+        for notification in reversed(notifications[-5:]):
+            if isinstance(notification, dict):
+                st.caption(
+                    f"Day {notification.get('day')}, Hour {notification.get('hour')}:00 "
+                    f"[{notification.get('category')}] {notification.get('message')}"
+                )
+            else:
+                st.caption(notification)
+    else:
+        st.caption("No notifications yet.")
+    
+    st.divider()
+
+    st.write("### Risk Alerts")
+
+    risk_alerts = []
+
+    if sim.resources.get("food", 0) < 20:
+        risk_alerts.append("Low food")
+
+    if sim.village_tension >= 70:
+        risk_alerts.append("High tension")
+
+    if any(a.alive and a.health < 40 for a in sim.agents):
+        risk_alerts.append("Critical health cases")
+
+    if any(a.alive and a.hunger > 85 for a in sim.agents):
+        risk_alerts.append("Starvation risk")
+
+    if getattr(sim, "error_log", []):
+        risk_alerts.append("Simulation errors detected")
+
+    if risk_alerts:
+        for alert in risk_alerts:
+            st.warning(alert)
+    else:
+        st.success("No major risks.")
+    
+    st.divider()
+
+    st.write("### World Identity")
+
+    st.write(f"**World:** {getattr(sim, 'world_name', 'Unknown')}")
+    st.write(f"**Settlement:** {sim.settlement.get('name') or 'None'}")
+    st.write(f"**Stage:** {getattr(sim, 'settlement_stage', 'Camp')}")
+    st.write(f"**Era:** {getattr(sim, 'current_era', 'Age of Survival')}")
+    st.write(f"**Leader:** {getattr(sim, 'leader', None) or 'None'}")
+
+    st.divider()
+
+    st.write("### Major Family Lines")
+
+    family_counts = {}
+
+    for agent in sim.agents:
+        surname = getattr(agent, "surname", None)
+
+        if surname:
+            family_counts[surname] = family_counts.get(surname, 0) + 1
+
+    top_families = sorted(
+        family_counts.items(),
+        key=lambda item: item[1],
+        reverse=True
+    )[:5]
+
+    if top_families:
+        for surname, count in top_families:
+            st.write(f"**{surname}:** {count} members")
+    else:
+        st.caption("No family lines yet.")
+    
+    st.divider()
+
+    st.write("### Notable Agents")
+
+    alive_agents = [a for a in sim.agents if a.alive]
+
+    if alive_agents:
+        top_social = max(alive_agents, key=lambda a: a.get_social_score())
+        top_wealth = max(alive_agents, key=lambda a: a.wealth)
+        top_combat = max(alive_agents, key=lambda a: a.skills.get("combat", 0))
+
+        st.write(f"**Most Social:** {top_social.get_full_name()} ({top_social.get_social_score()})")
+        st.write(f"**Wealthiest:** {top_wealth.get_full_name()} ({top_wealth.wealth})")
+        st.write(f"**Strongest:** {top_combat.get_full_name()} ({top_combat.skills.get('combat', 0)})")
+    else:
+        st.caption("No living agents.")
+    
+    st.divider()
+
+    st.write("### System Counts")
+
+    st.write(f"**Notifications:** {len(getattr(sim, 'notifications', []))}")
+    st.write(f"**Chronicles:** {len(getattr(sim, 'chronicles', []))}")
+    st.write(f"**Milestones:** {len(getattr(sim, 'milestones', []))}")
+    st.write(f"**Wars:** {len(getattr(sim, 'wars', []))}")
+    st.write(f"**Treaties:** {len(getattr(sim, 'treaties', []))}")
+    st.write(f"**Errors:** {len(getattr(sim, 'error_log', []))}")
+
+    st.divider()
+
+    st.caption("Observer World is running in temporary Streamlit dashboard mode.")
+    st.caption("True real-time mode will require a FastAPI backend later.")
+
 st.subheader("World Controls")
 
 control_col1, control_col2, control_col3, control_col4, control_col5, control_col6 = st.columns(6)
