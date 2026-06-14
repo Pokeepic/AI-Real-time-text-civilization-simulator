@@ -39,6 +39,7 @@ def stabilize_agent(agent):
         "notifications": [],
         "watchlist": [],
         "family_watchlist": [],
+        "history_snapshots": [],
     }
 
     for key, value in defaults.items():

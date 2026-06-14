@@ -3,7 +3,7 @@ from simulation import Simulation
 from config import CONFIG
 from stability import stabilize_sim
 from export_data import export_agents_csv, export_relationships_csv
-from archive import export_story_summary, export_chronicles
+from archive import export_story_summary, export_chronicles, export_history_snapshots, export_history_snapshots_csv
 import random
 TEST_TICKS = 1000
 TEST_SEEDS = [42, 99, 123, 7, 202, 999]
@@ -42,7 +42,7 @@ def run_test(seed):
                     print(error)
                     file.write(f"- {error}\n")
 
-            print("Failed test results saved to test_results.txt.")
+            print(f"Failed test results saved to {result_file}.")
             return False
     print(f"Total agents: {len(sim.agents)}")
     print(f"Alive agents: {len([a for a in sim.agents if a.alive])}")
@@ -57,6 +57,8 @@ def run_test(seed):
 
     export_agents_csv(sim)
     export_relationships_csv(sim)
+    export_history_snapshots(sim)
+    export_history_snapshots_csv(sim)
     export_story_summary(sim)
     export_chronicles(sim)
 

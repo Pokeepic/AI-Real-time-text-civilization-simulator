@@ -5,6 +5,8 @@ LOG_FOLDER = "logs"
 LOG_FILE = os.path.join(LOG_FOLDER, "world_history.txt")
 CHRONICLE_FILE = os.path.join(LOG_FOLDER, "chronicles.txt")
 STORY_SUMMARY_FILE = os.path.join(LOG_FOLDER, "story_summary.txt")
+SNAPSHOTS_FILE = os.path.join(LOG_FOLDER, "history_snapshots.txt")
+SNAPSHOTS_CSV_FILE = os.path.join(LOG_FOLDER, "history_snapshots.csv")
 
 def archive_logs(sim, logs):
     os.makedirs(LOG_FOLDER, exist_ok=True)
@@ -62,3 +64,36 @@ Laws: {len(sim.laws)}
         file.write(story_summary)
 
     return STORY_SUMMARY_FILE
+
+def export_history_snapshots(sim):
+    os.makedirs(LOG_FOLDER, exist_ok=True)
+
+    with open(SNAPSHOTS_FILE, "w", encoding="utf-8") as file:
+        file.write("OBSERVER WORLD HISTORY SNAPSHOTS\n")
+        file.write("================================\n\n")
+
+        for snapshot in getattr(sim, "history_snapshots", []):
+            file.write(str(snapshot) + "\n")
+
+    return SNAPSHOTS_FILE
+
+def export_history_snapshots_csv(sim):
+    os.makedirs(LOG_FOLDER, exist_ok=True)
+
+    snapshots = getattr(sim, "history_snapshots", [])
+
+    with open(SNAPSHOTS_CSV_FILE, "w", encoding="utf-8") as file:
+        file.write("day,hour,alive,dead,food,wood,stone,tension,wars,technologies,births_total,deaths_total,notifications_total,avg_health,avg_hunger,avg_energy,births_today,deaths_today,growth_rate\n")
+
+        for s in snapshots:
+            file.write(
+                f"{s.get('day')},{s.get('hour')},{s.get('alive')},{s.get('dead')},"
+                f"{s.get('food')},{s.get('wood')},{s.get('stone')},"
+                f"{s.get('tension')},{s.get('wars')},{s.get('technologies')}\n"
+                f"{s.get('births_total')},{s.get('deaths_total')},{s.get('notifications_total')},"
+                f"{s.get('births_today')},{s.get('deaths_today')},"
+                f"{s.get('avg_health')},{s.get('avg_hunger')},{s.get('avg_energy')}\n"
+                f"{s.get('growth_rate')}\n"
+            )
+
+    return SNAPSHOTS_CSV_FILE

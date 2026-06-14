@@ -1,0 +1,22 @@
+CHARTS CHECKLIST
+
+[x] History snapshots
+[x] Population chart
+[x] Resources chart
+[x] Food per person chart
+[x] Material storage chart
+[x] Tension chart
+[x] Wars/technology progress chart
+[x] Life events chart
+[x] Daily births/deaths chart
+[x] Agent condition chart
+[x] Growth rate chart
+[x] Resource trend warnings
+[x] Tension trend warnings
+[x] Snapshot TXT export
+[x] Snapshot CSV export
+
+Next:
+[ ] Character biography generator
+[ ] Family dynasty summaries
+[ ] Weekly newspaper summary

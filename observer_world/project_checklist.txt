@@ -1,0 +1,64 @@
+OBSERVER WORLD PROJECT CHECKLIST
+
+Core:
+[x] Agents
+[x] Needs
+[x] Roles
+[x] Relationships
+[x] Memories
+[x] Journals
+[x] Life goals
+
+Society:
+[x] Families
+[x] Reproduction
+[x] Aging
+[x] Deaths
+[x] Leadership
+[x] Factions
+[x] Rebellions
+[x] Crime
+[x] Trials
+[x] Exile
+
+World:
+[x] Settlements
+[x] Extra settlements
+[x] Migration
+[x] Diplomacy
+[x] War
+[x] Culture
+[x] Beliefs
+[x] Traditions
+[x] Technology
+[x] Eras
+[x] Milestones
+[x] Daily food consumption
+[x] Food spoilage
+[x] Food storage capacity
+[x] Material storage capacity
+
+Observer:
+[x] Streamlit dashboard
+[x] Notifications
+[x] Watchlists
+[x] Timeline
+[x] Newspaper
+[x] Exports
+[x] Backup ZIP
+[x] Error tab
+
+Architecture:
+[x] systems/ modularization
+[x] ui/ modularization
+[x] stability migration
+[x] stress tests
+
+Next:
+[ ] Long-term charts
+[ ] Better family tree visualization
+[ ] Character biography generator
+[ ] Weekly newspaper summary
+[ ] True real-time FastAPI backend
+[ ] Better resource economy balancing
+[ ] Food production tuning

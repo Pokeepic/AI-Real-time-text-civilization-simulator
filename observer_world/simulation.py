@@ -1,8 +1,7 @@
 import random
-
-from world import LOCATIONS
 from config import CONFIG, get_setting, get_scenario, ACTIVE_SCENARIO
 from error_handler import safe_execute
+from history_tracker import record_world_snapshot
 
 # Modular family systems
 from systems.family_system import (
@@ -142,6 +141,13 @@ from systems.life_goal_system import (
 from systems.personality_system import (
     handle_journals as journals_system,
     handle_personality_drift as personality_drift_system,
+)
+# Modular resource systems
+from systems.resource_system import (
+    consume_daily_food as consume_daily_food_system,
+    spoil_excess_food as spoil_excess_food_system,
+    enforce_storage_capacity as storage_capacity_system,
+    enforce_material_storage_capacity as material_storage_capacity_system,
 )
 
 class Simulation:
@@ -500,6 +506,10 @@ class Simulation:
                 logs.append(f"{agent.name} stayed at {agent.location} and chose to {action}.")
 
         systems = [
+        ("consume_daily_food", self.consume_daily_food),
+        ("spoil_excess_food", self.spoil_excess_food),
+        ("enforce_storage_capacity", self.enforce_storage_capacity),
+        ("enforce_material_storage_capacity", self.enforce_material_storage_capacity),
         ("handle_family_growth", self.handle_family_growth),
         ("handle_aging", self.handle_aging),
         ("choose_village_project", self.choose_village_project),
@@ -555,6 +565,7 @@ class Simulation:
         if self.hour >= 24:
             self.hour = 0
             self.day += 1
+            record_world_snapshot(self)
             logs.append(f"--- A new day begins. Day {self.day}. ---")
 
         self.daily_events.extend(logs)
@@ -787,3 +798,15 @@ class Simulation:
 
     def notify_family_event(self, surname, message):
         notify_family_event_system(self, surname, message)
+    
+    def consume_daily_food(self, logs):
+        consume_daily_food_system(self, logs)
+
+    def spoil_excess_food(self, logs):
+        spoil_excess_food_system(self, logs)
+    
+    def enforce_storage_capacity(self, logs):
+        storage_capacity_system(self, logs)
+
+    def enforce_material_storage_capacity(self, logs):
+        material_storage_capacity_system(self, logs)

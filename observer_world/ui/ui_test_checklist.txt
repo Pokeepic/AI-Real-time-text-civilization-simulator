@@ -1,0 +1,32 @@
+UI TEST CHECKLIST
+
+[ ] App opens without errors
+[ ] Overview tab loads
+[ ] Agents tab loads
+[ ] Settlements tab loads
+[ ] History tab loads
+[ ] Chronicles tab loads
+[ ] Controls tab loads
+[ ] Errors tab loads
+[ ] Notifications tab loads
+[ ] Watchlist tab loads
+[ ] Families tab loads
+[ ] Timeline tab loads
+[ ] Newspaper tab loads
+
+Controls:
+[ ] Advance 1 Hour works
+[ ] Run 6 Hours works
+[ ] Run 1 Day works
+[ ] Run 7 Days works
+[ ] Save works
+[ ] Export Everything works
+[ ] Backup ZIP works
+
+Observer:
+[ ] Notifications update
+[ ] Watchlist saves
+[ ] Family watchlist saves
+[ ] Timeline search works
+[ ] Newspaper shows sections
+[ ] Errors tab shows no major errors

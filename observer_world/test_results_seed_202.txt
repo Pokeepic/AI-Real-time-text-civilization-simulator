@@ -5,8 +5,8 @@ Status: PASSED
 Day: 43
 Hour: 0
 Total agents: 37
-Alive agents: 8
-Deaths recorded: 24
+Alive agents: 6
+Deaths recorded: 26
 Notifications: 100
 Chronicles: 30
 Milestones: 12

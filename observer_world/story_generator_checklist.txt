@@ -1,0 +1,20 @@
+STORY GENERATOR CHECKLIST
+
+[x] Agent biography generator
+[x] Agent biography export
+[x] Agent biography download
+[x] Family dynasty summary
+[x] Family summary download
+[x] World story summary
+[x] World story summary download
+[x] Weekly newspaper summary
+[x] Weekly newspaper download
+[x] Fallen heroes summary
+[x] Family rivalry story summary
+[x] Civilization timeline summary
+
+Next:
+[ ] Greatest leader biography
+[ ] Most influential family summary
+[ ] World ending report
+[ ] Real-time backend

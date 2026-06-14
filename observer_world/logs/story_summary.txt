@@ -7,9 +7,9 @@ Settlement: First Gate
 Stage: Settlement
 Era: Age of Innovation
 
-Living Population: 10
-Recorded Dead: 38
-Leader: Daren
+Living Population: 14
+Recorded Dead: 39
+Leader: Mira
 
 Culture: Trade-Oriented Society
 Belief: Chosen Leader Myth
