@@ -99,6 +99,13 @@ from systems.agent_action_system import (
     handle_learning as learning_system,
     handle_patrol as patrol_system,
     handle_teaching as teaching_system,
+    handle_explore as explore_system,
+    handle_sleep as sleep_system,
+    handle_visit_favorite_place as visit_favorite_place_system,
+    handle_practice as practice_system,
+    handle_gather_food as gather_food_system,
+    handle_gather_materials as gather_materials_system,
+    handle_build as build_system,
 )
 # Modular world systems
 from systems.world_system import (
@@ -372,6 +379,24 @@ class Simulation:
 
     def add_history(self, event):
         add_history_system(self, event)
+    
+    def handle_explore(self, agent):
+        return explore_system(self, agent)
+    
+    def handle_sleep(self, agent):
+        return sleep_system(self, agent)
+    
+    def handle_visit_favorite_place(self, agent):
+        return visit_favorite_place_system(self, agent)
+    
+    def handle_practice(self, agent):
+        return practice_system(self, agent)
+    
+    def handle_gather_food(self, agent):
+        return gather_food_system(self, agent)
+    
+    def handle_gather_materials(self, agent):
+        return gather_materials_system(self, agent)
 
     def tick(self):
         logs = []
@@ -409,43 +434,13 @@ class Simulation:
             action = agent.choose_action(self.hour)
 
             if action == "explore":
-                new_location = random.choice(LOCATIONS)
-                agent.location = new_location
-                logs.append(f"{agent.name} explored and moved to {agent.location}.")
+                logs.extend(self.handle_explore(agent))
 
             elif action == "gather food":
-                food_found = random.randint(5, 20) + agent.skills["hunting"]
-
-                if self.weather in ["Storm", "Snow"]:
-                    food_found = max(1, food_found // 2)
-
-                if self.season == "Winter":
-                    food_found = max(1, food_found // 2)
-
-                if self.weather == "Rain":
-                    food_found += 2
-
-                food_found = int(food_found * get_setting("resource_multiplier"))
-
-                agent.hunger = max(agent.hunger - food_found // 2, 0)
-
-                agent_settlement = self.get_agent_settlement(agent)
-
-                if agent_settlement:
-                    agent_settlement["resources"]["food"] += food_found // 2
-                else:
-                    self.resources["food"] += food_found // 2
-
-                agent.inventory["food"] += max(1, food_found // 4)
-                agent.improve_skill("hunting", 1)
-
-                logs.append(f"{agent.name} gathered food at {agent.location}.")
-                logs.append(f"{food_found // 2} food was added to shared storage.")
-                logs.append(f"{agent.name}'s hunting improved to {agent.skills['hunting']}.")
+                logs.extend(self.handle_gather_food(agent))
 
             elif action == "sleep":
-                agent.energy = min(agent.energy + 30, 100)
-                logs.append(f"{agent.name} slept at {agent.location}. Energy restored.")
+                logs.extend(self.handle_sleep(agent))
 
             elif action == "talk":
                 logs.extend(self.handle_talk(agent))
@@ -457,45 +452,10 @@ class Simulation:
                 logs.extend(self.handle_help(agent))
 
             elif action == "practice":
-                skill = random.choice(list(agent.skills.keys()))
-                agent.improve_skill(skill, 1)
-                logs.append(f"{agent.name} practiced {skill}. {skill.capitalize()} is now {agent.skills[skill]}.")
+                logs.extend(self.handle_practice(agent))
 
             elif action == "gather materials":
-                wood = random.randint(3, 10)
-                stone = random.randint(1, 6)
-
-                if self.weather in ["Storm", "Snow"]:
-                    wood = max(1, wood // 2)
-                    stone = max(1, stone // 2)
-
-                agent_settlement = self.get_agent_settlement(agent)
-
-                if agent_settlement and "Basic Tools" in agent_settlement.get("technologies", []):
-                    wood += 3
-                    stone += 2
-                elif not agent_settlement and "Basic Tools" in self.technologies:
-                    wood += 3
-                    stone += 2
-
-                wood = int(wood * get_setting("resource_multiplier"))
-                stone = int(stone * get_setting("resource_multiplier"))
-
-                if agent_settlement:
-                    agent_settlement["resources"]["wood"] += wood
-                    agent_settlement["resources"]["stone"] += stone
-                else:
-                    self.resources["wood"] += wood
-                    self.resources["stone"] += stone
-
-                agent.inventory["wood"] += max(1, wood // 3)
-                agent.inventory["stone"] += max(1, stone // 3)
-
-                agent.improve_skill("building", 1)
-
-                logs.append(f"{agent.name} gathered materials at {agent.location}.")
-                logs.append(f"Shared resources gained: wood +{wood}, stone +{stone}.")
-                logs.append(f"{agent.name}'s building improved to {agent.skills['building']}.")
+                logs.extend(self.handle_gather_materials(agent))
 
             elif action == "build":
                 logs.extend(self.handle_build(agent))
@@ -534,16 +494,7 @@ class Simulation:
                 logs.extend(self.handle_patrol(agent))
 
             elif action == "visit favorite place":
-                favorite = agent.get_favorite_place()
-
-                if favorite:
-                    agent.location = favorite
-                    agent.social = min(agent.social + 5, 100)
-                    agent.energy = max(agent.energy - 2, 0)
-
-                    logs.append(f"{agent.name} visited their favorite place: {favorite}.")
-                else:
-                    logs.append(f"{agent.name} wanted to visit a favorite place, but had none.")
+                logs.extend(self.handle_visit_favorite_place(agent))
 
             else:
                 logs.append(f"{agent.name} stayed at {agent.location} and chose to {action}.")
@@ -739,43 +690,7 @@ class Simulation:
         return work_on_project_system(self, agent)
 
     def handle_build(self, agent):
-        logs = []
-
-        if self.current_project is not None and "Shelter" in self.settlement["buildings"]:
-            return self.work_on_project(agent)
-
-        if "Shelter" in self.settlement["buildings"]:
-            logs.append(f"{agent.name} maintained the shelter.")
-            agent.improve_skill("building", 1)
-            return logs
-
-        if self.resources["wood"] < 10 or self.resources["stone"] < 5:
-            logs.append(f"{agent.name} wanted to build, but the group lacked materials.")
-            return logs
-
-        self.resources["wood"] -= 10
-        self.resources["stone"] -= 5
-
-        progress = random.randint(10, 25) + agent.skills["building"]
-        self.settlement["shelter_progress"] += progress
-
-        agent.improve_skill("building", 1)
-
-        logs.append(f"{agent.name} worked on the first shelter.")
-        logs.append(f"Shelter progress +{progress}. Total: {self.settlement['shelter_progress']}/100.")
-
-        if self.settlement["shelter_progress"] >= 100:
-            self.settlement["buildings"].append("Shelter")
-
-            if self.settlement["name"] is None:
-                self.settlement["name"] = self.generate_settlement_name()
-
-            logs.append("A permanent shelter has been completed.")
-            logs.append(f"Settlement founded: {self.settlement['name']}.")
-
-            self.add_history(f"Settlement founded: {self.settlement['name']}.")
-
-        return logs
+        return build_system(self, agent)
 
     def handle_steal_food(self, agent):
         return steal_food_system(self, agent)

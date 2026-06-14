@@ -4,6 +4,7 @@ Agent action system for Observer World.
 
 import random
 from dialogue import get_line
+from world import LOCATIONS
 
 
 def handle_talk(sim, agent):
@@ -202,3 +203,169 @@ def handle_teaching(sim, teacher, student, logs):
     sim.record_family_alliance(teacher, student, "teaching")
 
     logs.append(f"{teacher.name} taught {student.name} about {skill} at {teacher.location}.")
+
+def handle_explore(sim, agent):
+    logs = []
+
+    new_location = random.choice(LOCATIONS)
+    agent.location = new_location
+
+    logs.append(f"{agent.name} explored and moved to {agent.location}.")
+
+    return logs
+
+def handle_sleep(sim, agent):
+    logs = []
+
+    agent.energy = min(agent.energy + 30, 100)
+
+    logs.append(f"{agent.name} slept at {agent.location}. Energy restored.")
+
+    return logs
+
+def handle_visit_favorite_place(sim, agent):
+    logs = []
+
+    favorite = agent.get_favorite_place()
+
+    if favorite:
+        agent.location = favorite
+        agent.social = min(agent.social + 5, 100)
+        agent.energy = max(agent.energy - 2, 0)
+
+        logs.append(f"{agent.name} visited their favorite place: {favorite}.")
+    else:
+        logs.append(f"{agent.name} wanted to visit a favorite place, but had none.")
+
+    return logs
+
+def handle_practice(sim, agent):
+    logs = []
+
+    skill = random.choice(list(agent.skills.keys()))
+    agent.improve_skill(skill, 1)
+
+    logs.append(f"{agent.name} practiced {skill}. {skill.capitalize()} is now {agent.skills[skill]}.")
+
+    return logs
+
+def handle_gather_food(sim, agent):
+    logs = []
+
+    food_found = random.randint(5, 20) + agent.skills["hunting"]
+
+    if sim.weather in ["Storm", "Snow"]:
+        food_found = max(1, food_found // 2)
+
+    if sim.season == "Winter":
+        food_found = max(1, food_found // 2)
+
+    if sim.weather == "Rain":
+        food_found += 2
+
+    try:
+        from config import get_setting
+        food_found = int(food_found * get_setting("resource_multiplier"))
+    except Exception:
+        pass
+
+    agent.hunger = max(agent.hunger - food_found // 2, 0)
+
+    agent_settlement = sim.get_agent_settlement(agent)
+
+    if agent_settlement:
+        agent_settlement["resources"]["food"] += food_found // 2
+    else:
+        sim.resources["food"] += food_found // 2
+
+    agent.inventory["food"] += max(1, food_found // 4)
+    agent.improve_skill("hunting", 1)
+
+    logs.append(f"{agent.name} gathered food at {agent.location}.")
+    logs.append(f"{food_found // 2} food was added to shared storage.")
+    logs.append(f"{agent.name}'s hunting improved to {agent.skills['hunting']}.")
+
+    return logs
+
+def handle_gather_materials(sim, agent):
+    logs = []
+
+    wood = random.randint(3, 10)
+    stone = random.randint(1, 6)
+
+    if sim.weather in ["Storm", "Snow"]:
+        wood = max(1, wood // 2)
+        stone = max(1, stone // 2)
+
+    agent_settlement = sim.get_agent_settlement(agent)
+
+    if agent_settlement and "Basic Tools" in agent_settlement.get("technologies", []):
+        wood += 3
+        stone += 2
+    elif not agent_settlement and "Basic Tools" in sim.technologies:
+        wood += 3
+        stone += 2
+
+    try:
+        from config import get_setting
+        wood = int(wood * get_setting("resource_multiplier"))
+        stone = int(stone * get_setting("resource_multiplier"))
+    except Exception:
+        pass
+
+    if agent_settlement:
+        agent_settlement["resources"]["wood"] += wood
+        agent_settlement["resources"]["stone"] += stone
+    else:
+        sim.resources["wood"] += wood
+        sim.resources["stone"] += stone
+
+    agent.inventory["wood"] += max(1, wood // 3)
+    agent.inventory["stone"] += max(1, stone // 3)
+
+    agent.improve_skill("building", 1)
+
+    logs.append(f"{agent.name} gathered materials at {agent.location}.")
+    logs.append(f"Shared resources gained: wood +{wood}, stone +{stone}.")
+    logs.append(f"{agent.name}'s building improved to {agent.skills['building']}.")
+
+    return logs
+
+def handle_build(sim, agent):
+    logs = []
+
+    if sim.current_project is not None and "Shelter" in sim.settlement["buildings"]:
+        return sim.work_on_project(agent)
+
+    if "Shelter" in sim.settlement["buildings"]:
+        logs.append(f"{agent.name} maintained the shelter.")
+        agent.improve_skill("building", 1)
+        return logs
+
+    if sim.resources["wood"] < 10 or sim.resources["stone"] < 5:
+        logs.append(f"{agent.name} wanted to build, but the group lacked materials.")
+        return logs
+
+    sim.resources["wood"] -= 10
+    sim.resources["stone"] -= 5
+
+    progress = random.randint(10, 25) + agent.skills["building"]
+    sim.settlement["shelter_progress"] += progress
+
+    agent.improve_skill("building", 1)
+
+    logs.append(f"{agent.name} worked on the first shelter.")
+    logs.append(f"Shelter progress +{progress}. Total: {sim.settlement['shelter_progress']}/100.")
+
+    if sim.settlement["shelter_progress"] >= 100:
+        sim.settlement["buildings"].append("Shelter")
+
+        if sim.settlement["name"] is None:
+            sim.settlement["name"] = sim.generate_settlement_name()
+
+        logs.append("A permanent shelter has been completed.")
+        logs.append(f"Settlement founded: {sim.settlement['name']}.")
+
+        sim.add_history(f"Settlement founded: {sim.settlement['name']}.")
+
+    return logs
