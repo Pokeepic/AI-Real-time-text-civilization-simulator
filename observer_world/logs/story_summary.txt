@@ -2,14 +2,14 @@
 OBSERVER WORLD STORY SUMMARY
 ============================
 
-World: Noramere
-Settlement: First Gate
-Stage: Settlement
+World: Eldfall
+Settlement: Old Hollow
+Stage: Village
 Era: Age of Innovation
 
-Living Population: 14
-Recorded Dead: 39
-Leader: Mira
+Living Population: 23
+Recorded Dead: 158
+Leader: Rook18
 
 Culture: Trade-Oriented Society
 Belief: Chosen Leader Myth

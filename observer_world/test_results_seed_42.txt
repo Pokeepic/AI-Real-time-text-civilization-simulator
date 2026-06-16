@@ -4,11 +4,11 @@ OBSERVER WORLD TEST RESULTS
 Status: PASSED
 Day: 43
 Hour: 0
-Total agents: 55
-Alive agents: 13
-Deaths recorded: 29
-Notifications: 97
+Total agents: 181
+Alive agents: 23
+Deaths recorded: 83
+Notifications: 100
 Chronicles: 30
-Milestones: 12
+Milestones: 14
 World state: Ongoing
 Random Seed: 42

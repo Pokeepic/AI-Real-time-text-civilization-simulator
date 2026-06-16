@@ -1,5 +1,5 @@
 CONFIG = {
-    "starting_population": 10,
+    "starting_population": 50,
     "default_speed": 2,
     "autosave_every_hours": 6,
 

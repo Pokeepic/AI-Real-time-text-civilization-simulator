@@ -12,9 +12,12 @@ STORY GENERATOR CHECKLIST
 [x] Fallen heroes summary
 [x] Family rivalry story summary
 [x] Civilization timeline summary
+[x] Story export bundle
+[x] Greatest leader biography
+[x] Most influential family summary
+[x] World ending report
+[x] Better newspaper layout
+[x] Newspaper internal tabs
 
 Next:
-[ ] Greatest leader biography
-[ ] Most influential family summary
-[ ] World ending report
 [ ] Real-time backend

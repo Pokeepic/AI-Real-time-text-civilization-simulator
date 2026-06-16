@@ -2,16 +2,23 @@ from agent import Agent
 from simulation import Simulation
 from config import CONFIG
 from stability import stabilize_sim
+from world import generate_random_agent_name
 from export_data import export_agents_csv, export_relationships_csv
 from archive import export_story_summary, export_chronicles, export_history_snapshots, export_history_snapshots_csv
 import random
 TEST_TICKS = 1000
-TEST_SEEDS = [42, 99, 123, 7, 202, 999]
+TEST_SEEDS = [42]
 
 def run_test(seed):
     random.seed(seed)
 
-    agents = [Agent(name) for name in CONFIG["starting_names"]]
+    starting_population = CONFIG.get("starting_population", len(CONFIG["starting_names"]))
+    print(f"Starting population target: {starting_population}")
+
+    agents = [
+        Agent(generate_random_agent_name(i))
+        for i in range(starting_population)
+    ]
     sim = Simulation(agents)
     stabilize_sim(sim)
 

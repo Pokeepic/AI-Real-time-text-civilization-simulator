@@ -8,6 +8,7 @@ from save_system import load_world, save_world, delete_save
 from config import CONFIG
 from export_data import export_agents_csv, export_relationships_csv
 from stability import stabilize_sim
+from world import generate_random_agent_name
 
 from ui.overview_tab import render as render_overview
 from ui.agents_tab import render as render_agents
@@ -34,7 +35,12 @@ st.set_page_config(page_title="Observer World", layout="wide")
 # -----------------------------
 
 def create_new_world():
-    agents = [Agent(name) for name in CONFIG["starting_names"]]
+    starting_population = CONFIG.get("starting_population", len(CONFIG["starting_names"]))
+
+    agents = [
+        Agent(generate_random_agent_name(i))
+        for i in range(starting_population)
+    ]
     return Simulation(agents)
 
 

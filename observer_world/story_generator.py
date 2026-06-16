@@ -286,3 +286,94 @@ This leader played a significant role in shaping the history of {getattr(sim, "w
 """
 
     return bio.strip()
+
+def generate_most_influential_family_summary(sim):
+    if not getattr(sim, "family_reputation", {}):
+        return "No family reputation records exist yet."
+
+    top_family = max(
+        sim.family_reputation,
+        key=lambda surname: sim.family_reputation.get(surname, 0)
+    )
+
+    members = [
+        a for a in sim.agents
+        if getattr(a, "surname", None) == top_family
+    ]
+
+    leaders = [a for a in members if a.role == "Leader"]
+
+    summary = f"""
+MOST INFLUENTIAL FAMILY
+
+Family: {top_family}
+Reputation: {sim.family_reputation.get(top_family, 0)}
+Members: {len(members)}
+Living Members: {len([a for a in members if a.alive])}
+Generations: {sorted(set(a.generation for a in members))}
+
+Notable Members:
+{chr(10).join("- " + a.get_full_name() + f" ({a.role}, Gen {a.generation})" for a in members[:10]) if members else "- None"}
+
+Leaders:
+{chr(10).join("- " + a.get_full_name() for a in leaders) if leaders else "- None"}
+
+The {top_family} family has become one of the most influential bloodlines in {getattr(sim, "world_name", "the world")}.
+"""
+
+    return summary.strip()
+
+def generate_world_ending_report(sim):
+    if sim.world_state not in ["Extinct", "Civilization", "Collapsed", "Dark Age"]:
+        return "The world has not reached an ending state yet."
+
+    alive = [a for a in sim.agents if a.alive]
+    dead = [a for a in sim.agents if not a.alive]
+
+    report = f"""
+WORLD ENDING REPORT
+
+World: {getattr(sim, "world_name", "Unknown")}
+Final State: {sim.world_state}
+Day: {sim.day}
+Hour: {sim.hour}:00
+
+Population:
+- Alive: {len(alive)}
+- Dead: {len(dead)}
+
+Final Era: {getattr(sim, "current_era", "Unknown")}
+Main Settlement: {sim.settlement.get("name") or "None"}
+Settlement Stage: {getattr(sim, "settlement_stage", "Camp")}
+Leader: {getattr(sim, "leader", None) or "None"}
+
+Collapse / Ending Reasons:
+{chr(10).join("- " + reason for reason in getattr(sim, "collapse_reasons", [])) if getattr(sim, "collapse_reasons", []) else "- None recorded"}
+
+Final Culture: {sim.get_culture_identity()}
+Final Belief: {sim.get_belief_identity()}
+
+Wars: {len(sim.wars)}
+Treaties: {len(sim.treaties)}
+Technologies: {len(sim.technologies)}
+Milestones: {len(sim.milestones)}
+
+Final History:
+{chr(10).join("- " + event for event in sim.world_history[-20:]) if sim.world_history else "- None"}
+"""
+
+    return report.strip()
+
+def generate_story_export_bundle(sim):
+    sections = [
+        generate_world_story_summary(sim),
+        generate_weekly_newspaper(sim),
+        generate_fallen_heroes_summary(sim),
+        generate_family_rivalry_summary(sim),
+        generate_civilization_timeline_summary(sim),
+        generate_greatest_leader_biography(sim),
+        generate_most_influential_family_summary(sim),
+        generate_world_ending_report(sim),
+    ]
+
+    return "\n\n" + ("=" * 60 + "\n\n").join(sections)
