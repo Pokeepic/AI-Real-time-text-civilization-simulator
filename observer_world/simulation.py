@@ -2,6 +2,7 @@ import random
 from config import CONFIG, get_setting, get_scenario, ACTIVE_SCENARIO
 from error_handler import safe_execute
 from history_tracker import record_world_snapshot
+from name_generator import generate_unique_name
 
 # Modular family systems
 from systems.family_system import (
@@ -425,13 +426,57 @@ class Simulation:
                 continue
 
             self.assign_role(agent)
+
+            # Emergency eating before needs get worse
+            # This prevents agents from starving while shared food exists.
+            if agent.hunger >= 75 and self.resources.get("food", 0) > 0:
+                meal = min(3, self.resources["food"])
+                self.resources["food"] -= meal
+                agent.hunger = max(agent.hunger - meal * 12, 0)
+                agent.energy = min(agent.energy + 5, 100)
+            # Emergency resting before needs get worse
+            # Softer version: agents sometimes rest when critically exhausted,
+            # but resting costs hunger and does not fully save everyone.
+            if agent.energy <= 8 and random.random() < 0.55:
+                agent.energy = min(agent.energy + random.randint(8, 14), 100)
+                agent.hunger = min(agent.hunger + random.randint(1, 3), 100)
+
+                if hasattr(agent, "remember"):
+                    agent.remember(f"Rested on Day {self.day} to recover from exhaustion.")
+
             agent.update_needs()
 
             if not agent.alive:
-                self.record_death(agent, "hunger or exhaustion", logs)
+                cause = "hunger"
+
+                if agent.energy <= 0 and agent.hunger < 90:
+                    cause = "exhaustion"
+                elif agent.hunger >= 90 and agent.energy <= 0:
+                    cause = "hunger and exhaustion"
+
+                self.record_death(agent, cause, logs)
                 continue
 
-            self.apply_weather_effects(agent, logs)
+            # Normal resting behavior
+            # Tired agents sometimes rest, but not always.
+            # This keeps exhaustion dangerous without causing mass death.
+            if agent.energy <= 12 and random.random() < 0.40:
+                agent.energy = min(agent.energy + random.randint(8, 14), 100)
+                agent.hunger = min(agent.hunger + random.randint(3, 7), 100)
+
+                if hasattr(agent, "remember") and random.random() < 0.08:
+                    agent.remember(f"Rested on Day {self.day} instead of working.")
+
+                continue
+
+            # Weather exposure should not hit every single hour.
+            # Apply it only at morning, afternoon, and night.
+            if self.hour in [6, 14, 22]:
+                self.apply_weather_effects(agent, logs)
+
+                if not agent.alive:
+                    self.record_death(agent, "weather exposure", logs)
+                    continue
 
             if not agent.alive:
                 self.record_death(agent, "weather exposure", logs)
@@ -571,6 +616,9 @@ class Simulation:
         self.daily_events.extend(logs)
 
         if self.day != starting_day:
+            self.apply_age_pressure(logs)
+            self.apply_daily_health_events(logs)
+            self.apply_daily_medical_care(logs)
             self.create_daily_chronicle(logs)
 
         self.check_world_state(logs)
@@ -651,10 +699,54 @@ class Simulation:
         return bond_system(self, agent)
 
     def handle_family_growth(self, logs):
+        alive_agents = [a for a in self.agents if a.alive]
+        alive_count = len(alive_agents)
+
+        if alive_count == 0:
+            return
+
+        children_count = len([
+            a for a in alive_agents
+            if getattr(a, "age", 0) < 13
+        ])
+
+        food_per_person = self.resources.get("food", 0) / max(1, alive_count)
+        child_ratio = children_count / max(1, alive_count)
+
+        # Hard stop: famine or too many children
+        if food_per_person < 3:
+            return
+
+        if child_ratio > 0.50:
+            return
+
+        # Slow births when food is not comfortable
+        if food_per_person < 5 and random.random() < 0.80:
+            return
+
+        # Slow births in large populations
+        if alive_count > 250 and random.random() < 0.85:
+            return
+
+        if alive_count > 180 and random.random() < 0.60:
+            return
+
         family_growth_system(self, logs)
 
     def generate_child_name(self):
-        return child_name_system(self)
+        existing_names = set()
+
+        # Names of all current agents, alive or dead
+        for agent in self.agents:
+            existing_names.add(agent.name)
+
+        # Names already recorded in death history
+        for record in getattr(self, "death_records", []):
+            name = record.get("name")
+            if name:
+                existing_names.add(name)
+
+        return generate_unique_name(existing_names)
 
     def inherit_traits(self, child, parent_a, parent_b):
         traits = ["curiosity", "kindness", "aggression", "discipline", "pride"]
@@ -684,6 +776,214 @@ class Simulation:
 
     def handle_aging(self, logs):
         aging_system(self, logs)
+
+    def apply_age_pressure(self, logs):
+        """
+        Applies age-based weakness, sickness, and natural death.
+        This prevents immortal population growth without making hunger unfair.
+        """
+
+        for agent in self.agents:
+            if not agent.alive:
+                continue
+
+            age = getattr(agent, "age", 18)
+
+            # Children should not carry full work pressure,
+            # but they are more vulnerable to sickness.
+            if age < 13:
+                agent.energy = min(agent.energy + 1, 100)
+
+                food_per_person = self.resources.get("food", 0) / max(
+                    1,
+                    len([a for a in self.agents if a.alive])
+                )
+
+                sickness_chance = 0.015
+
+                # Bad conditions make child sickness more likely
+                if food_per_person < 4:
+                    sickness_chance += 0.025
+
+                if self.weather in ["Storm", "Snow", "Heatwave"]:
+                    sickness_chance += 0.020
+
+                if random.random() < sickness_chance:
+                    damage = random.randint(4, 12)
+                    agent.health = max(agent.health - damage, 0)
+                    logs.append(f"{agent.name} became sick as a child.")
+
+                    if hasattr(agent, "remember"):
+                        agent.remember(f"Became sick as a child on Day {self.day}.")
+
+                if agent.health <= 0:
+                    agent.alive = False
+                    self.record_death(agent, "child sickness", logs)
+
+                continue
+
+            # Older adults slowly lose stamina
+            if age >= 45:
+                agent.energy = max(agent.energy - random.randint(1, 2), 0)
+
+            # Elders become more fragile
+            if age >= 60:
+                agent.energy = max(agent.energy - random.randint(1, 3), 0)
+
+                if random.random() < 0.08:
+                    agent.health = max(agent.health - random.randint(4, 10), 0)
+                    logs.append(f"{agent.name} suffered age-related sickness.")
+
+                    if hasattr(agent, "remember"):
+                        agent.remember(f"Felt weak from sickness on Day {self.day}.")
+
+            # Very old agents can die naturally
+            if age >= 75:
+                old_age_chance = min(0.25, (age - 74) * 0.025)
+
+                if random.random() < old_age_chance:
+                    agent.alive = False
+                    self.record_death(agent, "old age", logs)
+                    continue
+
+            # Sickness can kill weak elders
+            if agent.health <= 0:
+                agent.alive = False
+                self.record_death(agent, "age sickness", logs)
+
+    def apply_daily_health_events(self, logs):
+        """
+        Adds light daily sickness and accident pressure.
+        This creates natural deaths without relying only on hunger or violence.
+        """
+
+        alive_agents = [a for a in self.agents if a.alive]
+
+        if not alive_agents:
+            return
+
+        food_per_person = self.resources.get("food", 0) / max(1, len(alive_agents))
+
+        for agent in alive_agents:
+            age = getattr(agent, "age", 18)
+
+            # Existing sickness continues for several days
+            sick_days = getattr(agent, "sick_days", 0)
+
+            if sick_days > 0:
+                agent.sick_days = sick_days - 1
+
+                agent.health = max(agent.health - random.randint(2, 6), 0)
+                agent.energy = max(agent.energy - random.randint(4, 9), 0)
+                agent.hunger = min(agent.hunger + random.randint(1, 4), 100)
+
+                if random.random() < 0.15:
+                    logs.append(f"{agent.name} continued suffering from sickness.")
+
+                if agent.health <= 0:
+                    agent.alive = False
+                    self.record_death(agent, "sickness", logs)
+
+                continue
+
+            sickness_chance = 0.006
+            accident_chance = 0.004
+
+            # Children and elders are more vulnerable
+            if age < 13:
+                sickness_chance += 0.006
+
+            if age >= 60:
+                sickness_chance += 0.010
+                accident_chance += 0.004
+
+            # Low food makes sickness more likely
+            if food_per_person < 4:
+                sickness_chance += 0.004
+
+            if food_per_person < 2:
+                sickness_chance += 0.008
+
+            # Bad weather increases sickness risk
+            if self.weather in ["Storm", "Snow", "Heatwave"]:
+                sickness_chance += 0.006
+
+            # Sickness
+            if random.random() < sickness_chance:
+                damage = random.randint(5, 14)
+                agent.health = max(agent.health - damage, 0)
+                agent.sick_days = random.randint(2, 5)
+
+                logs.append(f"{agent.name} became sick.")
+
+                if hasattr(agent, "remember"):
+                    agent.remember(f"Became sick on Day {self.day}.")
+
+                if agent.health <= 0:
+                    agent.alive = False
+                    self.record_death(agent, "sickness", logs)
+                    continue
+
+            # Accidents
+            if random.random() < accident_chance:
+                damage = random.randint(4, 12)
+                agent.health = max(agent.health - damage, 0)
+
+                logs.append(f"{agent.name} was injured in an accident.")
+
+                if hasattr(agent, "remember"):
+                    agent.remember(f"Was injured in an accident on Day {self.day}.")
+
+                if agent.health <= 0:
+                    agent.alive = False
+                    self.record_death(agent, "accident", logs)
+
+    def apply_daily_medical_care(self, logs):
+        """
+        Gives injured or sick agents a chance to recover if the village has medics.
+        This keeps health pressure dangerous, but not hopeless.
+        """
+
+        alive_agents = [a for a in self.agents if a.alive]
+
+        if not alive_agents:
+            return
+
+        medics = [
+            a for a in alive_agents
+            if getattr(a, "role", "") == "Medic"
+            or a.skills.get("medicine", 0) >= 6
+        ]
+
+        if not medics:
+            return
+
+        patients = [
+            a for a in alive_agents
+            if a.health < 80 or getattr(a, "sick_days", 0) > 0
+        ]
+
+        if not patients:
+            return
+
+        # More medics = more treatment capacity
+        treatment_limit = min(len(patients), max(1, len(medics) * 2))
+        treated_patients = random.sample(patients, treatment_limit)
+
+        for patient in treated_patients:
+            recovery = random.randint(3, 8)
+
+            patient.health = min(patient.health + recovery, 100)
+
+            if getattr(patient, "sick_days", 0) > 0 and random.random() < 0.35:
+                patient.sick_days = max(0, patient.sick_days - 1)
+
+            if hasattr(patient, "remember") and random.random() < 0.08:
+                patient.remember(f"Received medical care on Day {self.day}.")
+
+        logs.append(
+            f"Medics treated {len(treated_patients)} injured or sick people."
+        )
 
     def check_leadership(self, logs):
         leadership_system(self, logs)
@@ -800,10 +1100,157 @@ class Simulation:
         notify_family_event_system(self, surname, message)
     
     def consume_daily_food(self, logs):
+        # Original food system
         consume_daily_food_system(self, logs)
 
+        alive_agents = [a for a in self.agents if a.alive]
+
+        if not alive_agents:
+            return
+
+        alive_count = len(alive_agents)
+
+        # Extra community food pressure.
+        # This represents children, elders, cooking loss, storage handling,
+        # shared meals, and general population upkeep.
+        extra_consumption = int(alive_count * 0.25)
+
+        if extra_consumption <= 0:
+            return
+
+        available_food = self.resources.get("food", 0)
+        eaten = min(extra_consumption, available_food)
+
+        self.resources["food"] = available_food - eaten
+
+        shortage = extra_consumption - eaten
+
+        if shortage > 0:
+            affected_count = min(len(alive_agents), max(1, shortage))
+
+            affected_agents = random.sample(alive_agents, affected_count)
+
+            for agent in affected_agents:
+                agent.hunger = min(agent.hunger + random.randint(4, 9), 100)
+
+                if agent.hunger >= 90:
+                    agent.health = max(agent.health - random.randint(1, 4), 0)
+
+            logs.append(
+                f"Food shortage affected {affected_count} people. The population struggled to share limited meals."
+            )
+        
+            # Famine pressure when stored food is dangerously low.
+            # This should only happen once per day.
+            if self.hour != 0:
+                return
+
+            alive_agents = [a for a in self.agents if a.alive]
+
+            if not alive_agents:
+                return
+
+            food_per_person = self.resources.get("food", 0) / max(1, len(alive_agents))
+
+            if food_per_person >= 2:
+                return
+
+            if food_per_person < 1:
+                affected_ratio = 0.35
+                hunger_min, hunger_max = 10, 18
+                health_min, health_max = 3, 8
+            else:
+                affected_ratio = 0.18
+                hunger_min, hunger_max = 5, 12
+                health_min, health_max = 1, 4
+
+            affected_count = max(1, int(len(alive_agents) * affected_ratio))
+            affected_agents = random.sample(alive_agents, affected_count)
+
+            for agent in affected_agents:
+                agent.hunger = min(agent.hunger + random.randint(hunger_min, hunger_max), 100)
+
+                if agent.hunger >= 85:
+                    agent.health = max(agent.health - random.randint(health_min, health_max), 0)
+
+                if agent.health <= 0:
+                    agent.alive = False
+                    self.record_death(agent, "famine", logs)
+
+            logs.append(
+                f"Food scarcity affected {affected_count} people. Stored food is dangerously low."
+            )
+
     def spoil_excess_food(self, logs):
+        # Original spoilage system
         spoil_excess_food_system(self, logs)
+
+        # Only apply stronger spoilage once per day
+        if self.hour != 0:
+            return
+
+        alive_agents = [a for a in self.agents if a.alive]
+
+        if not alive_agents:
+            return
+
+        alive_count = len(alive_agents)
+        current_food = self.resources.get("food", 0)
+
+        # The village can safely hold about 5 food per living person.
+        # Food above this is treated as surplus and can spoil.
+        protected_food = alive_count * 5
+        excess_food = max(0, current_food - protected_food)
+
+        if excess_food <= 0:
+            return
+
+        spoil_rate = 0.15
+
+        # Weather and season affect food decay
+        if self.season == "Summer":
+            spoil_rate += 0.04
+        elif self.season == "Winter":
+            spoil_rate -= 0.03
+
+        if self.weather == "Heatwave":
+            spoil_rate += 0.05
+        elif self.weather == "Storm":
+            spoil_rate += 0.02
+        elif self.weather == "Snow":
+            spoil_rate -= 0.02
+
+        buildings = self.settlement.get("buildings", [])
+
+        # Storage buildings reduce spoilage
+        if "Storage Hut" in buildings:
+            spoil_rate -= 0.04
+
+        if "Granary" in buildings:
+            spoil_rate -= 0.07
+
+        # Future tech bonus
+        if "Food Preservation" in self.technologies:
+            spoil_rate -= 0.05
+
+        spoil_rate = max(0.03, min(spoil_rate, 0.25))
+
+        spoiled = int(excess_food * spoil_rate)
+
+        # Small random waste from pests, bad storage, accidents
+        if random.random() < 0.25:
+            spoiled += random.randint(1, max(1, alive_count // 10))
+
+        spoiled = min(spoiled, excess_food)
+
+        if spoiled <= 0:
+            return
+
+        self.resources["food"] = max(0, current_food - spoiled)
+
+        logs.append(
+            f"{spoiled} food spoiled due to storage limits, weather, and daily waste."
+        )
     
     def enforce_storage_capacity(self, logs):
         storage_capacity_system(self, logs)

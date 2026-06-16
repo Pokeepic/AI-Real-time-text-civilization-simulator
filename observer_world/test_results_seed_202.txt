@@ -2,13 +2,30 @@ OBSERVER WORLD TEST RESULTS
 ===========================
 
 Status: PASSED
-Day: 43
-Hour: 0
-Total agents: 37
-Alive agents: 6
-Deaths recorded: 26
+Day: 126
+Hour: 8
+Total agents: 190
+Alive agents: 178
+Deaths recorded: 12
+Death causes:
+- old age: 5
+- severe attack by Alya Stormwatch: 2
+- severe attack by Omar River: 2
+- fight with Kira Dawnbrook: 1
+- fight with Azra Stonekeeper: 1
+- severe attack by Rowan Vale: 1
+Accounted for: 190
+Missing agents: 0
 Notifications: 100
 Chronicles: 30
-Milestones: 12
+Milestones: 17
 World state: Ongoing
 Random Seed: 202
+Survival audit:
+- Food: 706
+- Food per person: 3.97
+- Average health: 96.5
+- Average hunger: 40.4
+- Average energy: 51.7
+- Critical hunger agents: 0
+- Critical energy agents: 28

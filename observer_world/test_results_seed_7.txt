@@ -2,13 +2,43 @@ OBSERVER WORLD TEST RESULTS
 ===========================
 
 Status: PASSED
-Day: 43
-Hour: 0
-Total agents: 61
-Alive agents: 10
-Deaths recorded: 33
+Day: 126
+Hour: 8
+Total agents: 164
+Alive agents: 130
+Deaths recorded: 34
+Death causes:
+- severe attack by Vera Highfield: 4
+- fight with Vera Highfield: 3
+- fight with Nia Stonekeeper: 3
+- old age: 3
+- fight with Rami Dawnbrook: 2
+- severe attack by Zara Moonfield: 2
+- fight with Mika Elderbranch: 2
+- fight with Isla Emberfall: 2
+- severe attack by Nova Silva: 2
+- severe attack by Isla Emberfall: 2
+- fight with Zara Moonfield: 1
+- hunger: 1
+- fight with Toma Stormwatch: 1
+- punishment for murder: 1
+- fight with Ilan Blackriver: 1
+- fight with Daren Ash: 1
+- fight with Leila Moonfield: 1
+- fight with Nova Silva: 1
+- weather exposure: 1
+Accounted for: 164
+Missing agents: 0
 Notifications: 100
 Chronicles: 30
-Milestones: 13
+Milestones: 17
 World state: Ongoing
 Random Seed: 7
+Survival audit:
+- Food: 704
+- Food per person: 5.42
+- Average health: 89.3
+- Average hunger: 40.7
+- Average energy: 50.7
+- Critical hunger agents: 0
+- Critical energy agents: 27

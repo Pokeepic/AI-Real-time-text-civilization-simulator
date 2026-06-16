@@ -68,19 +68,34 @@ class Agent:
         self.surname = None
 
     def update_needs(self):
-        self.hunger = clamp(self.hunger + 5, 0, 100)
-        self.energy = clamp(self.energy - 3, 0, 100)
-        self.social = clamp(self.social - 2, 0, 100)
+        # Needs slowly get worse over time
+        self.hunger = min(self.hunger + random.randint(1, 4), 100)
+        self.energy = max(self.energy - random.randint(1, 3), 0)
 
+        # Hunger hurts, but not instantly
         if self.hunger >= 95:
-            self.health = max(self.health - 5, 0)
+            self.health -= random.randint(3, 7)
+        elif self.hunger >= 85:
+            self.health -= random.randint(1, 3)
 
+        # Exhaustion hurts, but slower than hunger
         if self.energy <= 5:
-            self.health = max(self.health - 2, 0)
+            self.health -= random.randint(2, 5)
 
+        # Slow natural recovery.
+        # Agents should not heal too quickly, especially when sick.
+        if (
+            self.hunger < 45
+            and self.energy > 45
+            and self.health < 100
+            and getattr(self, "sick_days", 0) <= 0
+            and random.random() < 0.08
+        ):
+            self.health += 1
+
+        # Death check
         if self.health <= 0:
             self.alive = False
-            self.status = "Dead"
         elif self.health < 30:
             self.status = "Critical"
         elif self.health < 60:

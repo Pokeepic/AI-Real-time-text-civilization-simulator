@@ -2,13 +2,27 @@ OBSERVER WORLD TEST RESULTS
 ===========================
 
 Status: PASSED
-Day: 43
-Hour: 0
-Total agents: 53
-Alive agents: 14
-Deaths recorded: 28
+Day: 126
+Hour: 8
+Total agents: 194
+Alive agents: 184
+Deaths recorded: 10
+Death causes:
+- old age: 8
+- fight with Freya Rosewick: 1
+- weather exposure: 1
+Accounted for: 194
+Missing agents: 0
 Notifications: 100
 Chronicles: 30
-Milestones: 12
+Milestones: 17
 World state: Ongoing
 Random Seed: 999
+Survival audit:
+- Food: 745
+- Food per person: 4.05
+- Average health: 96.2
+- Average hunger: 40.0
+- Average energy: 51.3
+- Critical hunger agents: 0
+- Critical energy agents: 33

@@ -2,13 +2,34 @@ OBSERVER WORLD TEST RESULTS
 ===========================
 
 Status: PASSED
-Day: 43
-Hour: 0
-Total agents: 59
-Alive agents: 10
-Deaths recorded: 38
+Day: 126
+Hour: 8
+Total agents: 185
+Alive agents: 166
+Deaths recorded: 19
+Death causes:
+- old age: 7
+- fight with Elena Stonekeeper: 2
+- fight with Dima Dawnfield: 2
+- fight with Aria Darkmoor: 2
+- severe attack by Isla Lowstone: 1
+- fight with Omar Stormwatch: 1
+- fight with Omar Mooncrest: 1
+- severe attack by Elena Stone: 1
+- severe attack by Mina Elderbranch: 1
+- severe attack by Vale Glassmere: 1
+Accounted for: 185
+Missing agents: 0
 Notifications: 100
 Chronicles: 30
-Milestones: 13
+Milestones: 17
 World state: Ongoing
 Random Seed: 123
+Survival audit:
+- Food: 541
+- Food per person: 3.26
+- Average health: 96.3
+- Average hunger: 39.1
+- Average energy: 51.2
+- Critical hunger agents: 0
+- Critical energy agents: 32

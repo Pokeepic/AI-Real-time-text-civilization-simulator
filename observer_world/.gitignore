@@ -14,3 +14,4 @@ __pycache__/
 
 # World save files (if you don't want them tracked)
 *.json
+

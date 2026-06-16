@@ -2,19 +2,19 @@
 OBSERVER WORLD STORY SUMMARY
 ============================
 
-World: Eldfall
-Settlement: Old Hollow
+World: Arumere
+Settlement: River Rest
 Stage: Village
 Era: Age of Innovation
 
-Living Population: 23
-Recorded Dead: 158
-Leader: Rook18
+Living Population: 150
+Recorded Dead: 25
+Leader: Cael Silverline
 
 Culture: Trade-Oriented Society
 Belief: Chosen Leader Myth
 
 Wars: 0
-Treaties: 0
+Treaties: 2
 Technologies: 4
 Laws: 0

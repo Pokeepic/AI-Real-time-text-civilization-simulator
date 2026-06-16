@@ -2,13 +2,33 @@ OBSERVER WORLD TEST RESULTS
 ===========================
 
 Status: PASSED
-Day: 43
-Hour: 0
-Total agents: 181
-Alive agents: 23
-Deaths recorded: 83
+Day: 126
+Hour: 8
+Total agents: 182
+Alive agents: 164
+Deaths recorded: 18
+Death causes:
+- old age: 8
+- fight with Lucan Southmere: 3
+- fight with Nolan Vale: 1
+- fight with Vale Southmere: 1
+- severe attack by Luna Goldriver: 1
+- fight with Luna Goldriver: 1
+- fight with Orin Goldriver: 1
+- fight with Tarek Rainsong: 1
+- fight with Ari Vale: 1
+Accounted for: 182
+Missing agents: 0
 Notifications: 100
 Chronicles: 30
-Milestones: 14
+Milestones: 17
 World state: Ongoing
 Random Seed: 42
+Survival audit:
+- Food: 534
+- Food per person: 3.26
+- Average health: 87.0
+- Average hunger: 39.3
+- Average energy: 50.7
+- Critical hunger agents: 0
+- Critical energy agents: 25
