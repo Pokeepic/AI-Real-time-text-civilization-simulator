@@ -1,5 +1,6 @@
 import pandas as pd
 import streamlit as st
+from collections import Counter
 
 
 def render(sim):
@@ -169,3 +170,329 @@ def render(sim):
             st.info("Tension stayed the same.")
     else:
         st.info("Need at least 2 snapshots for tension trend.")
+
+    st.subheader("Deaths by Cause")
+
+    death_records = getattr(sim, "death_records", [])
+
+    if not death_records:
+        st.info("No deaths recorded yet.")
+    else:
+        death_causes = Counter(
+            record.get("cause", "Unknown")
+            for record in death_records
+        )
+
+        death_df = pd.DataFrame(
+            death_causes.items(),
+            columns=["Cause", "Deaths"]
+        ).sort_values("Deaths", ascending=False)
+
+        st.bar_chart(
+            death_df,
+            x="Cause",
+            y="Deaths"
+        )
+
+        st.dataframe(
+            death_df,
+            use_container_width=True,
+            hide_index=True
+        )
+
+        csv = death_df.to_csv(index=False).encode("utf-8")
+
+        st.download_button(
+            "Download Deaths by Cause CSV",
+            data=csv,
+            file_name="deaths_by_cause.csv",
+            mime="text/csv",
+            key="download_deaths_by_cause_csv"
+        )
+    
+    st.subheader("Civilization Balance Trends")
+
+    snapshots = getattr(sim, "history_snapshots", [])
+
+    if not snapshots:
+        st.info("No history snapshots yet. Run the simulation for at least 1 day.")
+    else:
+        snapshot_df = pd.DataFrame(snapshots)
+
+        if "day" in snapshot_df.columns:
+            snapshot_df = snapshot_df.sort_values("day")
+
+        # Population trend
+        if "alive" in snapshot_df.columns:
+            st.markdown("### Population Over Time")
+            st.line_chart(
+                snapshot_df,
+                x="day",
+                y="alive"
+            )
+
+        # Food per person trend
+        if "food_per_person" in snapshot_df.columns:
+            st.markdown("### Food Per Person")
+            st.line_chart(
+                snapshot_df,
+                x="day",
+                y="food_per_person"
+            )
+
+        # Health trend
+        if "avg_health" in snapshot_df.columns:
+            st.markdown("### Average Health")
+            st.line_chart(
+                snapshot_df,
+                x="day",
+                y="avg_health"
+            )
+
+        # Hunger and energy trend
+        trend_cols = []
+
+        if "avg_hunger" in snapshot_df.columns:
+            trend_cols.append("avg_hunger")
+
+        if "avg_energy" in snapshot_df.columns:
+            trend_cols.append("avg_energy")
+
+        if trend_cols:
+            st.markdown("### Hunger and Energy")
+            st.line_chart(
+                snapshot_df,
+                x="day",
+                y=trend_cols
+            )
+
+        csv = snapshot_df.to_csv(index=False).encode("utf-8")
+
+        st.download_button(
+            "Download Balance Trends CSV",
+            data=csv,
+            file_name="balance_trends.csv",
+            mime="text/csv",
+            key="download_balance_trends_csv"
+        )
+    
+    st.subheader("Age Groups")
+
+    alive_agents = [a for a in sim.agents if a.alive]
+
+    if not alive_agents:
+        st.info("No living agents to show age groups.")
+    else:
+        age_groups = {
+            "Children 0-12": len([
+                a for a in alive_agents
+                if getattr(a, "age", 0) < 13
+            ]),
+            "Teenagers 13-17": len([
+                a for a in alive_agents
+                if 13 <= getattr(a, "age", 0) <= 17
+            ]),
+            "Adults 18-44": len([
+                a for a in alive_agents
+                if 18 <= getattr(a, "age", 0) <= 44
+            ]),
+            "Older Adults 45-59": len([
+                a for a in alive_agents
+                if 45 <= getattr(a, "age", 0) <= 59
+            ]),
+            "Elders 60-74": len([
+                a for a in alive_agents
+                if 60 <= getattr(a, "age", 0) <= 74
+            ]),
+            "Very Old 75+": len([
+                a for a in alive_agents
+                if getattr(a, "age", 0) >= 75
+            ]),
+        }
+
+        age_df = pd.DataFrame(
+            age_groups.items(),
+            columns=["Age Group", "Agents"]
+        )
+
+        st.bar_chart(
+            age_df,
+            x="Age Group",
+            y="Agents"
+        )
+
+        st.dataframe(
+            age_df,
+            use_container_width=True,
+            hide_index=True
+        )
+
+        children = age_groups["Children 0-12"]
+        child_ratio = children / max(1, len(alive_agents))
+
+        st.markdown("### Age Balance Warning")
+
+        if child_ratio > 0.55:
+            st.warning(
+                f"High child population: {child_ratio:.0%}. "
+                "Birth rate may need to slow down or children need time to mature."
+            )
+        elif child_ratio < 0.25:
+            st.info(
+                f"Low child population: {child_ratio:.0%}. "
+                "The civilization may have weak future growth."
+            )
+        else:
+            st.success(
+                f"Healthy child population: {child_ratio:.0%}."
+            )
+
+        csv = age_df.to_csv(index=False).encode("utf-8")
+
+        st.download_button(
+            "Download Age Groups CSV",
+            data=csv,
+            file_name="age_groups.csv",
+            mime="text/csv",
+            key="download_age_groups_csv"
+        )
+    
+    st.subheader("Births vs Deaths")
+
+    snapshots = getattr(sim, "history_snapshots", [])
+
+    if not snapshots:
+        st.info("No birth/death history yet. Run the simulation for at least 1 day.")
+    else:
+        snapshot_df = pd.DataFrame(snapshots)
+
+        if "day" in snapshot_df.columns:
+            snapshot_df = snapshot_df.sort_values("day")
+
+        daily_cols = []
+
+        if "births_today" in snapshot_df.columns:
+            daily_cols.append("births_today")
+
+        if "deaths_today" in snapshot_df.columns:
+            daily_cols.append("deaths_today")
+
+        if daily_cols:
+            st.markdown("### Daily Births and Deaths")
+            st.line_chart(
+                snapshot_df,
+                x="day",
+                y=daily_cols
+            )
+        else:
+            st.info("Daily birth/death data is not available yet.")
+
+        total_cols = []
+
+        if "births_total" in snapshot_df.columns:
+            total_cols.append("births_total")
+
+        if "deaths_total" in snapshot_df.columns:
+            total_cols.append("deaths_total")
+
+        if total_cols:
+            st.markdown("### Total Births and Deaths")
+            st.line_chart(
+                snapshot_df,
+                x="day",
+                y=total_cols
+            )
+
+        # Current balance summary
+        total_births = snapshot_df["births_total"].iloc[-1] if "births_total" in snapshot_df.columns else 0
+        total_deaths = snapshot_df["deaths_total"].iloc[-1] if "deaths_total" in snapshot_df.columns else len(getattr(sim, "death_records", []))
+
+        st.markdown("### Birth / Death Balance")
+
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            st.metric("Total Births", int(total_births))
+
+        with col2:
+            st.metric("Total Deaths", int(total_deaths))
+
+        with col3:
+            st.metric("Net Growth", int(total_births - total_deaths))
+
+        if total_births > total_deaths * 4 and total_births > 50:
+            st.warning("Births are much higher than deaths. Population may grow too fast.")
+        elif total_deaths > total_births and total_deaths > 20:
+            st.error("Deaths are higher than births. Civilization may be declining.")
+        else:
+            st.success("Birth and death balance looks stable.")
+    
+    st.subheader("Civilization Balance Summary")
+
+    alive_agents = [a for a in sim.agents if a.alive]
+    alive_count = len(alive_agents)
+
+    food = sim.resources.get("food", 0)
+    food_per_person = food / max(1, alive_count)
+
+    death_count = len(getattr(sim, "death_records", []))
+
+    children_count = len([
+        a for a in alive_agents
+        if getattr(a, "age", 0) < 13
+    ])
+
+    child_ratio = children_count / max(1, alive_count)
+
+    if alive_agents:
+        avg_health = sum(a.health for a in alive_agents) / alive_count
+        avg_hunger = sum(a.hunger for a in alive_agents) / alive_count
+        avg_energy = sum(a.energy for a in alive_agents) / alive_count
+    else:
+        avg_health = 0
+        avg_hunger = 0
+        avg_energy = 0
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+        st.metric("Alive Population", alive_count)
+
+    with col2:
+        st.metric("Food / Person", f"{food_per_person:.2f}")
+
+    with col3:
+        st.metric("Average Health", f"{avg_health:.1f}")
+
+    with col4:
+        st.metric("Deaths", death_count)
+
+    col5, col6, col7 = st.columns(3)
+
+    with col5:
+        st.metric("Average Hunger", f"{avg_hunger:.1f}")
+
+    with col6:
+        st.metric("Average Energy", f"{avg_energy:.1f}")
+
+    with col7:
+        st.metric("Children Ratio", f"{child_ratio:.0%}")
+
+    st.markdown("### Balance Status")
+
+    if alive_count <= 0:
+        st.error("Civilization has no living population.")
+    elif food_per_person < 2:
+        st.error("Food is critically low. Famine risk is high.")
+    elif food_per_person < 3:
+        st.warning("Food is low. Population growth may slow down.")
+    elif avg_health < 70:
+        st.warning("Average health is low. Disease, injury, or harsh conditions may be too strong.")
+    elif child_ratio > 0.60:
+        st.warning("Too many children. Birth rate may be too high or children need more time to mature.")
+    elif child_ratio < 0.20 and alive_count > 50:
+        st.warning("Too few children. Long-term population growth may weaken.")
+    elif avg_energy < 35:
+        st.warning("Average energy is low. Agents may be overworked.")
+    else:
+        st.success("Civilization balance looks stable.")
